@@ -449,7 +449,6 @@ Now, as one last step, we have to take the qubits from the idle pool and place t
 '''
 
 
-
 def PlaceIdlePoolQB(Fsizes, Iset, c):
     '''
     this function places qubits from a global idle pool into idle storage zones with max capacities specified by F sizes 
@@ -509,28 +508,46 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
 
 '''
 Now, all subalgorithms have been taken care of.
+We can implement the main algorithm 
 '''
 
 
-def BlockProcessCircuit(CrawInp, Nq, Fsizes, Qmax, Mmax):
+def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
     '''
-    Keine Ahnung
+    This function step by step removes gates from the given circuit rawCircuit, based on  
+
     '''
 
-    Craw = CrawInp
+    # Raw Circuit to be manipulated 
+    cRaw = rawCircuit
 
+    # list of aggregated blocks 
     B = []
 
-    while len(Craw) > 0:
-        C                   = LayerCircuit(Nq, Craw)
-        S_best, G_best      = AggregateBlocksStep(C, Craw, Nq, Qmax, Mmax)
+    # while stuff still left in circuit 
+    while len(cRaw) > 0:
+        # Make layeredcircuit
+        C                   = LayerCircuit(Nq, cRaw)
+
+        # Get best set of qubits and gates from algorithm 
+        S_best, G_best, gc_list_test      = AggregateBlocksStep(C, cRaw, Nq, Qmax, Mmax)
+
+        # Get set of qubits and gates, for the different processing zones. And the 'remaining' idle pool Iset 
         SP, GP, Iset, c     = AggregateBlocksStepPostProcess(S_best, G_best, Nq, Qmax, Mmax)
+
+        # Finally, fill storage zones with qubits in 'remaining' idle pool 
         FP, cnew            = PlaceIdlePoolQB(Fsizes, Iset, c)
 
+        # iterate over the different sets of gates in GP
         for gpi in range(len(GP)):
+
+            # iterate over the gates in the gates sets corresponding to qubit sets in the processing zones 
             for gi in range(len(GP[gpi])):
-                Craw = [x for x in Craw if x != GP[gpi][gi]]
+
+                # Remove the covered gate from the circuit
+                cRaw = [x for x in cRaw if x != GP[gpi][gi]]
         
+        # append this set of S, G, F and c to the collection of processing blocks 
         B.append([SP, GP, FP, cnew])
 
     return B 
