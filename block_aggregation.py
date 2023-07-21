@@ -24,6 +24,10 @@ The second one is layeredcircuit.py - it creates a layered circuit given a raw c
 
 The third one is blockprocessing.py - it applies the block aggregation algorithm to the layered circuit. 
 
+What is also of interest is: 
+    1. The commutation rule: Not only do two gates commute if they just do not share two qubits. It is possible to have more general commutation rules. Implement this. 
+    2. 
+
 '''
 
 
@@ -134,6 +138,8 @@ def AggregateBlocksStep(layeredCirc, circ, Nq, Qmax, Mmax):
     # initialize gate coverage counter 
     bestGateCoverage = 0
 
+    # for debugging
+    gatecoverage_list = []
 
     # iterate over layers 
     for layer_no in range(len(layeredCirc)):
@@ -261,6 +267,8 @@ def AggregateBlocksStep(layeredCirc, circ, Nq, Qmax, Mmax):
                         break
 
 
+            print('S and G after sorting', S, G)
+
             '''
             At this point, the sets have been merged and sorted. Now, to evaluate how well the gates are covered by these particular sets. 
             '''        
@@ -278,11 +286,8 @@ def AggregateBlocksStep(layeredCirc, circ, Nq, Qmax, Mmax):
 
                 print('Termination condition reached!')
                 # function returns S_best and G_best, because we're running out of space 
-                return S_best, G_best
+                return S_best, G_best, gatecoverage_list
             
-            # compute number of gates covered by Mmax largest Qubit sets of size Q 
-            print('Gatecoverage 1:', gateCoverage)
-
             zoneCtr = 1
             gateCoverage = 0
 
@@ -295,9 +300,11 @@ def AggregateBlocksStep(layeredCirc, circ, Nq, Qmax, Mmax):
             for qubitset_no in range(len(G)):
                 if len(S[qubitset_no]) < Qmax and zoneCtr <= Mmax:
                     gateCoverage += len(G[qubitset_no])
+                    zoneCtr += 1
 
             print('Gatecoverage 2:', gateCoverage)
 
+            gatecoverage_list.append(gateCoverage)
 
             # if the gatecoverage for this particular constellation of sets is better than for the last constellation of sets
             if gateCoverage > bestGateCoverage: 
@@ -307,12 +314,18 @@ def AggregateBlocksStep(layeredCirc, circ, Nq, Qmax, Mmax):
                 S_best = S
                 G_best = G
 
-    return S_best, G_best        
+    return S_best, G_best, gatecoverage_list        
             
 
 
-AggregateBlocksStep(layeredcircuit, circuit_of_qubits, 10, 4, 1)
+S_best, G_best, GC_list = AggregateBlocksStep(layeredcircuit, circuit_of_qubits, 10, 4, 1)
 
+print(S_best, '\n', G_best)
+
+plt.plot(GC_list)
+plt.ylabel('Gatecoverage')
+plt.xlabel('Iterations')
+plt.show()
 
 
 def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
@@ -323,61 +336,104 @@ def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
     3. It fills all the remaining qubits into a global Idle pool
     4. It builds a new structure of pointer variables for further processing 
 
+    Each pointer variable to qubit q is now a quadruple: {s, m, k, s'}, where: 
+        s = {'p', 'i'}:  indicates if q is stored in processing zone or idle pool 
+        m = {0, ...}  processing zone number 
+        k = {1, ...} position within processing zone or idle pool 
+        s'= {'a', 'i'} active or idle (within processing zone, the qubits in idle pool are always idle / inactive.)
+
     '''
 
+    # set of processing zone sets 
     SP = []
+
+    # set of covered gates corresponding to processing zone sets 
     GP = []
 
     c = [[] for _ in range(Nq)]
 
-    # apparently a collection of all qubit sets in S that satisfy a certain condition 
+    # Idle pool qubits
     Iset = []
 
     # essentially a processing zone counter 
     m = 1 
 
+    # iterate over the aggregated sets (processing blocks so far)
     for n in range(len(S)):
+
+        # if this particular set of qubits fits into the processing zone, append to processing zone sets and corresponding gate coverage set
         if len(S[n]) <= Qmax and m <= Mmax: 
             SP.append(S[n])
             GP.append(G[n])
 
-            k = 1
+            # first position is zeroth position
+            k = 0
 
+            # assign pointers to the qubits in this set 
             for qi in range(len(S[n])):
                 q =  S[n][qi]
                 c[q] = ['p', m, k, 'a']
                 k += 1 
 
+            # now that this processing zone has been filled, focus on next one 
             m += 1   
+
+            # merge the qubits in this set to the idle pool 
+            # 
+            # BUT WHY???
             Iset = Iset + S[n]  
 
     # now, all the processing zone sets with good sizes are padded with qubits from the idle pool 
     for m in range(Mmax):
+
+        # idle subset of processing zone m 
         SPi = []
+
+        # if there is only one qubit in the m-th processing zone, move it from the processing zone into an idle zone? 
         if len(SP[m]) == 1:
+
+            # take the first qubit in this set
             q = SP[m][1]
+
+            # and empty this list 
             SP[m] = []
+
+            # append this qubit to the idle subset of the processing zone m 
             SPi = [q]
+
+            # qubits are stored in processing zone, but are idle 
             c[q] = ['p', m, 1, 'i']
         
+        # a qubit that is appended to a certain processing zone will have this position: 
         k = len(SP[m]) + len(SPi) + 1
+
+        # while all qubits (active and idle) in the processing zone are less than the maximum possible number of qubits in the processing zone, 
+        # we pad the processing zone with more idle qubits from the idle pool 
         while len(SP[m])+ len(SPi) < Qmax:
+
+            # take the first qubit in the idle pool
             q = Iset[1]
+
+            # append the qubit from the idle pool to the idle subset of the processing zone 
             SPi.append(q)
+
+            # and adjust its pointer accordingly, it's idle, but now in a processing zone 
             c[q] = ['p', m, k, 'i']
 
-            # drop first element in the Iset list 
+            # erase this qubit from the idle pool - it was moved to the processing zone 
             Iset = Iset[1:]
             k += 1 
         
-
-        SP[m].append(SPi)
+        # update the qubits in processing zone m 
+        SP[m] = SP[m] + SPi
 
     # end of for loop 
 
     # now, as a last step, assign the poiniter variables for all qubits remaining in the global idle pool 
     for qi in range(len(Iset)):
         q = Iset[qi]
+
+        # qubits are idle in idle pool 
         c[q] = ['i', 1, qi, 'i']
 
 
@@ -385,7 +441,12 @@ def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
 
 
 
+'''
+Now, we have padded the processing zones with idle qubits, so the processing zones are now filled with active and idle qubits. 
+We are done with the processing zones. 
 
+Now, as one last step, we have to take the qubits from the idle pool and place them into storage zones in the processing blocks. 
+'''
 
 
 
@@ -395,18 +456,19 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
     The qubits, in this version, are placed starting from the middle, outwards. 
     '''
 
-    # number of idle zones: 
+    # number of storage zones: 
     numF = len(Fsizes)
 
-    # first idle zone to be filled up, remember: we're starting in the middle 
+    # first storage zone to be filled up, remember: we're starting in the middle 
     f = math.floor(numF / 2)
 
-    # initialize empty idle zones, list of empty lists
+    # initialize empty storage zones, list of empty lists
     Fset = [[] for _ in range(numF)]
 
-
+    # idle pool, create a copy that will be continuosly decreased 
     Isetnew = Iset
     
+    # pointer table 
     cnew = c 
 
     # Now, to fill up these idle zones. We start in the starting zone, moving left and right, filling up the zones 
@@ -414,26 +476,40 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
     fp = f+1 
     ctr = 1 
 
+    # while there's still qubits left in the idle pool 
     while len(Isetnew) > 0: 
 
         # start with right zone
-        # check if size exceeded: 
+        # if we are still within the allowed number of storage zones but the number of qubits in this storage zone is too high, move to the left 
         if fp <= numF and len(Fset[fp]) >= Fsizes[fp]:
             fp += 1
+
+        
         if fp <= numF and len(Fset[fp]) < Fsizes[fp]:
+
+            # take the first qubit in the idle pool 
             q = Isetnew[1]
+
+            # append this qubit to the storage zone 
             Fset[fp].append(q)
+
+            # and adjust their pointer variables accordingly 
             cnew[q] = ['i', fp, len(Fset[fp]), 'i']
 
-            # get rid of all cases of q in the list Isetnew 
+            # eliminate qubit q from idle pool 
             Isetnew = [x for x in Isetnew if x != q]
 
-        # if all idle zones are filled up and there is idle qubits left, error 
+        # if all storage zones are filled up and there's qubits left in the idle pool, error 
         if fp == numF and len(Fset[fp]) >= Fsizes[fp] and fm == 1 and len(Fset[fm]) >= Fsizes[fm] and len(Isetnew) > 0:
-            print('No more idle zones left, but not all qubits placed.')
+            print('ERROR: No more storage zones left, but not all qubits placed.')
             return Fset, cnew
 
     return Fset, cnew          
+
+
+'''
+Now, all subalgorithms have been taken care of.
+'''
 
 
 def BlockProcessCircuit(CrawInp, Nq, Fsizes, Qmax, Mmax):
