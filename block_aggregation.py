@@ -700,7 +700,7 @@ for i in range(len(c_total) - 1):
 
         for pos1 in current_layer_positions:
             closest_pos2 = min(next_layer_positions, key=lambda pos2: abs(pos2[1] - pos1[1]))
-            plt.plot([pos1[0], closest_pos2[0]], [pos1[1], closest_pos2[1]], color='gray', linestyle='--')
+            plt.plot([pos1[0], closest_pos2[0]], [pos1[1], closest_pos2[1]], color='black')
 
 plt.axis('off')
 plt.show()
@@ -712,6 +712,8 @@ Write layerfunction so that Each layer also has the information about the corres
 adjust function aggregateblocksstep so it only takes layeredcircuit
 
 And in the final function: just create a new circuit ranging from 0 to 15 for example!!
+
+Use function that returns y positions also to plot! 
 '''
 
 
