@@ -34,7 +34,7 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
             if g not in usedgates: 
 
                 # first of all, we only consider a certain amount of gates
-                if layer != [] and g-layer[0] > search_horizon: 
+                if layer != [] and g-layer[0][0] > search_horizon: 
                     g += 1
                     continue  
                 # look at the individual qubits 
@@ -45,7 +45,9 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
                 if q1 not in blockedqubits and q2 not in blockedqubits: 
 
                     # add gate to layer 
-                    layer.append(g)
+                    # layer.append(g)
+
+                    layer.append([g, [q1,q2]])
 
                     # mark gate as used 
                     usedgates.append(g)
