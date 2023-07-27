@@ -186,8 +186,12 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     this function will be referred to as the deterministic part of the optimization procedure. 
     
     Given: 
-    BP: 
-    Nq: 
+    BP:     a list of Blocks and their corresponding variables S, G, c, 
+    Nq:     Number of total qubits
+    Fsizes: Sizes of the storage zones 
+    Qmax:   Maximum amount of qubits in processing zones 
+    Mmax:   Number of processing zones in processing block 
+    echo:   Do we want to print (debugging reasons)
 
     Returns: 
         Updated list bNew of qubits in processing blocks 
@@ -215,9 +219,30 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
     '''
     There are different types of swaps that can be done. Of course, we cannot swap active qubits from a processing zone with qubits in storage zones. 
+    
+    at every iteration, we safe the best BP so far, as well as the totcost. In the mathematica file, the expressions:
+        Sow[costTot, 1];
+        Sow[BPnew, 2];
+    safe these values for every iteration corresponding to the index 1 and 2. The reap and sow in the original file is only done for displaying reasons. 
+
+    this function is split into four parts: 
+        1. swap idle qubits between differennt idle ones to prevent crossings. 
+        2. Swap idle qubits within idle zones to minimize the number of swaps possible in experiment 
+        3. Swap whole processing zones 
+        4. Swap qubitts within processing zones to minimize number of swaps needed. 
+
     '''
 
-    for step in range(2, numSteps):
+    # why start at one? 
+    for step in range(1, numSteps):
+
+
+        # get information from previous step to compare to current step 
+        SPp, GPp, FPp, cp = bNew[step-1]
+
+        # if we have not reached the end of the blocks yet, also define the right partner
+        if step < len(BP):
+            SPf, GPf, FPf, cf = bNew[step+1]
         
         # 1. swap idle qubits between storage zones
         for z in range(numF):
@@ -230,6 +255,142 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                 q = FP[z][qi]
 
                 zp = cp[q][2]
+
+                s1p = cp[q][1]
+
+                if step < len(BP):
+                    zf =  cf[q][2]
+                    s1f = cf[q][1]
+
+                # if qubit is not idle, or we want to switch the same qubit, which is not possible
+                if s1p != 'i' or zp == z:
+                    continue
+
+                # iterate over all storage zone qubits as possible swap partners 
+                for qi2 in range(len(FP[zp])):
+                    q2 = FP[zp][qi2]
+
+                    if q2 == q: 
+                        continue 
+
+                    z2p = cp[q2][2]
+                    s12p = cp[q2][1]
+
+                    if step < len(BP):
+                        z2f = cf[q2][2]
+                        s12f = cf[q2][1]
+
+
+                    if z2p == zp and s12p == 'i':
+                        continue
+
+
+                    if step < numSteps: 
+                        if z2f == zf and s12f == 'i':
+                            continue
+                    
+                    # swap q and q2 in bNew, a few lines, add later 
+                    # bNew[step][4] = 
+
+                    costTot = updateStep(Y, step, q, q2, costTot)
+
+                    break 
+
+        
+        # 2. Swap idle qubits within idle zones to minimize swaps 
+        # similar to above, but we iterate twice over the same idle zone 
+
+        for z in range(numF):
+
+            SP, GP, FP, c = bNew[step]
+
+            # iterate over all idle qubits 
+            for qi in range(len(FP[z])):
+
+                q = FP[z][qi]
+
+                k = c[q][3]
+
+                zp = cp[q][2]
+
+                s1p = cp[q][1]
+
+                kp = cp[q][3]
+
+
+                # if qubit is not idle, or we want to switch the same qubit, which is not possible
+                if s1p != 'i' or zp != z:
+                    continue
+
+                # iterate over all qubits in the *same* storage zone as possible swap partners 
+                for qi2 in range(len(FP[z])):
+
+                    if qi == qi2: 
+                        continue
+
+                    q2 = FP[z][qi2]
+
+                    # we still cannot exchange the same qubit with itself
+                    if q2 == q: 
+                        continue 
+
+                    z2p = cp[q2][2]
+                    s12p = cp[q2][1]
+
+
+
+                    if z2p != zp or s12p != 'i':
+                        continue
+
+                    k2 = c[q2][3]
+
+                    k2p = cp[q2][3]
+
+                    dist = (k-kp)**2 + (k2-k2p)**2
+
+                    distSwap = (k-k2p)**2 + (k2-kp)**2
+
+                    if not distSwap < dist:
+                        continue
+
+                    
+                    # Same as above: Swap q and q2 in bNew, a few lines, add later 
+                    # bNew[step][4] = 
+
+                    costTot = updateStep(Y, step, q, q2, costTot)
+
+                    break 
+
+
+
+
+
+
+
+
+
+
+
+        # 3. Swap entire processing zones to minimize swaps 
+
+        for z in range(Mmax):
+
+            SP, GP, FP, c = bNew[step]
+
+            # in this step, we flatten a list, looks bad but it will look better when using np
+            SPz = SP[z]
+
+            # just switch to numpy at this point... 
+
+
+
+
+
+
+
+        # 4. Swap qubits within processing zones to minimize swaps
+
+
 
 
 
