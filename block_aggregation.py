@@ -39,6 +39,10 @@ layeredcircuit = LayerCircuit(10, circuit_of_qubits)
 
 # show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
 print(layeredcircuit)
+print(np.shape(layeredcircuit))
+print(type(layeredcircuit))
+exit()
+
 '''
 Now that we have the layered circle going, we can focus on the block aggregation. 
 This will be done ... 

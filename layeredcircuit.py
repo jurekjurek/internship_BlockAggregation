@@ -60,8 +60,9 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
             g += 1
         
         LayeredCircuit.append(sorted(layer))
+        LayeredCircuit_np = np.array(LayeredCircuit)
 
-    return LayeredCircuit
+    return LayeredCircuit_np
 
 
 
