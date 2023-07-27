@@ -318,11 +318,14 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
 S_best, G_best, GC_list = AggregateBlocksStep(layeredcircuit, 10, 4, 1)
 
 
+# Plot the blockaggregation procedure  
 
-plt.plot(GC_list)
-plt.ylabel('Gatecoverage')
-plt.xlabel('Iterations')
-plt.show()
+# plt.figure()
+# plt.title('Developement of the gatecoverage during blockaggregation \n')
+# plt.plot(GC_list)
+# plt.ylabel('Gatecoverage')
+# plt.xlabel('Iterations')
+# plt.show()
 
 
 def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
@@ -356,13 +359,13 @@ def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
     Iset = []
 
     # essentially a processing zone counter 
-    m = 1 
+    m = 0
 
     # iterate over the aggregated sets (processing blocks so far)
     for n in range(len(S)):
 
         # if this particular set of qubits fits into the processing zone, append to processing zone sets and corresponding gate coverage set
-        if len(S[n]) <= Qmax and m <= Mmax: 
+        if len(S[n]) <= Qmax and m <= Mmax - 1: 
             SP.append(S[n])
             GP.append(G[n])
 
@@ -404,7 +407,7 @@ def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
             SPi = [q]
 
             # this qubit is now idle, but it is still in a processing zone, not a storage zone  
-            c[q] = ['p', m+1, 1, 'i']
+            c[q] = ['p', m, 1, 'i']
         
         # a qubit that is appended to a certain processing zone will have this position: 
         k = len(SP[m]) + len(SPi)
@@ -420,7 +423,7 @@ def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
             SPi.append(q)
 
             # and adjust its pointer accordingly, it's idle, but now in a processing zone 
-            c[q] = ['p', m+1, k, 'i']
+            c[q] = ['p', m, k, 'i']
 
             # erase this qubit from the idle pool - it was moved to the processing zone 
             Iset = Iset[1:]
@@ -552,10 +555,7 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
 
 # test of storage zone algorithm, funktioniert. 
 Fsizes = [3, 3]
-Fset, cNew = PlaceIdlePoolQB(Fsizes, Iset, c)
 
-print('Idle pool:', Iset)
-print('Fset:', Fset)
 
 
 '''
@@ -629,7 +629,7 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
         print('cRaw looks like:',cRaw)
         print('where GP is:', GP)
 
-    return B 
+    return B
 
 
 # test of the whole algorithm 
@@ -638,233 +638,86 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
 B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
 
 
-print('B is now:')
-c_total = []
-for i in range(len(B)):
-    print('step', i)
-    print('SP:', B[i][0])
-    print('GP:', B[i][1])
-    print('FP:', B[i][2])
-    print('c:', B[i][3])
-    c_total.append(B[i][3])
-    print('\n')
+
+'''
+Plotting, trying, really ugly
+'''
 
 
-print(c_total)
+# print('B is now:')
+# c_total = []
+# for i in range(len(B)):
+#     print('step', i)
+#     print('SP:', B[i][0])
+#     print('GP:', B[i][1])
+#     print('FP:', B[i][2])
+#     print('c:', B[i][3])
+#     c_total.append(B[i][3])
+#     print('\n')
 
-x = 0
-y = 0
 
-node_groups = {}
+# print(c_total)
 
-for layer in c_total: 
-    for q_no in range(len(layer)):
-        q = layer[q_no]
+# x = 0
+# y = 0
 
-        number = str(q_no)  # Adding 1 to q_no to start numbering from 1
+# node_groups = {}
+# plt.figure()
 
-        if number in node_groups:
-            node_groups[number].append((x, y))
-        else:
-            node_groups[number] = [(x, y)]
 
-        if q[0] == 'p':
-            # plot green node at position pos(processing zone 1) + q[2]
-            y = -3 - q[2]
-            plt.scatter(x, y, color='green', s=400)
-            plt.annotate(str(q_no), (x, y), ha='center', va='center')
+# for layer in c_total: 
+#     for q_no in range(len(layer)):
+#         q = layer[q_no]
 
-            print('p')
-        elif q[0] == 'i':
-            # plot red node at position q[1] * pos(storage zone)
-            y = q[1]*-7 - q[2]
-            plt.scatter(x, y, color='red', s=400)
-            plt.annotate(str(q_no), (x, y), ha='center', va='center')
+#         number = str(q_no)  # Adding 1 to q_no to start numbering from 1
 
-            print('s')
+#         if number in node_groups:
+#             node_groups[number].append((x, y))
+#         else:
+#             node_groups[number] = [(x, y)]
+
+#         if q[0] == 'p':
+#             # plot green node at position pos(processing zone 1) + q[2]
+#             y = -3 - q[2]
+#             if q[3] == 'i':
+#                 plt.scatter(x, y, color='blue', s=400)
+#             elif q[3] == 'a':
+#                 plt.scatter(x, y, color='green', s=400)
+#             plt.annotate(str(q_no), (x, y), ha='center', va='center')
+
+#             print('p')
+#         elif q[0] == 'i':
+#             # plot red node at position q[1] * pos(storage zone)
+#             y = q[1]*-7 - q[2]
+#             plt.scatter(x, y, color='red', s=400)
+#             plt.annotate(str(q_no), (x, y), ha='center', va='center')
+
+#             print('s')
         
 
-        # shift position of plotting to the right 
-    x += 1
+#         # shift position of plotting to the right 
+#     x += 1
 
-# for number, positions in node_groups.items():
-#     sorted_positions = sorted(positions, key=lambda pos: pos[1])
-#     x_values, y_values = zip(*sorted_positions)
-#     plt.plot(x_values, y_values, marker='o', label=f'Node {number}')
+# # for number, positions in node_groups.items():
+# #     sorted_positions = sorted(positions, key=lambda pos: pos[1])
+# #     x_values, y_values = zip(*sorted_positions)
+# #     plt.plot(x_values, y_values, marker='o', label=f'Node {number}')
 
-# Connect nodes between neighboring layers
-for i in range(len(c_total) - 1):
-    for number, positions in node_groups.items():
-        current_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i]
-        next_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i + 1]
+# # Connect nodes between neighboring layers
+# for i in range(len(c_total) - 1):
+#     for number, positions in node_groups.items():
+#         current_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i]
+#         next_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i + 1]
 
-        for pos1 in current_layer_positions:
-            closest_pos2 = min(next_layer_positions, key=lambda pos2: abs(pos2[1] - pos1[1]))
-            plt.plot([pos1[0], closest_pos2[0]], [pos1[1], closest_pos2[1]], color='black')
+#         for pos1 in current_layer_positions:
+#             closest_pos2 = min(next_layer_positions, key=lambda pos2: abs(pos2[1] - pos1[1]))
+#             plt.plot([pos1[0], closest_pos2[0]], [pos1[1], closest_pos2[1]], color='black')
 
-plt.axis('off')
-plt.show()
-
-'''
-2 do: 
-
-Write layerfunction so that Each layer also has the information about the corresponding qubits 
-adjust function aggregateblocksstep so it only takes layeredcircuit
-
-And in the final function: just create a new circuit ranging from 0 to 15 for example!!
-
-Use function that returns y positions also to plot! 
-'''
+# plt.title('Qubits arranged in Processing zones \n')
+# plt.axis('off')
+# plt.show()
 
 
-
-'''
-Now, as a last step we have to visualize the qubits. We do this via a function that returns a y given ...
-'''
-
-# def qubitPlacement():
-#     '''
-#     Returns the position of a certain qubit in some processing block in some processing zone. 
-#     '''
-#     for layer in B:
-#         block = layer[2][0] + layer[0] +  layer[2][1] 
-#         color = []
-#         for c in layer[3]:
-#             if c[0] == 'p':
-#                 color.append('green')
-#             elif c[0] == 'i':
-#                 color.append('red')
-            
-
-
-# the displaying of the qubits will be done in a manner different to what is done in the mathematica file. 
-
-
-
-'''
-The layered circuits has been arranged in processing blocks. 
-Now, given this setup we can improve upon it using local search algorithms to approximate the ideal placement of the qubits in the individual processing zones. 
-
-What we have now is a list of Processing blocks. So a list of lists of qubits. 
-The goal now is to rearrange the qubits in each processing block in such a way that the total number of rearragemets during the actual measuring procedure is minimized. 
-
-For this, we define a metric that is guiding the minimization process. 
-
-
-The way we approach this optimization problem is: 
-0. A function returns a list of Y positions. 
-1. We compute the total rearrangement cost for all the processing blocks. At this point we restrict ourselves to associating the qubits solely to their y positions. 
-2. Updatestepfunction: swaps the position of two given qubits and returns the list of Y positions as well as the updated total rearrangement cost. 
-3. A function ImprovePlacement 
-
-
-
-The next step is setting up a tabu search algorithm. 
-
-
-And the last step is to set up an algorithm that alterantes between tabu search and deterministic search. 
-
-
-'''
-
-
-def computeArrangements(BP, Nq, Fsizes, Qmax, Mmax):
-    '''
-    This function returns a list of Y positions based on the structure of the list of processing blocks B 
-    '''
-    
-
-    numsteps = len(BP)
-
-    # Sequence of Y positions 
-    Y = []
-
-    for step in range(numsteps):
-        SP = BP[step][1]
-        c  = BP[step][4]
-        YList = [0] * Nq
-
-        # 
-        for q in range(Nq):
-            YList[q] = qubitPlacement()
-        Y.append(YList)
-
-    return Y 
-
-
-
-def computeTotalCost(Y, Nq, BP):
-    '''
-    The rearrangement cost is computed based on a metric as follows: 
-
-
-    Given: 
-    Y:  A sequence of Y positions, corresponding to all the qubits in the circuit 
-    Nq: Number of qubits in the circuit 
-
-    Returns:
-    total rearrangement cost (int)
-
-
-    '''
-
-    numSteps = len(BP)
-
-    totCost = 0
-
-    for step in range(numSteps):
-
-        # look at layers step and step+1
-        Yc = Y[step]
-        Yf = Y[step + 1]
-
-        # iterate over y positions in both layers 
-        # if y position of the qi-th qubit in layer step is not the same as of the qi-th qubit in layer step+1, add their y distance squared to the total cost 
-        for qi in range(Nq):
-            totCost += (Yc[qi] - Yf[qi]) ** 2
-
-
-    # return total cost 
-    return totCost  
-
-
-def updateStep(Y, step, numSteps, q1, q2, totCost):
-    '''
-    Given ..., this function returns a Y list that has qubits q1 and q2 in step step. 
-    '''
-
-    newCost = totCost
-
-    if step > 1: 
-        costNew -= (Y[step][q1] - Y[step - 1][q1])^2 + (Y[step][q2] - Y[step - 1][q2]) ** 2
-
-    if step < numSteps: 
-        newCost -= ( Y[step][q1] - Y[step+1][q1] ) ** 2 + (Y[step][q2] - Y[step+1][q2]) ** 2
-    
-    Ynew = Y[step]
-
-    # swap q1 and q2 in Y[step]
-    temp = Ynew[q1] 
-    Ynew[q1] = Ynew[q2]
-    Ynew[q2] = temp
-
-    # if step 
-
-
-
-
-def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
-    '''
-    This function improves the placement of the qubits, subsequently minimizing the metric used in the function 
-    computeTotalCost()
-    
-    Given: 
-    BP: 
-    Nq: 
-
-
-    '''
-    return True
 
 
 
