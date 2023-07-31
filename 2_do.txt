@@ -1,0 +1,6 @@
+
+
+Translate everything into numpy 
+
+Make the deterministic optimization 
+
