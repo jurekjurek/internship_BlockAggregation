@@ -7,6 +7,16 @@ import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 
 
+
+# Recursive function to convert nested list to NumPy array
+def convert_to_np_array(nested_list):
+    if isinstance(nested_list, list):
+        return np.array([convert_to_np_array(sublist) for sublist in nested_list])
+    else:
+        return nested_list
+
+
+
 def LayerCircuit(Nq, circ, search_horizon = 10):
     '''
     This function creates a list of layers with mutually commuting gates inside. 
@@ -26,6 +36,8 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
         layer = []
         blockedqubits = []
         g = 0
+
+
 
         # iterate over elements in the circuit and fill the layers with mutually commuting gates
         while len(blockedqubits) != Nq and g < len(circ):
@@ -59,10 +71,14 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
             # now, for the next layer 
             g += 1
         
-        LayeredCircuit.append(sorted(layer))
-        LayeredCircuit_np = np.array(LayeredCircuit)
+        
 
-    return LayeredCircuit_np
+        LayeredCircuit.append(sorted(layer))
+
+    
+    LayeredCircuit_ = convert_to_np_array(LayeredCircuit)
+
+    return LayeredCircuit_
 
 
 
@@ -73,11 +89,27 @@ def show_layeredCircuit(Nq, circ, layeredcirc):
     q_a = QuantumRegister(Nq, name='q')
     circuit = QuantumCircuit(q_a)
     for i in range(len(layeredcirc)):
-        for g in layeredcirc[i]:
 
-            circuit.cz(q_a[circ[g][1][0]-1], q_a[circ[g][1][1]-1], label=str(g+1))
+        print("TESTETSETSTETSTTETS:")
+        print(layeredcirc[i])
+
+        for g in range(len(layeredcirc[i])):
+
+            gate = layeredcirc[i][g][0]
+            # print('test', gate)
+
+            q1 = layeredcirc[i][g][1][0]
+            q2 = layeredcirc[i][g][1][1]
+
+            print('the qubits are: ', q1, q2)
+
+            # circuit.cz(q_a[circ[gate][1][0]-1], q_a[circ[gate][1][1]-1], label=str(g+1))
+            circuit.cz(q1, q2, label=str(gate+1))
+
+
         circuit.barrier()
     circuit.draw(output='mpl', justify='none', fold = 50)
+    plt.title("Circuit arranged in layers \n")
     plt.show()
     # print(circuit)
 

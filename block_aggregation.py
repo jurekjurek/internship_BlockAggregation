@@ -36,12 +36,9 @@ circuit_of_qubits = random_circuit(10, 20)
 # show_circuit(10,circuit_of_qubits)
 
 layeredcircuit = LayerCircuit(10, circuit_of_qubits)
-
+# print(layeredcircuit)
 # show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
-print(layeredcircuit)
-print(np.shape(layeredcircuit))
-print(type(layeredcircuit))
-exit()
+
 
 '''
 Now that we have the layered circle going, we can focus on the block aggregation. 
@@ -99,13 +96,13 @@ def EvaluateGateCoverage(S, G, Nq, Qmax, Mmax):
 
 
 
-def InitBlockAggregation():
-    S = []
-    G = []
-    c = []
-    S_b = []
-    G_b = []
-    return S, G, c, S_b, G_b
+# def InitBlockAggregation():
+#     S = []
+#     G = []
+#     c = []
+#     S_b = []
+#     G_b = []
+#     return S, G, c, S_b, G_b
 
 
 '''
@@ -128,13 +125,19 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
     # The s list, the list containing the qubits, will be initialized as follows: S = [[1],[2],...], so the first qubit set contains only the first qubit, the second set only the second qubit and so on
     S = [[n] for n in range(Nq)]
 
+
     # same for the gate coverage sets
     G = [[] for _ in range(Nq)]
+    G_test = [[None] for _ in range(Nq)]
+    G_np = np.array(G_test)
+    # print(np.shape(G_np))
+    # G_np = np.full(Nq, np.array([None]), dtype=object)
 
     # also the pointer variables will be initialized, in the beginning cn = n, because every qubit has its own set S_n, later the sets will get merged and more qubits will have the same cn
     ctbl = [n for n in range(Nq)]
 
 
+    # shall be overwritten quickly, 
     S_best = []
     G_best = []
 
@@ -166,11 +169,16 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
 
             # print('Corresponding pointers to qubit sets: ', cn, cm)
             
-            # append gate (which is just a number) to gate coverage set of qubit set corresponding to cn
+            # append gate (which is not just a number) to gate coverage set of qubit set corresponding to cn
             if G[cn] != []:
                 G[cn].append(gate[0])
             if G[cn] == []:
                 G[cn] = [gate[0]]
+            
+            print(G_np[cn], G_np, gate[0])
+            G_np[cn] = gate[0]
+
+            print(G_np[cn], G_np, gate[0], type(G_np), np.shape(G_np))
 
             # if cn and cm are equal, meaning they are part of the same qubit set, continue
             if cn == cm: 
@@ -190,6 +198,19 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
             # Remember: Gate n connects qubits n and m, so we dont have to append the gate to G[cm] as well, if we did, we would have it twice 
             G[cn] = G[cn] + G[cm]
 
+            # a = np.array(G_np[cn])
+            # b = np.array(G_np[cm])
+
+
+            # print(a, b)
+            if G_np[cn] != None and G_np[cm] != None: 
+                print('Want to concatenate:', G_np[cn], G_np[cm])
+                np.concatenate((G_np[cn], G_np[cm])) 
+        
+            # G_np[cn] = np.append(G_np[cn], temp_np)
+
+
+
             # All the pointers that belonged to the qubits in set S[cm] will now be pointing to set S[cn]
             for i in range(len(S[cm])):
 
@@ -201,6 +222,9 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
 
             # The gate coverage set corresponding to Set cm is emptied, because it was merged above
             G[cm] = []
+            G_np[cm] = [None]
+
+            # G_np[cm] = np.empty(1)
 
             # print('the list looks like this:', S)
             # print('the gatelist looks like this:', G)
@@ -214,7 +238,7 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
             if cn > 0:
 
                 # we want to move S[cn] to the appropriate position in S. Compare to the element that is one element after it in the list. If it is bigger, move S[cn] up one element
-                while len(S[cn]) > len(S[cn-1]) and cn != 0:
+                while (len(S[cn]) > len(S[cn-1]) and cn != 0) or G[cn-1] == None:
                     
                     # in the pointer list ctbl, assign cn to all elements that are assigned cn - 1
 
@@ -287,6 +311,8 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
 
                 print('Termination condition reached!')
                 # function returns S_best and G_best, because we're running out of space 
+
+                print(np.shape(G_best))
                 return S_best, G_best, gatecoverage_list
             
             zoneCtr = 1
@@ -312,8 +338,12 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
                 
 
                 # also, this particular constellation of Qubit sets and of Gate sets are updatet as the best ones so far 
-                S_best = S.copy()
-                G_best = G.copy()
+                # S_best = S.copy()
+                # G_best = G.copy()
+
+                S_best = np.copy(S)
+                G_best = np.copy(G)
+
 
     return S_best, G_best, gatecoverage_list        
             
@@ -321,6 +351,10 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
 
 S_best, G_best, GC_list = AggregateBlocksStep(layeredcircuit, 10, 4, 1)
 
+print(np.shape(G_best))
+print(G_best)
+
+exit()
 
 # Plot the blockaggregation procedure  
 
