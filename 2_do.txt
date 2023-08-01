@@ -6,3 +6,7 @@ Make the deterministic optimization
 
 What I want: 
 [np.array(type object), ..., np.array(type object)]
+
+
+Fahrplan: erstmal den ganzen Bums mit listen machen... 
+
