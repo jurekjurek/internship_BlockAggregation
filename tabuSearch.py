@@ -14,10 +14,10 @@ def reconstructBlocksFromArrangements(BP, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl, s
 
 def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, swapNumMax, processingZoneSwapFraction, greedySpread, soreAllBestBP, echo):
 
+
+    # initialize all variables
     numF = len(Fsizes)
 
     numSteps = len(BP)
-
-    idlePools = []
 
     

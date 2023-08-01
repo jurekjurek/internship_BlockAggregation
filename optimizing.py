@@ -77,12 +77,11 @@ def computeArrangements(B, Fsizes, Qmax):
 
     return y
 
+# list of y positions is returned correctly 
 y_list = computeArrangements(B, Fsizes, 4)
 
 print(np.shape(y_list))
 print(y_list)
-
-
 
 
 def computeTotalCost(Y, Nq):
@@ -126,10 +125,10 @@ def computeTotalCost(Y, Nq):
 # test total cost calculation
 
 totalCost = computeTotalCost(y_list, 10)
-print(totalCost)
+print('totalcost:',totalCost)
 
 
-
+# exit()
 
 
 def updateStep(Y, step, q1, q2, totCost):
@@ -171,13 +170,14 @@ def updateStep(Y, step, q1, q2, totCost):
     
     return newCost, Y
 
-print(y_list)
+print(y_list, totalCost)
 
 newCost, Y_new = updateStep(y_list, 2, 2, 3, totalCost)
 
+print(Y_new, newCost)
 
-print(Y_new)
 
+# exit()
 
 def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     '''
@@ -241,7 +241,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
         SPp, GPp, FPp, cp = bNew[step-1]
 
         # if we have not reached the end of the blocks yet, also define the right partner
-        if step < len(BP):
+        if step < len(BP)-1:
             SPf, GPf, FPf, cf = bNew[step+1]
         
         # 1. swap idle qubits between storage zones
@@ -379,6 +379,41 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
             # in this step, we flatten a list, looks bad but it will look better when using np
             SPz = SP[z]
+            print(SPz)
+
+            # I actually dont understand why we have to flatten here, look at this again.
+
+            for z2 in range(Mmax):
+                if z == z2: 
+                    continue
+                
+                # in the code, this is again flattened 
+                SPz2 = SP[z2]
+
+                # in mathematica, this is one expression, using np probably too 
+                dist = 0
+                for qi in range(Qmax):
+                    dist += ( Y[step, SPz[qi]] - Y[step-1, SPz[qi]] )**2 + ( Y[step, SPz2[qi]] - Y[step-1, SPz2[qi]] )**2
+
+                # now, the same for distswap
+                distswap = 0
+                for qi in range(Qmax):
+                    distswap += ( Y[step, SPz2[qi]] - Y[step-1, SPz[qi]] )**2 + ( Y[step, SPz[qi]] - Y[step-1, SPz2[qi]] )**2
+                
+
+                if distswap < dist:
+
+                    # change the two qubits in the new B: 
+                    # bNew[step][]
+
+                    for qi in range(Qmax):
+                        bNew[step][4][SPz[qi]][2] = z2
+                        bNew[step][4][SPz2[qi]][2] = z
+                        costTot, Y[step] = updateStep(Y, step, numSteps, SPz[qi], SPz2[qi], costTot)
+
+                    break
+
+                
 
             # just switch to numpy at this point... 
 
@@ -390,13 +425,76 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
         # 4. Swap qubits within processing zones to minimize swaps
 
+        for z in range(Mmax):
+            SP, GP, FP, c = bNew[step]
+            
+            # this was also flattened 
+            SPz = SP[z]
+
+            q = SPz[qi]
+
+            k = c[q][3]
+
+            zp = cp[q][2]
+
+            s1p = cp[q][1]
+
+            kp = cp[q][3]
 
 
+            if s1p != 'p' or zp != z:
+                continue 
+
+            for qi2 in range(len(SPz)):
+                if qi == qi2: 
+                    continue
+
+                q2 = SPz[qi2]
+
+                if q2 == q: 
+                    continue
+
+                s12p = cp[q2][1]
+                z2p  = cp[q2][2]
+
+                # if q2 not in same processing zone in previous step, do not swap 
+                if s12p != 'p' or z2p != z: 
+                    continue 
+
+                k2 = c[q2][3]
+
+                k2p = cp[q2][3]
+
+                dist = (k-kp)**2 + (k2-k2p)**2
+
+                distSwap = (k-k2p)**2 + (k2-kp)**2
+
+                if echo == True: 
+                    print(" candidates - z: ", z, " zprev: ", zp, " z2prev: ", z2p, " q: ", q, " q2: ", q2)
 
 
+                # if we cant improve, just keep going 
+                if not (distSwap < dist):
+                    continue
 
 
-    return True
+                if echo == True:
+                    print("  swap found - dist: ", dist, " distSwap: ", distSwap)
+
+                bNew[step][4][q][3] = k2
+
+                bNew[step][4][q2][3] = k
+
+                costTot, Y[step] = updateStep(Y, step, numSteps, q, q2, costTot)
+
+                break 
+
+    # here, more parameters are returned in the future 
+    return bNew    
+
+
+improvePlacement(B, 10, Fsizes, 4, 1, True)
+
 
 
 
