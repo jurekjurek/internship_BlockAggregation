@@ -354,7 +354,6 @@ S_best, G_best, GC_list = AggregateBlocksStep(layeredcircuit, 10, 4, 1)
 print(np.shape(G_best))
 print(G_best)
 
-exit()
 
 # Plot the blockaggregation procedure  
 
