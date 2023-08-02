@@ -16,6 +16,20 @@ In this file, the so called tabu search is performed.
 
 
 
+
+'''
+General note: 
+
+manchmal habe ich nicht auf dem Schirm, ob funktionen schon die debugging sachen (die listen zum plotten zum Beispiel) mit zuruckgeben, 
+daran koennte es also immer liegen 
+
+
+'''
+
+
+
+
+
 def reconstructBlocksFromArrangements(BP, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl, s1Tbl, s2Tbl):
 
     bNew = []
@@ -445,192 +459,75 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     return bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr
             
 
+'''
+Now, for the alternating optimization.
 
+'''
 
+def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSiterations, TSlen, echo, visualOutput):
+    bNew = BP 
 
-            
+    totalBestCostTbl = [[] for _ in range(2 * numOptimizationSteps)]
 
+    grPtbl = [[] for _ in range(2 * numOptimizationSteps)]
 
+    grPBest = []
 
+    YTemp = computeArrangements(bNew, Nq, Fsizes, Qmax, Mmax)
 
+    costTotInitial = computeTotalCost(YTemp, Nq)
 
+    costTotBest = 10 ** 9 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-               
-
-            
-
-            While[stepp <= numSteps, {
-              
-              
-              }];
-            
-            stepp = step - 1;
-            While[stepp > 1, {
-              
-              If[s2Tbl[[step, swapQBLists[[ssi]]]] != 
-                 s2Tbl[[stepp, swapQBLists[[ssi]]]] || 
-                zonesTbl[[step, swapQBLists[[ssi]]]] != 
-                 zonesTbl[[stepp, swapQBLists[[ssi]]]], Break[]];
-              Yc = YBestUpdate[[stepp]];
-              Yp = YBestUpdate[[stepp - 1]];
-              
-              If[stepp < numSteps, Yf = YBestUpdate[[stepp + 1]], 
-               Yf = Table[0, Nq]];
-              
-              deltaCost2 = 
-               2 (Yp[[swapQBLists[[ssi]]]] + 
-                   Yf[[swapQBLists[[ssi]]]]) . (Yc[[
-                    swapQBLists[[ssi]]]] - 
-                   Yc[[swapQBListsSwapped[[ssi]]]]);
-              If[deltaCost2 < 0, {
-                deltaCostBestLocal += deltaCost2;
-                
-                YBestUpdate[[stepp, swapQBLists[[ssi]]]] = 
-                 YBestUpdate[[stepp, swapQBListsSwapped[[ssi]]]];
-                
-                zonesTblBestUpdate[[stepp, swapQBLists[[ssi]]]] = 
-                 zonesTblBestUpdate[[stepp, 
-                  swapQBListsSwapped[[ssi]]]];
-                
-                s1TblBestUpdate[[stepp, swapQBLists[[ssi]]]] = 
-                 s1TblBestUpdate[[stepp, swapQBListsSwapped[[ssi]]]];
-                
-                For[sqbi = 1, sqbi <= Length[swapQBLists[[ssi]]], 
-                 sqbi++,
-                 sqb = swapQBLists[[ssi, sqbi]];
-                 If[
-                  s1TblBestUpdate[[stepp, sqb]] == "i" && 
-                   s2TblBestUpdate[[stepp, sqb]] == "a", 
-                  Print["  ERROR in greedy expansion, step: ", step, 
-                   " stepp: ", stepp, " sqb: ", sqb, " swaptbl: ", 
-                   swapQBLists[[ssi]], " s2tbl: ", 
-                   s2Tbl[[step, swapQBLists[[ssi]]]], " s2tbl 2: ", 
-                   s2Tbl[[step, swapQBLists[[ssi]]]]]]; 
-                 ];
-                }, stepp = 1];
-              stepp--;
-              }];
-            
-            Break[];
-            ];
-           
-           If[flag == False, noUpdateCtr++];
-           If[flag == True, {
-             TSlist[[TSfill]] = YBestUpdate;
-             TSfill++;
-             If[TSfill > TSlen, TSfill = 1];
-             
-             (update best values)
-             Y = YBestUpdate;
-             zonesTbl = zonesTblBestUpdate;
-             s1Tbl = s1TblBestUpdate;
-             s2Tbl = s2TblBestUpdate;
-             
-             costTot += deltaCostBestLocal;
-             If[costTot < costBest, {
-               costBest = costTot;
-               YBest = YBestUpdate;
-               zonesTblBest = zonesTblBestUpdate;
-               s1TblBest = s1TblBestUpdate;
-               s2TblBest = s2TblBestUpdate;
-               numImprovements++;
-               Sow[YBest, 1];
-               Sow[costBest, 2];
-               If[storeAllBestBP == True, {
-                 
-                 BPnew = ReconstructBlocksFromArrangements[BP, Fsizes,
-                    Qmax, Mmax, Nq, YBest, zonesTblBest, s1TblBest, 
-                   s2TblBest];
-                 Sow[BPnew, 3];
-                 }];
-               
-               If[swapProcessingZones == False,
-                
-                If[swapQBnum > 2, numImprovementMultiSwaps++, 
-                 numImprovementTwoSwaps++]];
-               
-               If[swapProcessingZones == True, 
-                numImprovementProcessingZonesSwaps++];
-               }, {
-               deltaCostBestLocal = 0;
-               }];
-             }];
-           costProgressTbl[[i]] = {i, costTot};
-           bestCostProgressTbl[[i]] = {i, costBest};
-           ];
-         ];
-      }];
-  
-  If[numImprovements == 0, {
-     BPnew = BP;
-     bestCostUpdateAll = {costBest};
-     If[echo == True, Print["NO IMPROVEMENT!!!"]];
-     }, {
-     TStime = TStime[[1]];
-     bestYAll = reapRes[[2, 1]];
-     bestCostUpdateAll = reapRes[[2, 2]];
-     bestBPTblAll = If[storeAllBestBP == True, reapRes[[2, 3]], {}];
-     BPnew = 
-      ReconstructBlocksFromArrangements[BP, Fsizes, Qmax, Mmax, Nq, 
-       YBest, zonesTblBest, s1TblBest, s2TblBest];
-     Ytemp2 = ComputeArrangements[BPnew, Nq, Fsizes, Qmax, Mmax];
-     costTotBest2 = ComputeTotalCost[Ytemp2, Nq];
-     If[Ytemp2 != YBest, Print["ERROR: Y table inconsistency"]];
-     }];
-  
-  If[echo == True, {
-     Print["Final best cost: ", costBest];
-     Print["Final best cost 2: ", costTotBest2];
-     Print["Number of improvements: ", numImprovements];
-     Print["MemberQ queries: ", memberQqueries];
-     Print["numImprovementTwoSwaps: ", numImprovementTwoSwaps];
-     Print["numImprovementMultiSwaps: ", numImprovementMultiSwaps];
-     Print["numProcessingZoneSwaps: ", numProcessingZoneSwaps];
-     Print["numImprovementProcessingZonesSwaps: ", 
-      numImprovementProcessingZonesSwaps];
-     }];
-  
-  {BPnew, costProgressTbl, bestCostProgressTbl, YBest, 
-   numImprovements, tabuCtr, noUpdateCtr, bestYAll, bestCostUpdateAll,
-    bestBPTblAll, TStime}
-  ];                 
-
-
-
-
-    
+    for optimizationstep in range(numOptimizationSteps): 
 
 
 
 
 
+        bNew, costTotTbl, bNewTbl = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
+
+        if echo == True: 
+            print('echo')
+
+        if visualOutput == True:
+            print('visualoutput')
+
+        bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(bNew, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 3, 0, False, visualOutput, False)
+
+        if echo == True: 
+            print('echo')
+
+        if visualOutput == True: 
+            print('visualoutput')
+
+        # still needs to be returned by tabusearch 
+        if bestCostUpdateAll[-1] < costTotBest:
+
+            if visualOutput == True: 
+                print('visualoutput')
+
+            # last element in list 
+            costTotBest = bestCostUpdateAll[-1]
+
+
+    # this gets flattened in the mathematica code 
+    grPtbl = grPtbl 
+
+    # this as well 
+    totalBestCostTbl = totalBestCostTbl
 
 
 
+    return grPBest, costTotBest, grPtbl, totalBestCostTbl, costTotInitial
 
 
 
+'''
+Alternating algorithm over 
 
-
+Now, the displaying shall be done. 
+'''
 
 
 
