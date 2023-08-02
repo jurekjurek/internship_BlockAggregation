@@ -10,11 +10,24 @@ from block_aggregation import *
 The layered circuits has been arranged in processing blocks. 
 Now, given this setup we can improve upon it using local search algorithms to approximate the ideal placement of the qubits in the individual processing zones. 
 
-What we have now is a list of Processing blocks. So a list of lists of qubits. 
+This programme starts with a variable B. This variable is composed as follows: 
+
+B = [[SP, GP, FP, c], ..., [SP,GP,FP,c]] where len(B) = number of processing blocks. 
+
+let us remind ourselves what exatly these different constituents are: 
+
+SP = contains the qubits in the processing zones 
+GP = contains the gates covered by these qubits 
+FP = contains qubits in the storage zones 
+c = {s, m, k, s'}, where: 
+    s = {'p', 'i'}:  indicates if q is stored in processing zone or idle pool 
+    m = {0, ...}  processing zone number 
+    k = {1, ...} position within processing zone or idle pool 
+    s'= {'a', 'i'} active or idle (within processing zone, the qubits in idle pool are always idle / inactive.)
+
 The goal now is to rearrange the qubits in each processing block in such a way that the total number of rearragemets during the actual measuring procedure is minimized. 
 
 For this, we define a metric that is guiding the minimization process. 
-
 
 The way we approach this optimization problem is: 
 0. A function returns a list of Y positions. 
@@ -233,8 +246,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
     '''
 
-    # why start at one? 
-    for step in range(1, numSteps):
+    # Iterate over the processing blocks, in original file we stared at one but I guess its fine 
+    for step in range(numSteps):
 
 
         # get information from previous step to compare to current step 
@@ -242,45 +255,58 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
         # if we have not reached the end of the blocks yet, also define the right partner
         if step < len(BP)-1:
+
+            # variables for the processing block on the right 
             SPf, GPf, FPf, cf = bNew[step+1]
         
         # 1. swap idle qubits between storage zones
+
+        # iterate over all the storage zones 
         for z in range(numF):
 
             SP, GP, FP, c = bNew[step]
 
-            # iterate over all idle qubits 
+            # iterate over all idle qubits in the z-th storage zone 
             for qi in range(len(FP[z])):
 
+                # qi-th qubit in z-th storage zone 
                 q = FP[z][qi]
 
-                zp = cp[q][2]
+                # processing/storage zone number of this qubit 
+                zp = cp[q][1]
 
-                s1p = cp[q][1]
+                # In what zone? 
+                s1p = cp[q][0]
 
-                if step < len(BP):
+                # processing zone number and zone indicator for qubit in the right processing block 
+                if step < len(BP)-1:
                     zf =  cf[q][2]
                     s1f = cf[q][1]
 
-                # if qubit is not idle, or we want to switch the same qubit, which is not possible
+                # if previous qubit is not idle, or the qubit in the previous processing block is in the same storage zone as the qubit in this processing block 
                 if s1p != 'i' or zp == z:
                     continue
 
-                # iterate over all storage zone qubits as possible swap partners 
+                # iterate over all previous storage zone qubits as possible swap partners 
                 for qi2 in range(len(FP[zp])):
                     q2 = FP[zp][qi2]
 
+                    # we cannot swap a qubit with itself 
                     if q2 == q: 
                         continue 
-
+                    
+                    # remember: z is processing zone number? 
                     z2p = cp[q2][2]
+
+                    # s indicates if in storage or processing zone 
                     s12p = cp[q2][1]
 
-                    if step < len(BP):
+                    # if we have not reached the rightmost layer, define z and s for the right neighbour as well 
+                    if step < len(BP)-1:
                         z2f = cf[q2][2]
                         s12f = cf[q2][1]
 
-
+                    # 
                     if z2p == zp and s12p == 'i':
                         continue
 

@@ -679,6 +679,17 @@ B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
 Plotting, trying, really ugly
 '''
 
+print('B is now:')
+c_total = []
+for i in range(len(B)):
+    print('step', i)
+    print('SP:', B[i][0])
+    print('GP:', B[i][1])
+    print('FP:', B[i][2])
+    print('c:', B[i][3])
+    c_total.append(B[i][3])
+    print('\n')
+
 def plot_and_print():
     print('B is now:')
     c_total = []
@@ -692,7 +703,7 @@ def plot_and_print():
         print('\n')
 
 
-    print(c_total)
+    # print(c_total)
 
     x = 0
     y = 0
