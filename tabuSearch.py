@@ -31,6 +31,10 @@ daran koennte es also immer liegen
 
 
 def reconstructBlocksFromArrangements(BP, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl, s1Tbl, s2Tbl):
+    '''
+    Returns: 
+        bNew: an updatet B-list 
+    '''
 
     bNew = []
 
@@ -85,7 +89,9 @@ def reconstructBlocksFromArrangements(BP, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl, s
 
 
 def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, swapNumMax, processingZoneSwapFraction, greedySpread, soreAllBestBP, echo):
-
+    '''
+    This function performs the Tabu search! 
+    '''
 
     # initialize all variables
     numF = len(Fsizes)
