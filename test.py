@@ -1,12 +1,13 @@
 import numpy as np
 
-G = [[] for _ in range(10)]
-G_np = np.array(G)
+QBTbl = [q for q in range(10)]
 
 
-print(np.shape(G_np))
-print(G_np)
 
-G_np[4] = 5
 
-print(G_np)
+a = [q for q in QBTbl if q%2==0]
+b = [q for q in QBTbl if q%2!=0]
+
+c = a+b
+d = [a+b]
+print(c, '\n', d)

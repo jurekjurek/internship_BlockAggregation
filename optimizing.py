@@ -338,13 +338,13 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     # swap q and q2 in bNew, a few lines, add later 
                     # 1. Swap values in the sublist at the 4th position of BPnew, corresponding to c 
-                    BPnew[step][3][q], BPnew[step][3][q2] = c[q2], c[q]
+                    bNew[step][3][q], bNew[step][3][q2] = c[q2], c[q]
 
                     # 2. Swap qubit indices in the sublist at the 3rd position of BPnew for 'z'
-                    BPnew[step][2][z] = [q2 if x == q else x for x in BPnew[step][2][z]]
+                    bNew[step][2][z] = [q2 if x == q else x for x in bNew[step][2][z]]
 
                     # 3. Swap qubit indices in the sublist at the 3rd position of BPnew for 'zp'
-                    BPnew[step][2][zp] = [q if x == q2 else x for x in BPnew[step][2][zp]]
+                    bNew[step][2][zp] = [q if x == q2 else x for x in bNew[step][2][zp]]
 
                     # swap q1 and q2 in Y and update the costTot
                     costTot, Y[step] = updateStep(Y, step, q, q2, costTot)
