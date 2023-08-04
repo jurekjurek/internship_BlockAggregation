@@ -724,14 +724,18 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
                 stepp -= 1 
 
             # this loop is breaked here:  for ssi in range(numPossibleSwaps)
+            # we do not iterate over the possible swaps anymore. In the algorithm, now we deal with what comes after the swapping, all the swapping is finished. Now, for the updating 
             break  
 
+        '''
+        Swapping is finished -> Updating 
+        '''
 
         # no update if flag == false
         if flag == False: 
             noUpdateCtr += 1 
 
-        # if flag == true, update tabu list 
+        # if flag == true, update tabu list and all the best lists, and gegebenenfalls bestcost 
         if flag == True: 
 
             # assign this Y to the corresponding element in the tabu list, why not just use append? 
@@ -800,6 +804,10 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
 
     # here is still a lot missing for I guess graphic and debugging purposes, first I have to try to understand this algorithm 
+
+    '''
+    All done 
+    '''
 
     return bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr
             
