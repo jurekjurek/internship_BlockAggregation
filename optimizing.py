@@ -91,10 +91,10 @@ def computeArrangements(B, Fsizes, Qmax):
     return y
 
 # list of y positions is returned correctly 
-y_list = computeArrangements(B, Fsizes, 4)
+# y_list = computeArrangements(B, Fsizes, 4)
 
-print(np.shape(y_list))
-print(y_list)
+# print(np.shape(y_list))
+# print(y_list)
 
 
 def computeTotalCost(Y, Nq):
@@ -137,8 +137,8 @@ def computeTotalCost(Y, Nq):
 
 # test total cost calculation
 
-totalCost = computeTotalCost(y_list, 10)
-print('totalcost:',totalCost)
+# totalCost = computeTotalCost(y_list, 10)
+# print('totalcost:',totalCost)
 
 
 # exit()
@@ -183,11 +183,11 @@ def updateStep(Y, step, q1, q2, totCost):
     
     return newCost, Y
 
-print(y_list, totalCost)
+# print(y_list, totalCost)
 
-newCost, Y_new = updateStep(y_list, 2, 2, 3, totalCost)
+# newCost, Y_new = updateStep(y_list, 2, 2, 3, totalCost)
 
-print(Y_new, newCost)
+# print(Y_new, newCost)
 
 
 # exit()
@@ -198,6 +198,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     computeTotalCost()
     this function will be referred to as the deterministic part of the optimization procedure. 
     
+    It just iterates over all the qubits and thei possible swapping partners and checks if a global cost metric is minimized upon each swap. 
+
     Given: 
     BP:     a list of Blocks and their corresponding variables S, G, c, 
     Nq:     Number of total qubits
@@ -250,11 +252,17 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     for step in range(numSteps):
 
 
-        # get information from previous step to compare to current step 
+         
+        # I added this if statement, I dont understand why we would not need this 
+        # I have to stil understand this 
+        if step == 0: 
+            continue 
+
+        # get information from previous step to compare to current step
         SPp, GPp, FPp, cp = bNew[step-1]
 
         # if we have not reached the end of the blocks yet, also define the right partner
-        if step < len(BP)-1:
+        if step < numSteps-1:
 
             # variables for the processing block on the right 
             SPf, GPf, FPf, cf = bNew[step+1]
@@ -266,41 +274,45 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
         1. swap idle qubits between storage zones
         '''
 
-        # iterate over all the storage zones 
+        # iterate over all the storage zones in the step-th processing block 
         for z in range(numF):
 
             SP, GP, FP, c = bNew[step]
 
-            # iterate over all idle qubits in the z-th storage zone 
+           
 
             # For all the qubits, we look at them in the processing blocks left and right to it. Why? 
             # To determine if it makes sense to swap them with qubits 
 
-            # We want to swap qubits q1 and q2 in step step. 
+            # We want to swap qubits q1 and q2 in block number step. 
             # Therefore, we examine a couple of things of q1 and q2 in the previous and next steps 
 
-
+            # iterate over all idle qubits in the z-th storage zone 
             for qi in range(len(FP[z])):
 
                 # qi-th qubit in z-th storage zone 
                 q = FP[z][qi]
 
-                # processing/storage zone number of the previous block! 
+                # processing/storage zone number of q1 in the previous block! 
                 zp = cp[q][1]
 
-                # in idle or processing zone in previous block? 
+                # is q1 in idle or in processing block in previous step? 
                 s1p = cp[q][0]
 
                 # processing zone number and zone indicator for qubit in the right processing block 
-                if step < len(BP)-1:
-                    zf =  cf[q][2]
-                    s1f = cf[q][1]
+                if step < numSteps-1:
+                    zf =  cf[q][1]
+                    s1f = cf[q][0]
 
                 # if previous qubit is not idle, or the qubit in the previous processing block is in the same storage zone as the qubit in this processing block 
                 if s1p != 'i' or zp == z:
                     continue
 
-                # iterate over all previous storage zone qubits as possible swap partners 
+                # Remember: What we check for is if the qubit was in the same storage zone in the block to the left. If so, this part of the swapping algorithm does not make any sense. 
+                # We want to swap qubits in *this* layer in such a way that they are in the *same* processing zone as they were before. 
+                # So, here we want to *achieve* zp == z. If this is already accomplished, continue. 
+
+                # iterate over all storage zone qubits of this block in the storage zone, in which the qubit sits in in the previous step 
                 for qi2 in range(len(FP[zp])):
 
                     # qubit two, the qubit we want to exchange qubit 1 with 
@@ -314,10 +326,11 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     z2p = cp[q2][2]
 
                     # Is qubit 2 in idle or in processing zone in previous step
+                    # Why do we do this? it is idle anyway 
                     s12p = cp[q2][1]
 
                     # if we have not reached the rightmost layer, define z and s for the right neighbour (next step) as well 
-                    if step < len(BP)-1:
+                    if step < numSteps-1:
 
                         # processing zone number and indication in which kind of zone for qubit 2 in next step 
                         z2f = cf[q2][2]
@@ -334,7 +347,9 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                             continue
                     
 
-                    # if none of the continues above have been executed, we swap qubit one and two in bNew and in the Y list 
+                    '''
+                    swap qubit one and two in bNew and in the Y list 
+                    '''
 
                     # swap q and q2 in bNew, a few lines, add later 
                     # 1. Swap values in the sublist at the 4th position of BPnew, corresponding to c 
@@ -353,13 +368,14 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
         
         '''
-        2. Swap idle qubits within idle zones to minimize swaps 
+        2.  Swap idle qubits within idle zones to minimize swaps 
+            Here, we have to keep in mind the position of the qubits *in* the processing zones. As opposed to above, where the only requirement was for the qubit to be in different processing zones over the blocks 
         '''
-        # similar to above, but we iterate twice over the same idle zone 
 
         # z is storage zone number! 
         for z in range(numF):
 
+            # THIS step!
             SP, GP, FP, c = bNew[step]
 
             # iterate over all idle qubits 
@@ -385,9 +401,10 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                 if s1p != 'i' or zp != z:
                     continue
 
-                # iterate over all qubits in the *same* storage zone as possible swap partners 
+                # iterate over all qubits in the *same* storage zone as possible swap partners (zp is now z)
                 for qi2 in range(len(FP[z])):
 
+                    # well, here it makes sense that we encounter q1 again
                     if qi == qi2: 
                         continue
 
@@ -444,6 +461,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     costTot, Y[step] = updateStep(Y, step, q, q2, costTot)
 
                     break 
+
 
 
         '''
@@ -533,11 +551,12 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
             # list of qubits in z-th processing zone 
             SPz = SP[z]
 
-            # iterate over all qubits in z-th processing zone 
+            
             ##############################################################################################################################
             # Ich habe wahrscheinlich noch nicht so ganz verstanden, warum wir einmal ueber Qmax und einmal ueber len(SPz) iterieren!!!! #
             ##############################################################################################################################
 
+            # iterate over all qubits in z-th processing zone 
             for qi in range(Qmax):
 
                 # i-th qubit in z-th processing zone 
@@ -555,7 +574,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                 # previous position in zone of qubit 
                 kp = cp[q1][2]
 
-                # if this qubit is not in a processing zone, for whatever reason or the storage zones between this and previous step did not change, no need to switch this qubit 
+                # if this qubit is not in a processing zone, for whatever reason or the processing zone numbers between this and previous step did not change, no need to switch this qubit #
+                # we would then first have to switch the processing zones anyway I guess 
                 if s1p != 'p' or zp != z:
                     continue 
 
@@ -579,7 +599,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     # processing zone number
                     z2p  = cp[q2][1]
 
-                    # if processing zone number of q1 is not the same as processing zone number of q2 in previous step, continue  
+                    # if processing zone number of q1 is not the same as processing zone number of q2 in previous step, continue. Same as above 
                     if s12p != 'p' or z2p != z: 
                         continue 
 
@@ -621,7 +641,13 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     return bNew    
 
 
-improvePlacement(B, 10, Fsizes, 4, 1, True)
+bTest = improvePlacement(B, 10, Fsizes, 4, 1, True)
+
+
+print(bTest)
+
+
+
 
 
 '''
