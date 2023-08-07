@@ -29,6 +29,7 @@ for layer in range(num_layers - 1):
         current_node = (layer, i)
         next_node = (layer + 1, i)
         G.add_edge(current_node, next_node)
+        
 
 # Create node positions based on layers and zones
 pos = {}

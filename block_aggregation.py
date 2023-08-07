@@ -771,7 +771,36 @@ def plot_and_print(B):
 
 plot_and_print(B)
 
+def visualize_blocks(B):
 
+    # extract c from B
+    c_total = []
+    for i in range(len(B)):
+        c_total.append(B[i][3])
+
+    G = nx.Graph() 
+
+    # add nodes 
+    for layer_no in range(len(B)):
+        for qb_no in range(len(B[layer_no])):
+
+            if c[layer_no][qb_no][0] == 'i':
+                G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
+
+            elif c[layer_no][qb_no][0] == 'p': 
+                if c[layer_no][qb_no][3] == 'i':
+                    G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
+                elif c[layer_no][qb_no][3] == 'a':
+                    G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
+
+
+
+    node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
+    plt.figure(figsize=(10, 8))
+    nx.draw(G, node_size=400, node_color=['blue' if G.nodes[node]['zone'] == 'storage' else 'red' for node in G.nodes()], labels=node_labels, with_labels=True)
+    plt.title("Layered Node Visualization with Corrected Zones")
+    plt.show()                
+    return None 
 
 
 
