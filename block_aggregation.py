@@ -676,124 +676,44 @@ B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
 
 
 '''
-Plotting, trying, really ugly
+Displaying 
 '''
 
-# print('B is now:')
-# c_total = []
-# for i in range(len(B)):
-#     print('step', i)
-#     print('SP:', B[i][0])
-#     print('GP:', B[i][1])
-#     print('FP:', B[i][2])
-#     print('c:', B[i][3])
-#     c_total.append(B[i][3])
-#     print('\n')
-
-
-
-def plot_and_print(B):
-    # print('B is now:')
-    c_total = []
-
-
-    for i in range(len(B)):
-        # print('step', i)
-        # print('SP:', B[i][0])
-        # print('GP:', B[i][1])
-        # print('FP:', B[i][2])
-        # print('c:', B[i][3])
-        c_total.append(B[i][3])
-        # print('\n')
-
-
-    # print(c_total)
-
-    x = 0
-    y = 0
-
-    node_groups = {}
-    plt.figure()
-
-
-    for layer in c_total: 
-        for q_no in range(len(layer)):
-            q = layer[q_no]
-
-            number = str(q_no)  # Adding 1 to q_no to start numbering from 1
-
-            if number in node_groups:
-                node_groups[number].append((x, y))
-            else:
-                node_groups[number] = [(x, y)]
-
-            if q[0] == 'p':
-                # plot green node at position pos(processing zone 1) + q[2]
-                y = -3 - q[2]
-                if q[3] == 'i':
-                    plt.scatter(x, y, color='blue', s=400)
-                elif q[3] == 'a':
-                    plt.scatter(x, y, color='green', s=400)
-                plt.annotate(str(q_no), (x, y), ha='center', va='center')
-
-                # print('p')
-            elif q[0] == 'i':
-                # plot red node at position q[1] * pos(storage zone)
-                y = q[1]*-7 - q[2]
-                plt.scatter(x, y, color='red', s=400)
-                plt.annotate(str(q_no), (x, y), ha='center', va='center')
-
-                # print('s')
-            
-
-            # shift position of plotting to the right 
-        x += 1
-
-    # for number, positions in node_groups.items():
-    #     sorted_positions = sorted(positions, key=lambda pos: pos[1])
-    #     x_values, y_values = zip(*sorted_positions)
-    #     plt.plot(x_values, y_values, marker='o', label=f'Node {number}')
-
-    # Connect nodes between neighboring layers
-    for i in range(len(c_total) - 1):
-        for number, positions in node_groups.items():
-            current_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i]
-            next_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i + 1]
-
-            for pos1 in current_layer_positions:
-                closest_pos2 = min(next_layer_positions, key=lambda pos2: abs(pos2[1] - pos1[1]))
-                plt.plot([pos1[0], closest_pos2[0]], [pos1[1], closest_pos2[1]], color='black')
-
-    plt.title('Qubits arranged in Processing zones \n')
-    plt.axis('off')
-    plt.show()
-
-# plot_and_print(B)
-
-
 def visualize_blocks(B):
+    '''
+    Given a list B, this function plots the qubits in the corresponding processing blocks. Same qubits are connected to each other between neighbouring layers. 
+
+    Accepts: 
+        B:          List of interest in optimization procedure 
+    Returns: 
+        Nothing 
+
+    '''
 
     # extract c from B
     c_total = []
     for i in range(len(B)):
         c_total.append(B[i][3])
 
-
-
-    print(type(c_total[0][0]))
-    print('shape of c list: ', np.shape(c_total))
-
+    # Graph 
     G = nx.Graph() 
 
     
 
-    # add nodes 
+    # add nodes for all the qubits in the different layers 
+    # every qubit gets assigned a zone keyword indicating in what zone it is and a label keyword indicating what number qubit it is. Also a layer number indicating what layer it is in. 
+
+    # iterate over blocks 
     for layer_no in range(len(c_total)):
+
+        # iterate over qubits in block 
         for qb_no in range(len(c_total[layer_no])):
 
+            # if in storage zone, add with corresponding label and zone keyword 
             if c_total[layer_no][qb_no][0] == 'i':
                 G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
 
+            # if in storage zone, add with corresponding label and zone keyword, remember: qbs can still be idle in processing zone, so we have to differentiate 
             elif c_total[layer_no][qb_no][0] == 'p': 
 
                 if c_total[layer_no][qb_no][3] == 'i':
@@ -804,38 +724,55 @@ def visualize_blocks(B):
 
             print(G.nodes())
 
+    # assign positions to all the qubits 
     pos = {}
-    print(G.nodes(), len(G.nodes()))
     for node in G.nodes():
+
+        # node is a tuple, node = (layer_number, node_number)
         layer_idx, node_idx = node
-        zone = G.nodes[node]['zone']
+        
+        # x position is just the layer number 
         x = layer_idx
 
+        # depending if in storage, or processing zone, assign y coordinates 
+        # storage zone 
         if c_total[layer_idx][node_idx][0] == 'i':
             y = c_total[layer_idx][node_idx][1]*-7 - c_total[layer_idx][node_idx][2]
 
+        # processing zone 
         elif c_total[layer_idx][node_idx][0] == 'p':
             y = -3 - c_total[layer_idx][node_idx][2]
+
+        # pos is a dictionary, pos((processingblock_number, qubit_number) = (x, y)). 
+        # pos stores this for all the qubits in all the blocks 
 
         pos[node] = (x, y)
 
 
+    # add edges 
+    # We always add an edge between a qubit and the one in the layer next to it on the right. So, for the rightmost layer, we do not have to add an edge.
     for layer_no in range(len(c_total)-1):
         for qb_no in range(len(c_total[layer_no])):
+
+            # current node is tuple
             current_node = (layer_no, qb_no)
+
+            # want to find the node in the layer next to it on the right that has the same label (corresponds to the same qubit)
             for qb_no_ in range(len(c_total[layer_no+1])):
+
+                # if we found the qubit with the same label 
                 if G.nodes[current_node]['label'] == G.nodes[(layer_no+1, qb_no_)]['label']:
                     next_node = (layer_no + 1, qb_no_) 
 
+                    # add an edge connecting these two nodes to the graph 
                     G.add_edge(current_node, next_node)
 
-
+    # clarifying that the label keyword is actually the label that we want to use 
     node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
     plt.figure(figsize=(10, 8))
     nx.draw(G, pos, node_size=400, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
-    plt.title('Layered Node Visualization with Corrected Zones')
-    plt.show()                
-    return None 
+    plt.title('Qubits in processing blocks \n')
+    plt.show()       
 
 
 # visualize_blocks(B)
