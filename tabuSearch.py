@@ -8,9 +8,6 @@ from optimizing import *
 
 '''
 In this file, the so called tabu search is performed. 
-
-
-
 '''
 
 
