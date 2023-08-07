@@ -662,9 +662,9 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     # all that is exchanged between those two qubits is the position inside the processing zone. This is the only part of the pointerlist c that we have to update 
 
                     # save a copy... 
-                    # k_temp = k 
+                    k_temp = k 
                     bNew[step][3][q1][2] = k2
-                    bNew[step][3][q2][2] = k
+                    bNew[step][3][q2][2] = k_temp
 
                     costTot, Y[step] = updateStep(Y, step, q1, q2, costTot)
 
