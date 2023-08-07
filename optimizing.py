@@ -477,7 +477,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     # swap qubits in storage zones (B = [[SP, GP, FP, c], ..., []]), so third element in B 
                     q_temp = q
                     q2_temp = q2
-                    bNew[step][2][z][qi] = q2
+                    bNew[step][2][z][qi] = q2_temp
                     bNew[step][2][z][qi2] = q_temp
                     
                     # update total cost and swap qubits in Y list 
