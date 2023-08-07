@@ -795,16 +795,28 @@ def visualize_blocks(B):
                 G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
 
             elif c_total[layer_no][qb_no][0] == 'p': 
+
                 if c_total[layer_no][qb_no][3] == 'i':
                     G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
+
                 elif c_total[layer_no][qb_no][3] == 'a':
                     G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
 
+    pos = {}
+    for node in G.nodes():
+        layer, node_idx = node
+        zone = G.nodes[node]['zone']
+        x = layer
+        if zone == 'storage':
+            y = c_total[layer_no][node][1]*-7 - c_total[layer_no][node][2]
+        elif zone == 'processing':
+            y = -3 - c_total[layer_no][node][2]
 
+        pos[node] = (x, y)
 
     node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
     plt.figure(figsize=(10, 8))
-    nx.draw(G, node_size=400, node_color=['blue' if G.nodes[node]['zone'] == 'storage' else 'red' for node in G.nodes()], labels=node_labels, with_labels=True)
+    nx.draw(G, pos, node_size=400, node_color=['blue' if G.nodes[node]['zone'] == 'storage' else 'red' for node in G.nodes()], labels=node_labels, with_labels=True)
     plt.title("Layered Node Visualization with Corrected Zones")
     plt.show()                
     return None 
