@@ -679,22 +679,24 @@ B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
 Plotting, trying, really ugly
 '''
 
-print('B is now:')
-c_total = []
-for i in range(len(B)):
-    print('step', i)
-    print('SP:', B[i][0])
-    print('GP:', B[i][1])
-    print('FP:', B[i][2])
-    print('c:', B[i][3])
-    c_total.append(B[i][3])
-    print('\n')
+# print('B is now:')
+# c_total = []
+# for i in range(len(B)):
+#     print('step', i)
+#     print('SP:', B[i][0])
+#     print('GP:', B[i][1])
+#     print('FP:', B[i][2])
+#     print('c:', B[i][3])
+#     c_total.append(B[i][3])
+#     print('\n')
 
 
 
 def plot_and_print(B):
     # print('B is now:')
     c_total = []
+
+
     for i in range(len(B)):
         # print('step', i)
         # print('SP:', B[i][0])
@@ -712,9 +714,6 @@ def plot_and_print(B):
 
     node_groups = {}
     plt.figure()
-
-    print(c_total)
-    print(np.shape(c_total))
 
 
     for layer in c_total: 
@@ -769,7 +768,8 @@ def plot_and_print(B):
     plt.axis('off')
     plt.show()
 
-plot_and_print(B)
+# plot_and_print(B)
+
 
 def visualize_blocks(B):
 
@@ -778,19 +778,26 @@ def visualize_blocks(B):
     for i in range(len(B)):
         c_total.append(B[i][3])
 
+
+
+    print(type(c_total[0][0]))
+    print('shape of c list: ', np.shape(c_total))
+
     G = nx.Graph() 
+
+    
 
     # add nodes 
     for layer_no in range(len(B)):
         for qb_no in range(len(B[layer_no])):
 
-            if c[layer_no][qb_no][0] == 'i':
+            if c_total[layer_no][qb_no][0] == 'i':
                 G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
 
-            elif c[layer_no][qb_no][0] == 'p': 
-                if c[layer_no][qb_no][3] == 'i':
+            elif c_total[layer_no][qb_no][0] == 'p': 
+                if c_total[layer_no][qb_no][3] == 'i':
                     G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
-                elif c[layer_no][qb_no][3] == 'a':
+                elif c_total[layer_no][qb_no][3] == 'a':
                     G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
 
 
@@ -803,7 +810,7 @@ def visualize_blocks(B):
     return None 
 
 
-
+visualize_blocks(B)
 
 
 
