@@ -713,6 +713,9 @@ def plot_and_print(B):
     node_groups = {}
     plt.figure()
 
+    print(c_total)
+    print(np.shape(c_total))
+
 
     for layer in c_total: 
         for q_no in range(len(layer)):
@@ -734,7 +737,7 @@ def plot_and_print(B):
                     plt.scatter(x, y, color='green', s=400)
                 plt.annotate(str(q_no), (x, y), ha='center', va='center')
 
-                print('p')
+                # print('p')
             elif q[0] == 'i':
                 # plot red node at position q[1] * pos(storage zone)
                 y = q[1]*-7 - q[2]
@@ -766,7 +769,7 @@ def plot_and_print(B):
     plt.axis('off')
     plt.show()
 
-# plot_and_print(B)
+plot_and_print(B)
 
 
 

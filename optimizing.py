@@ -663,7 +663,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     # save a copy... 
                     # k_temp = k 
-                    bNew[step][3][q1][2] = k2
+                    bNew[step][3][q1][2] = k2git
                     bNew[step][3][q2][2] = k
 
                     costTot, Y[step] = updateStep(Y, step, q1, q2, costTot)

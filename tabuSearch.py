@@ -209,6 +209,8 @@ def reconstructBlocksFromArrangements(BPold, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl
 
 
 
+
+
 '''
 We can now update a B list given an old B list and a 'new' Y list that has been created by the tabu search. 
 Now for the actual tabu search. 
