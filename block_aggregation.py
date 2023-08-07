@@ -788,8 +788,8 @@ def visualize_blocks(B):
     
 
     # add nodes 
-    for layer_no in range(len(B)):
-        for qb_no in range(len(B[layer_no])):
+    for layer_no in range(len(c_total)):
+        for qb_no in range(len(c_total[layer_no])):
 
             if c_total[layer_no][qb_no][0] == 'i':
                 G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
