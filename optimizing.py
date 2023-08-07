@@ -663,7 +663,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     # save a copy... 
                     # k_temp = k 
-                    bNew[step][3][q1][2] = k2git
+                    bNew[step][3][q1][2] = k2
                     bNew[step][3][q2][2] = k
 
                     costTot, Y[step] = updateStep(Y, step, q1, q2, costTot)
@@ -674,11 +674,10 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     return bNew    
 
 
-plot_and_print(B)
+visualize_blocks(B)
 
 bTest = improvePlacement(B, 10, Fsizes, 4, 1, True)
 
-# print(bTest)
 
 
 
@@ -690,7 +689,8 @@ This is it for the algorithm!
 Here, one can further investigate the developement of the totalcost with the swaps done. What we did now is we just swapped two qubits when the metric was okay with it. 
 The function does this once. This means: The function does this for every layer and every qubit in every layer. And looks at every qubit in every layer as a potential swapping partner.
 '''
-plot_and_print(bTest)
+# plot_and_print(bTest)
+visualize_blocks(bTest)
 
 print(bTest == B)
 

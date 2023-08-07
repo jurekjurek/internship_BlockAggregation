@@ -797,36 +797,48 @@ def visualize_blocks(B):
             elif c_total[layer_no][qb_no][0] == 'p': 
 
                 if c_total[layer_no][qb_no][3] == 'i':
-                    G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
+                    G.add_node((layer_no, qb_no), layer=layer_no, zone='processing_idle', label=str(qb_no))
 
                 elif c_total[layer_no][qb_no][3] == 'a':
-                    G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
+                    G.add_node((layer_no, qb_no), layer=layer_no, zone='processing_active', label=str(qb_no))
 
             print(G.nodes())
 
     pos = {}
     print(G.nodes(), len(G.nodes()))
     for node in G.nodes():
-        layer, node_idx = node
+        layer_idx, node_idx = node
         zone = G.nodes[node]['zone']
-        x = layer
-        print('node:', node)
-        # if zone == 'storage':
-        #     y = c_total[layer_no][node][1]*-7 - c_total[layer_no][node][2]
-        # elif zone == 'processing':
-        #     y = -3 - c_total[layer_no][node][2]
+        x = layer_idx
 
-        # pos[node] = (x, y)
+        if c_total[layer_idx][node_idx][0] == 'i':
+            y = c_total[layer_idx][node_idx][1]*-7 - c_total[layer_idx][node_idx][2]
 
-    # node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
-    # plt.figure(figsize=(10, 8))
-    # nx.draw(G, pos, node_size=400, node_color=['blue' if G.nodes[node]['zone'] == 'storage' else 'red' for node in G.nodes()], labels=node_labels, with_labels=True)
-    # plt.title("Layered Node Visualization with Corrected Zones")
-    # plt.show()                
-    # return None 
+        elif c_total[layer_idx][node_idx][0] == 'p':
+            y = -3 - c_total[layer_idx][node_idx][2]
+
+        pos[node] = (x, y)
 
 
-visualize_blocks(B)
+    for layer_no in range(len(c_total)-1):
+        for qb_no in range(len(c_total[layer_no])):
+            current_node = (layer_no, qb_no)
+            for qb_no_ in range(len(c_total[layer_no+1])):
+                if G.nodes[current_node]['label'] == G.nodes[(layer_no+1, qb_no_)]['label']:
+                    next_node = (layer_no + 1, qb_no_) 
+
+                    G.add_edge(current_node, next_node)
+
+
+    node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
+    plt.figure(figsize=(10, 8))
+    nx.draw(G, pos, node_size=400, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
+    plt.title('Layered Node Visualization with Corrected Zones')
+    plt.show()                
+    return None 
+
+
+# visualize_blocks(B)
 
 
 
