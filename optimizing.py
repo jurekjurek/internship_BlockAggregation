@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-
+import copy 
 from block_aggregation import *
 
 
@@ -175,14 +175,13 @@ def updateStep(Y, step, q1, q2, totCost):
 
 
     # add cost due to the new constellation of qubits, equal procedure as above. 
-    if step > 1:
+    if step > 0:
         newCost += (Y[step][q1] - Y[step - 1][q1])**2 + (Y[step][q2] - Y[step - 1][q2])**2
 
-    if step < numSteps:
+    if step < numSteps-1:
         newCost += (Y[step][q1] - Y[step + 1][q1])**2 + (Y[step][q2] - Y[step + 1][q2])**2
 
-    
-    # also possible to return the whole Y list, but then have to adjust the other functions accordingly. 
+    # return only the part of the Y list that is of interest 
     return newCost, Y[step]
 
 # print(y_list, totalCost)
@@ -232,7 +231,10 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     numF = len(Fsizes)
     
     # copy of B to be manipulated
-    bNew = BP
+    # bNew = list(BP)
+
+    # for nested lists, this has to be done in python. copy() does not work for nested lists 
+    bNew = copy.deepcopy(BP)
 
     '''
     There are different types of swaps that can be done. Of course, we cannot swap active qubits from a processing zone with qubits in storage zones. 
@@ -357,18 +359,23 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     swap qubit one and two in bNew and in the Y list 
                     '''
 
+
                     # swap q and q2 in bNew, a few lines, add later 
+
+                    q_temp = q
+                    q2_temp = q2
                     # 1. Swap values in the sublist at the 4th position of BPnew, corresponding to c 
                     bNew[step][3][q], bNew[step][3][q2] = c[q2], c[q]
 
                     # 2. Swap qubit indices in the sublist at the 3rd position of BPnew for 'z'
-                    bNew[step][2][z] = [q2 if x == q else x for x in bNew[step][2][z]]
+                    bNew[step][2][z] = [q2_temp if x == q_temp else x for x in bNew[step][2][z]]
 
                     # 3. Swap qubit indices in the sublist at the 3rd position of BPnew for 'zp'
-                    bNew[step][2][zp] = [q if x == q2 else x for x in bNew[step][2][zp]]
+                    bNew[step][2][zp] = [q_temp if x == q2_temp else x for x in bNew[step][2][zp]]
+
 
                     # swap q1 and q2 in Y and update the costTot
-                    costTot, Y[step] = updateStep(Y, step, q, q2, costTot)
+                    costTot, Y[step] = updateStep(Y, step, q_temp, q2_temp, costTot)
 
                     # break, because we're not going to swap anymore. 
                     # This is all the swapping we were interested in for 1)
@@ -459,17 +466,22 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     # if swapping decreases the distance, exchange these two qubits with each other 
                     
+
                     # swap pointers 
+
+                    # important, because apparently, when bNew gets altered, so does the corresponding c sublist... 
+                    c_temp = c[q1].copy()
                     bNew[step][3][q1] = c[q2]
-                    bNew[step][3][q2] = c[q1] 
+                    bNew[step][3][q2] = c_temp # c[q1] 
 
                     # swap qubits in storage zones (B = [[SP, GP, FP, c], ..., []]), so third element in B 
+                    q_temp = q
+                    q2_temp = q2
                     bNew[step][2][z][qi] = q2
-                    bNew[step][2][z][qi2] = q
-                    
+                    bNew[step][2][z][qi2] = q_temp
                     
                     # update total cost and swap qubits in Y list 
-                    costTot, Y[step] = updateStep(Y, step, q, q2, costTot)
+                    costTot, Y[step] = updateStep(Y, step, q_temp, q2_temp, costTot)
 
                     break 
 
@@ -533,18 +545,17 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     # the two processing zones are swapped 
                     # first, in the list bNew, so essentially we swap the elements in the SP list 
 
-                    temp_b = bNew[step][0][z]
+
+                    temp_b = bNew[step][0][z].copy()
                     bNew[step][0][z] = bNew[step][0][z2]
                     bNew[step][0][z2] = temp_b
-
                     # c[1], so the processing zone number is changed as well. That's all that changes for the qubits 
                     for qi in range(Qmax):
                         
-                        # access first element of the c list corresponding to the qubit in the qi-th position in the SPz list. Let me translate this a little: 
+                        
                         # c[qi-th qubit in the z-th processing zone][1], the '1' indicates that we want to change the processing zone number 
                         bNew[step][3][SPz[qi]][1] = z2
                         bNew[step][3][SPz2[qi]][1] = z
-
                         # we have to do this in the for loop, because we can always only swap two qubits, not a set of qubits - maybe np.vectorize at some point 
                         costTot, Y[step] = updateStep(Y, step, numSteps, SPz[qi], SPz2[qi], costTot)
 
@@ -649,6 +660,9 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
 
                     # all that is exchanged between those two qubits is the position inside the processing zone. This is the only part of the pointerlist c that we have to update 
+
+                    # save a copy... 
+                    # k_temp = k 
                     bNew[step][3][q1][2] = k2
                     bNew[step][3][q2][2] = k
 
@@ -660,10 +674,11 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     return bNew    
 
 
+plot_and_print(B)
+
 bTest = improvePlacement(B, 10, Fsizes, 4, 1, True)
 
-
-print(bTest)
+# print(bTest)
 
 
 
@@ -675,6 +690,7 @@ This is it for the algorithm!
 Here, one can further investigate the developement of the totalcost with the swaps done. What we did now is we just swapped two qubits when the metric was okay with it. 
 The function does this once. This means: The function does this for every layer and every qubit in every layer. And looks at every qubit in every layer as a potential swapping partner.
 '''
+plot_and_print(bTest)
 
-
+print(bTest == B)
 

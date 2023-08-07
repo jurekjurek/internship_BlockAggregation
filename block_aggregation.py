@@ -690,17 +690,19 @@ for i in range(len(B)):
     c_total.append(B[i][3])
     print('\n')
 
-def plot_and_print():
-    print('B is now:')
+
+
+def plot_and_print(B):
+    # print('B is now:')
     c_total = []
     for i in range(len(B)):
-        print('step', i)
-        print('SP:', B[i][0])
-        print('GP:', B[i][1])
-        print('FP:', B[i][2])
-        print('c:', B[i][3])
+        # print('step', i)
+        # print('SP:', B[i][0])
+        # print('GP:', B[i][1])
+        # print('FP:', B[i][2])
+        # print('c:', B[i][3])
         c_total.append(B[i][3])
-        print('\n')
+        # print('\n')
 
 
     # print(c_total)
@@ -739,7 +741,7 @@ def plot_and_print():
                 plt.scatter(x, y, color='red', s=400)
                 plt.annotate(str(q_no), (x, y), ha='center', va='center')
 
-                print('s')
+                # print('s')
             
 
             # shift position of plotting to the right 
@@ -751,20 +753,20 @@ def plot_and_print():
     #     plt.plot(x_values, y_values, marker='o', label=f'Node {number}')
 
     # Connect nodes between neighboring layers
-    # for i in range(len(c_total) - 1):
-    #     for number, positions in node_groups.items():
-    #         current_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i]
-    #         next_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i + 1]
+    for i in range(len(c_total) - 1):
+        for number, positions in node_groups.items():
+            current_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i]
+            next_layer_positions = [(pos[0], pos[1]) for pos in positions if pos[0] == i + 1]
 
-    #         for pos1 in current_layer_positions:
-    #             closest_pos2 = min(next_layer_positions, key=lambda pos2: abs(pos2[1] - pos1[1]))
-    #             plt.plot([pos1[0], closest_pos2[0]], [pos1[1], closest_pos2[1]], color='black')
+            for pos1 in current_layer_positions:
+                closest_pos2 = min(next_layer_positions, key=lambda pos2: abs(pos2[1] - pos1[1]))
+                plt.plot([pos1[0], closest_pos2[0]], [pos1[1], closest_pos2[1]], color='black')
 
     plt.title('Qubits arranged in Processing zones \n')
     plt.axis('off')
     plt.show()
 
-# plot_and_print()
+# plot_and_print(B)
 
 
 
