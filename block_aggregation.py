@@ -679,7 +679,7 @@ B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
 Displaying 
 '''
 
-def visualize_blocks(B):
+def visualize_blocks(B, title):
     '''
     Given a list B, this function plots the qubits in the corresponding processing blocks. Same qubits are connected to each other between neighbouring layers. 
 
@@ -722,7 +722,7 @@ def visualize_blocks(B):
                 elif c_total[layer_no][qb_no][3] == 'a':
                     G.add_node((layer_no, qb_no), layer=layer_no, zone='processing_active', label=str(qb_no))
 
-            print(G.nodes())
+            # print(G.nodes())
 
     # assign positions to all the qubits 
     pos = {}
@@ -770,8 +770,9 @@ def visualize_blocks(B):
     # clarifying that the label keyword is actually the label that we want to use 
     node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
     plt.figure(figsize=(10, 8))
+    plt.title(title)
     nx.draw(G, pos, node_size=400, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
-    plt.title('Qubits in processing blocks \n')
+    
     plt.show()       
 
 

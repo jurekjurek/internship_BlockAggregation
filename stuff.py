@@ -107,3 +107,69 @@ def plot_and_print(B):
 
 # plot_and_print(B)
 
+
+
+
+'''
+Tabu search stuff 
+'''
+
+
+# def reconstructBlocksFromArrangements(BP, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl, s1Tbl, s2Tbl):
+#     '''
+#     Returns: 
+#         bNew: an updatet B-list 
+#     '''
+
+#     bNew = []
+
+#     qbTbl = [q for q in range(Nq)]
+
+#     for step in range(len(Y)):
+        
+#         qbTblSort = qbTbl
+
+
+#         # GP = BP[step][1]
+
+
+#         SPNew = [[[], []] for m in range(Mmax)]
+
+#         FPNew = [[] for f in range(len(Fsizes))]
+
+#         cNew = [[] for q in range(Nq)]
+
+#         kpTbl = [1] * Mmax
+
+#         kiTbl = [1] * len(Fsizes)
+
+
+#         for qi in range(Nq):
+#             q = qbTblSort[qi]
+#             s1 = s1Tbl[step][q]
+#             s2 = s2Tbl[step][q]
+
+#             z = zonesTbl[step][q]
+
+#             if s1 == 'i':
+#                 cNew[q] = [s1, z, kiTbl[z], s2]
+
+#                 kiTbl[z] += 1
+
+#                 FPNew[z] = FPNew[z] + q 
+
+#             else: 
+#                 cNew[q] = [s1, z, kpTbl[z], s2]
+
+#                 kpTbl[z] += 1
+
+#                 if s2 == 'a':
+#                     SPNew[z][1].append(q)
+#                 else: 
+#                     SPNew[z][2].append(q)
+
+
+#     return bNew
+
+
+

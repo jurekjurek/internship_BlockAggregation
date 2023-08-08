@@ -1,12 +1,8 @@
 
 
-Translate everything into numpy 
+Eigentlich ist der Fahrplan ab jetzt sehr klar. 
 
-Make the deterministic optimization 
+Einfach die Tabu search mit Debugger nachvollziehen, entsprechend anpassen. 
 
-What I want: 
-[np.array(type object), ..., np.array(type object)]
-
-
-Fahrplan: erstmal den ganzen Bums mit listen machen... 
+Dann numpy. Und dann Uli fragen, was ich nochmal machen sollte. 
 

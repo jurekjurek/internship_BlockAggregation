@@ -661,20 +661,21 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     # all that is exchanged between those two qubits is the position inside the processing zone. This is the only part of the pointerlist c that we have to update 
 
-                    # save a copy... 
-                    k_temp = k 
                     bNew[step][3][q1][2] = k2
-                    bNew[step][3][q2][2] = k_temp
+                    bNew[step][3][q2][2] = k
+
 
                     costTot, Y[step] = updateStep(Y, step, q1, q2, costTot)
 
-                break 
+                    # break has to be here, I put it one to the right and it did not work. Obviously. It just kept exchanging already exchanged qubits. 
+                    # So: After one qubit exchange, we don't want to further exchange and break! 
+                    break 
 
     # here, more parameters are returned in the future, for debugging and displaying reaasons 
     return bNew    
 
 
-visualize_blocks(B)
+visualize_blocks(B, 'Processing block arrangement before optimization \n')
 
 bTest = improvePlacement(B, 10, Fsizes, 4, 1, True)
 
@@ -690,7 +691,7 @@ Here, one can further investigate the developement of the totalcost with the swa
 The function does this once. This means: The function does this for every layer and every qubit in every layer. And looks at every qubit in every layer as a potential swapping partner.
 '''
 # plot_and_print(bTest)
-visualize_blocks(bTest)
+visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization \n')
 
 print(bTest == B)
 
