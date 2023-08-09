@@ -593,6 +593,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                 q1 = SPz[qi]
 
                 # position of q1 in processing zone z
+                print('qubit one: ', q1)
                 k = c[q1][2]
 
                 # previous processing zone of qubit 
@@ -675,7 +676,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     return bNew    
 
 
-visualize_blocks(B, 'Processing block arrangement before optimization \n')
+# visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, 4), 10)))
 
 bTest = improvePlacement(B, 10, Fsizes, 4, 1, True)
 
@@ -691,7 +692,7 @@ Here, one can further investigate the developement of the totalcost with the swa
 The function does this once. This means: The function does this for every layer and every qubit in every layer. And looks at every qubit in every layer as a potential swapping partner.
 '''
 # plot_and_print(bTest)
-visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization \n')
+# visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, 4), 10)))
 
 print(bTest == B)
 

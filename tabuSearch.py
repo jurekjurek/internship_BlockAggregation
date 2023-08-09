@@ -281,7 +281,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
         # same for numbers of processing zones I guess 
         zonesTbl.append(zonesList)
 
-        # 
+        # those are just lists of lists of strings ('i' and 'p', or 'i' and 'a') indicating the property for each qubit 
         s1Tbl.append(s1List)
         s2Tbl.append(s2List)
 
@@ -324,7 +324,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     # No idea 
     memberQqueries = 0
 
-    # Just for debugging reasons... Keep track of the number of steps where more than two, or only two qubits was swapped 
+    # Just for debugging reasons... Keep track of the number of steps where more than two, or only two qubits were swapped 
     numImprovementMultiSwaps = 0
     numImprovementTwoSwaps = 0
 
@@ -346,7 +346,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     # keep track of best cost over iterations 
     bestCostProgressTbl = [[] for _ in range(TSiterations)]
 
-    # keep track of arrangements of processing zones for qubits, I guess... 
+    # keep track of arrangements of processing zones for qubits corresponding to the arrangements that minimize the cost, I guess... 
     zonesTblBest = zonesTbl
 
     # and then this, as always 
@@ -376,10 +376,11 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
         step = random.randint(0, numSteps-1) 
 
         # if we can not swap whole processing zones anymore? 
-        if i>processingZoneSwapFraction:
+        if i >= processingZoneSwapFraction:
 
             # generate random integer between 0 and Nq-1 (both included)
             # look at random qubit in this block - what qubit do we want to switch? 
+            # Choose a qubit at random
             q1 = random.randint(0, Nq-1) 
 
             # s1Swap is either 'i' or 'p', in what kinda zone is q1? 
@@ -395,7 +396,8 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             swapQBnum = random.randint(2, swapNumMax)
 
 
-            # We picked a qubit, but we have no idea where it sits in or if it is active or idle. So we have to, based on these facts, go further. 
+            # We picked a qubit, but we have no idea where it sits in or if it is active or idle. So we have to, based on these facts, 
+            # identify some properties of this qubit 
 
             '''
             Create swappools, so list of possible swap partners for q1 
@@ -426,6 +428,8 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             # q1 cannot be swapped with itself, remove it from the list of possible swap partners, if its in there, I guess
             if q1 in swapPool: 
                 swapPool.remove(q1)
+            else: 
+                print('q1 not in swapPool????')
 
             # how many qubits in total are possible swap partners for q1? 
             swapPoolSize = len(swapPool)
@@ -447,6 +451,12 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             else: 
                 subsets = list(itertools.combinations(swapPool, swapQBnum))
 
+            # IMPORTANT: 
+            # subsets consits of lists of qubits that act as possible swap partners! These individual lists can contain 1, 2 ... - up to 
+            # swapNQBnum - 1 elements. 
+            # One of the elements in the subsets list will be chosen to swap qubit one with later one, based on which of these possible 
+            # swaps minimizes the cost!!!  
+
             # the len of the list, as indicated above, indicates how many times we swap in total (taking into account also the total number of qubits that are available for swapping - through swapPool)
             numPossibleSwaps = len(subsets)
 
@@ -455,11 +465,14 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
             '''
             I just altered this from -2 to -1 !!!
+            This has to go later, in the end the swapPool cannot have size 0! This just cannot be -> debug 
             '''
-            if swapQBnum > 0: 
-                rot = random.randint(0, swapQBnum-1)
+            if swapQBnum > 1: 
+                # rot == 0 is not allowed, we *have* to swap the qubits. i guess...
+                rot = random.randint(1, swapQBnum-1)
+                # rot = 1
             else: 
-                rot = random.randint(0, 0)
+                rot = 0 # random.randint(0, 0)
 
             # here, we create the actual list of qubits that shall be swapped. 
             # using the example above, lets assume we already picked qubit 4 to be swapped: 
@@ -475,7 +488,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             swapQBListsSwapped = [swapQBLists[ssi][rot:] + swapQBLists[ssi][:rot] for ssi in range(len(swapQBLists))]
 
 
-        # In case we want to exchange whole prcoessing zones
+        # In case we want to exchange whole processing zones
         else: 
 
             # I guess, if there is only one processing zone, we can skip this step 
@@ -524,6 +537,10 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
         # delta cost will indicate how much we can bring the cost down. The difference between the initial cost and the cost after swapping. We want to make this as small as possible.
         deltaCostBestLocal = 1000000 
 
+        '''
+        Get Y lists 
+        '''
+
         # get the Y list corresponding to this particular block 
         Yc = Y[step]
 
@@ -549,13 +566,35 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
         # I guess this is a list of len (numpossibleswaps) and for every swap it keeps track of the decreasement of the cost that has been done 
 
+        '''
+        TRY THIS FOR NOW!!!
+        '''
+
+
         # I added this np.array() stuff, not believing that would work but apparently, it did 
         deltaCostTbl = [2 * np.dot(np.array(Yp)[swapQBLists[ssi]] + np.array(Yf)[swapQBLists[ssi]], np.array(Yc)[swapQBLists[ssi]] - np.array(Yc)[swapQBListsSwapped[ssi]]) for ssi in range(numPossibleSwaps)]
+
+        # deltaCostTbl = []
+
+        # for i in range(numPossibleSwaps):
+        #     Y_np = np.array(Y)
+        #     Y_original = np.array(Y)
+        #     Y_np[step][swapQBLists] = Y_original[step][swapQBListsSwapped]
+        #     cost_temp = computeTotalCost(Y_np, Nq)
+        #     deltaCostTbl.append(cost_temp)
+
+
 
         # orders the costs by swaps 
         ord = np.argsort(deltaCostTbl)
 
-        # ordering the deltacost table
+
+        '''
+        WHAT EXACTLY DOES ORD LOOK LIKE?? 
+        '''
+
+
+        # ordering the deltacost table to see which swap minimizes the cost 
         deltaCostTbl = np.array(deltaCostTbl)[ord]
 
         # orders the qubits in the swaplist corresponding to the order 
@@ -571,6 +610,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
 
         # if flag == false; no update will be performed, the tabu list will not be updated!! 
+        # 'RESET' FLAG TO FALSE
         flag = False 
 
         # iterate over the number of possible swaps 
@@ -595,11 +635,11 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             #     continue 
 
             if np.any(np.all(YTest == TSList)):
-                if YTest in TSList:
-                    tabuCtr += 1 
+            # if YTest in TSList:
+                tabuCtr += 1 
 
-                    # jump to next swap 
-                    continue 
+                # jump to next swap 
+                continue 
 
             # if not in tabu list update best local cost, set update flag true and save swapped arrangement 
             # an update shall be performed later 
@@ -733,10 +773,11 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
         '''
 
         # no update if flag == false
+        # if flag == false, this means that the step we meant to perform was tabu 
         if flag == False: 
             noUpdateCtr += 1 
 
-        # if flag == true, update tabu list and all the best lists, and gegebenenfalls bestcost 
+        # if flag == true, update tabu list and all the best lists, and ggf bestcost 
         if flag == True: 
 
             # assign this Y to the corresponding element in the tabu list, why not just use append? 
@@ -745,7 +786,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             # increase counter by one 
             TSFill += 1
 
-            # when we have reached the end of the tabu list: start filling the tabu list, starting at the oldest, the first element again 
+            # when we have reached the end of the tabu list: start filling the tabu list, starting at the oldest - the first - element again 
             if TSFill >= TSlen: 
                 TSFill = 0
 
@@ -760,7 +801,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             s2Tbl = s2TblBestUpdate
 
             # update total cost 
-            costTot = deltaCostBestLocal
+            costTot += deltaCostBestLocal
 
             # if, globally, cost is minimal: 
             if costTot < costBest: 
@@ -815,19 +856,47 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
 # B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
 
-bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(B, Fsizes, 4, 1, 10, TSiterations=100, TSlen=10, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
+bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(B, Fsizes, 4, 1, 10, TSiterations=600, TSlen=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
+
+print((costProgressTbl))
+print(bestCostProgressTbl)
 
 
-visualize_blocks(bNew, 'After Tabu Search')
+'''
+Plotting cost evolution
+'''
+
+cost_list = []
+for i in range(1, len(costProgressTbl)):
+    cost_list.append(costProgressTbl[i][1])
+
+best_cost_list = []
+for i in range(1, len(bestCostProgressTbl)):
+    best_cost_list.append(bestCostProgressTbl[i][1])
+
+title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(noUpdateCtr)
+
+# plt.figure()
+# plt.plot(cost_list, label = 'cost')
+# plt.plot(best_cost_list, label = 'best cost')
+# plt.title('Evolution of the cost with the iterations, #impr: ' + title + '\n')
+# plt.xlabel('Iterations')
+# plt.ylabel('Cost')
+# plt.legend()
+# plt.show()
 
 
-exit()
+# visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, 10)))
+
+
 
 '''
 Tabu Search over. 
 Now, for the alternating optimization.
 
 '''
+
+print('OPTIMIZING EVERYTING')
 
 def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSiterations, TSlen, echo, visualOutput):
     bNew = BP 
@@ -842,7 +911,7 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     grPBest = []
 
     # list of Y positions to start with 
-    YTemp = computeArrangements(bNew, Nq, Fsizes, Qmax, Mmax)
+    YTemp = computeArrangements(bNew, Fsizes, Qmax)
 
     # total cost to start with, to be minimized 
     costTotInitial = computeTotalCost(YTemp, Nq)
@@ -853,8 +922,12 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     # iterate over the number of Optimizing steps, given the function as argument 
     for optimizationstep in range(numOptimizationSteps): 
 
+        print('Iteration no', optimizationstep)
+        print(np.shape(bNew))
+        print(bNew)
+
         # deterministic algorithm, returns updated bNew 
-        bNew, costTotTbl, bNewTbl = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
+        bNew = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
 
         if echo == True: 
             print('echo')
@@ -863,7 +936,7 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
             print('visualoutput')
 
         # Tabu Search algorithm, returns updatet bNew!
-        bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(bNew, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 3, 0, False, visualOutput, False)
+        bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(bNew, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 3, 0, greedySpread = False, storeAllBestBP= True, echo = False)
 
         if echo == True: 
             print('echo')
@@ -873,13 +946,13 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
 
         # still needs to be returned by tabusearch 
         # if the minimal cost obtained by the tabu search is smaller than the best cost so far, replace the best cost with the Tabu Search one. 
-        if bestCostUpdateAll[-1] < costTotBest:
+        # if bestCostUpdateAll[-1] < costTotBest:
 
-            if visualOutput == True: 
-                print('visualoutput')
+        #     if visualOutput == True: 
+        #         print('visualoutput')
 
-            # last element in list 
-            costTotBest = bestCostUpdateAll[-1]
+        #     # last element in list 
+        #     costTotBest = bestCostUpdateAll[-1]
 
 
     # this gets flattened in the mathematica code 
@@ -890,9 +963,9 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
 
 
     # 
-    return grPBest, costTotBest, grPtbl, totalBestCostTbl, costTotInitial
+    return grPBest, costTotBest, grPtbl, totalBestCostTbl, costTotInitial, bNew
 
-
+a,b,c,d,e, bNew = optimizeArrangements(B, 10, Fsizes, 4, 1, 5, 100, 10, True, False)
 
 '''
 Alternating algorithm over 
