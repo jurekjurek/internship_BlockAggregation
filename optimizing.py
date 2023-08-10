@@ -91,7 +91,7 @@ def computeArrangements(B, Fsizes, Qmax):
     return y
 
 # list of y positions is returned correctly 
-# y_list = computeArrangements(B, Fsizes, 4)
+y_list = computeArrangements(B, Fsizes, 4)
 
 # print(np.shape(y_list))
 # print(y_list)
@@ -350,7 +350,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                         continue
 
                     # if, in the next step, q1 and q2 are in the same storage zone, continue 
-                    if step < numSteps: 
+                    if step < numSteps-1: 
                         if z2f == zf and s12f == 'i':
                             continue
                     
