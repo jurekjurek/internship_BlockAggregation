@@ -893,7 +893,7 @@ title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(
 # print('B is: \n', B)
 # print('bNew is: \n', bNew)
 
-# visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, 10)))
+visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, 10)))
 
 
 
@@ -971,10 +971,10 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
 
     # 
     return grPBest, costTotBest, grPtbl, totalBestCostTbl, costTotInitial, bNew
-
+ 
 a,b,c,d,e, bNew = optimizeArrangements(B, 10, Fsizes, 4, 1, 10, 100, 10, True, False)
 
-# visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, Fsizes, 4), 10)))
+visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, Fsizes, 4), 10)))
 
 '''
 Alternating algorithm over 
@@ -982,37 +982,7 @@ Alternating algorithm over
 Now, the displaying shall be done. 
 '''
 
-def show_blocks_after_optimizing(BP, Nq, circ):
-    '''
-    This function uses qiskit to display a circuit with Nq qubits. The gates are displayed as dictated by the circ list created in the function random_circuit. 
-    '''
-    q_a = QuantumRegister(Nq, name='q')
-    circuit = QuantumCircuit(q_a)
-    for step in range(len(BP)):
 
-        for g in range(len(BP[step][1][0])):
-
-            # gate = layeredcirc[i][g][0]
-            gate = BP[step][1][0][g]
-            # print('test', gate)
-
-            # q1 = circ[i][g][1][0]
-            q1 = circ[gate][1][0]
-            q2 = circ[gate][1][1]
-            # q2 = circ[i][g][1][1]
-
-            print('TESTEST: the qubits are: ', q1, q2)
-            print(type(q1), type(q2))
-
-            # circuit.cz(q_a[circ[gate][1][0]-1], q_a[circ[gate][1][1]-1], label=str(g+1))
-            circuit.cz(q1, q2, label=str(gate+1))
-
-
-        circuit.barrier()
-    circuit.draw(output='mpl', justify='none', fold = 50)
-    plt.title("Circuit arranged in layers \n")
-    plt.show()
-    # print(circuit)
 
 # show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
-show_blocks_after_optimizing(bNew, 10, circuit_of_qubits)
+# show_circuit_after_optimizing(bNew, 10, circuit_of_qubits)

@@ -676,7 +676,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     return bNew    
 
 
-# visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, 4), 10)))
+visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, 4), 10)))
 
 bTest = improvePlacement(B, 10, Fsizes, 4, 1, True)
 
@@ -691,8 +691,14 @@ This is it for the algorithm!
 Here, one can further investigate the developement of the totalcost with the swaps done. What we did now is we just swapped two qubits when the metric was okay with it. 
 The function does this once. This means: The function does this for every layer and every qubit in every layer. And looks at every qubit in every layer as a potential swapping partner.
 '''
+
+
+
+
 # plot_and_print(bTest)
-# visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, 4), 10)))
+visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, 4), 10)))
+
+# show_circuit_after_optimizing(B, 10, circuit_of_qubits)
 
 print(bTest == B)
 

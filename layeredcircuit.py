@@ -41,9 +41,11 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
 
         # iterate over elements in the circuit and fill the layers with mutually commuting gates
         while len(blockedqubits) != Nq and g < len(circ):
+            
+            gate = circ[g][0]
 
             # has this gate in the circuit been used already? If not, 
-            if g not in usedgates: 
+            if gate not in usedgates: 
 
                 # first of all, we only consider a certain amount of gates
                 if layer != [] and g-layer[0][0] > search_horizon: 
@@ -59,10 +61,10 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
                     # add gate to layer 
                     # layer.append(g)
 
-                    layer.append([g, [q1,q2]])
+                    layer.append([gate, [q1,q2]])
 
                     # mark gate as used 
-                    usedgates.append(g)
+                    usedgates.append(gate)
 
                     # block the qubits for this layer 
                     blockedqubits.append(q1)        # only in this layer!
@@ -79,6 +81,8 @@ def LayerCircuit(Nq, circ, search_horizon = 10):
     LayeredCircuit_ = convert_to_np_array(LayeredCircuit)
 
     return LayeredCircuit_
+
+
 
 
 

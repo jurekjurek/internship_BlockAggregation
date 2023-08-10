@@ -30,8 +30,13 @@ What is also of interest is:
 
 '''
 
+NQ = 10
+GATES = 20
+MMAX = 1
+QMAX = 4
 
-circuit_of_qubits = random_circuit(10, 20)
+
+circuit_of_qubits = random_circuit(NQ, GATES)
 
 # show_circuit(10,circuit_of_qubits)
 
@@ -39,6 +44,8 @@ layeredcircuit = LayerCircuit(10, circuit_of_qubits)
 # print(layeredcircuit)
 # show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
 
+# print(layeredcircuit)
+# exit()
 
 '''
 Now that we have the layered circle going, we can focus on the block aggregation. 
@@ -152,7 +159,11 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
         
         # iterate over gates in layers 
         for gate_no in range(len(layeredCirc[layer_no])):
+            # print(layeredCirc)
+
             gate = layeredCirc[layer_no][gate_no]
+
+            # print('gate test: ', gate)
             
             # define qubit one and two, that are part of the gate gate_no in layer layer_no 
             QB_n = gate[1][0]
@@ -175,10 +186,10 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
             if G[cn] == []:
                 G[cn] = [gate[0]]
             
-            print(G_np[cn], G_np, gate[0])
+            # print(G_np[cn], G_np, gate[0])
             G_np[cn] = gate[0]
 
-            print(G_np[cn], G_np, gate[0], type(G_np), np.shape(G_np))
+            # print(G_np[cn], G_np, gate[0], type(G_np), np.shape(G_np))
 
             # if cn and cm are equal, meaning they are part of the same qubit set, continue
             if cn == cm: 
@@ -204,7 +215,7 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
 
             # print(a, b)
             if G_np[cn] != None and G_np[cm] != None: 
-                print('Want to concatenate:', G_np[cn], G_np[cm])
+                # print('Want to concatenate:', G_np[cn], G_np[cm])
                 np.concatenate((G_np[cn], G_np[cm])) 
         
             # G_np[cn] = np.append(G_np[cn], temp_np)
@@ -349,7 +360,7 @@ def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
             
 
 
-S_best, G_best, GC_list = AggregateBlocksStep(layeredcircuit, 10, 4, 1)
+S_best, G_best, GC_list = AggregateBlocksStep(layeredcircuit, NQ, QMAX, MMAX)
 
 print(np.shape(G_best))
 print(G_best)
@@ -484,7 +495,7 @@ def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
 
 
 # test 
-SP, GP, Iset, c = AggregateBlocksStepPostProcess(S_best, G_best, 10, 4, 2)
+SP, GP, Iset, c = AggregateBlocksStepPostProcess(S_best, G_best, NQ, QMAX, MMAX)
 
 print('sbest:', S_best) 
 print('gbest:', G_best)
@@ -535,12 +546,12 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
 
     # while there's still qubits left in the idle pool 
     while len(Isetnew) > 0: 
-
+        print(Isetnew)
         '''
         Right zone
         '''
         # if we are still within the allowed number of storage zones but the number of qubits in this storage zone is too high, move to the left 
-        if fp <= numF and len(Fset[fp]) >= Fsizes[fp]:
+        if fp < numF and len(Fset[fp]) >= Fsizes[fp]:
             fp += 1
 
         # if we are within the allowed number of storage zones and the fp-th storage zone still needs to be filled 
@@ -562,7 +573,7 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
         Left zone 
         '''
         # if within the allowed number of storage zones and the fm-th storage zone is too full 
-        if fm >= 0 and len(Fset[fm]) >= Fsizes[fm]:
+        if fm > 0 and len(Fset[fm]) >= Fsizes[fm]:
             fm -= 1
         
         # if the fm-th storage zone still has to be filled 
@@ -582,7 +593,7 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
 
 
         # if all storage zones are filled up and there's qubits left in the idle pool, error 
-        if fp == numF and len(Fset[fp]) >= Fsizes[fp] and fm == 1 and len(Fset[fm]) >= Fsizes[fm] and len(Isetnew) > 0:
+        if fp == numF-1 and len(Fset[fp-1]) >= Fsizes[fp-1] and fm == 1 and len(Fset[fm-1]) >= Fsizes[fm-1] and len(Isetnew) > 0:
             print('ERROR: No more storage zones left, but not all qubits placed.')
             return Fset, cnew
 
@@ -590,7 +601,10 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
 
 
 # test of storage zone algorithm, funktioniert. 
-Fsizes = [3, 3]
+Fsizes = [3,3]
+
+# second try:
+# Fsizes = [4,4,4]
 
 
 
@@ -627,7 +641,9 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
     i = 0
 
     # while stuff still left in circuit 
-    while cRaw != []:
+    while cRaw != [] and i<10:
+
+
         # Make layeredcircuit
         C                   = LayerCircuit(Nq, cRaw)
 
@@ -635,8 +651,10 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
         # Get best set of qubits and gates from algorithm 
         S_best, G_best, gc_list_test      = AggregateBlocksStep(C, Nq, Qmax, Mmax)
 
+
         # Get set of qubits and gates, for the different processing zones. And the 'remaining' idle pool Iset 
         SP, GP, Iset, c     = AggregateBlocksStepPostProcess(S_best, G_best, Nq, Qmax, Mmax)
+
 
         # Finally, fill storage zones with qubits in 'remaining' idle pool 
         FP, cnew            = PlaceIdlePoolQB(Fsizes, Iset, c)
@@ -644,7 +662,8 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
         # iterate over the different sets of gates in GP
         for gpi in range(len(GP)):
 
-            cRaw = [cRaw[i] for i in range(len(cRaw)) if i not in GP[gpi]]
+            cRaw = [cRaw[i] for i in range(len(cRaw)) if cRaw[i][0] not in GP[gpi]]
+            # for i in range(len(cRaw)):
 
 
             # iterate over the gates in the gates sets corresponding to qubit sets in the processing zones 
@@ -662,8 +681,9 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
         # append this set of S, G, F and c to the collection of processing blocks 
         B.append([SP, GP, FP, cnew])
 
-        print('cRaw looks like:',cRaw)
-        print('where GP is:', GP)
+        # print('cRaw looks like:',cRaw)
+        # print('where GP is:', GP)
+        i += 1
 
     return B
 
@@ -671,7 +691,7 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
 # test of the whole algorithm 
 # seems to work 
 
-B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
+B = blockProcessCircuit(circuit_of_qubits, NQ, Fsizes, QMAX, MMAX)
 
 
 
@@ -776,7 +796,37 @@ def visualize_blocks(B, title):
     plt.show()       
 
 
-# visualize_blocks(B)
+def show_circuit_after_optimizing(BP, Nq, circ):
+    '''
+    This function uses qiskit to display a circuit with Nq qubits. The gates are displayed as dictated by the circ list created in the function random_circuit. 
+    '''
+    q_a = QuantumRegister(Nq, name='q')
+    circuit = QuantumCircuit(q_a)
+    for step in range(len(BP)):
+
+        for g in range(len(BP[step][1][0])):
+
+            # gate = layeredcirc[i][g][0]
+            gate = BP[step][1][0][g]
+            # print('test', gate)
+
+            # q1 = circ[i][g][1][0]
+            q1 = circ[gate][1][0]
+            q2 = circ[gate][1][1]
+            # q2 = circ[i][g][1][1]
+
+            # circuit.cz(q_a[circ[gate][1][0]-1], q_a[circ[gate][1][1]-1], label=str(g+1))
+            circuit.cz(q1, q2, label=str(gate+1))
+
+
+        circuit.barrier()
+    circuit.draw(output='mpl', justify='none', fold = 50)
+    plt.title("Circuit arranged in layers \n")
+    plt.show()
+    # print(circuit)
+
+# show_circuit_after_optimizing(B, 10, circuit_of_qubits)
+# visualize_blocks(B, '')
 
 
 

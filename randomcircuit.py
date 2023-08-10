@@ -43,7 +43,7 @@ def show_circuit(Nq, circ):
     circuit = QuantumCircuit(q_a)
     for g in range(len(circ)):
 
-        circuit.cz(q_a[circ[g][1][0]-1], q_a[circ[g][1][1]-1], label=str(g+1))
+        circuit.cz(q_a[circ[g][1][0]], q_a[circ[g][1][1]], label=str(g+1))
     circuit.draw(output='mpl', justify='none')
     plt.show()
     print(circuit)
