@@ -435,8 +435,8 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             # q1 cannot be swapped with itself, remove it from the list of possible swap partners, if its in there, I guess
             if q1 in swapPool: 
                 swapPool.remove(q1)
-            else: 
-                print('q1 not in swapPool????')
+            # else: 
+                # print('q1 not in swapPool????')
 
             # how many qubits in total are possible swap partners for q1? 
             swapPoolSize = len(swapPool)
@@ -861,7 +861,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     return bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr
             
 
-bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(B, Fsizes, 4, 1, 10, TSiterations=600, TSlen=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
+bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(B, Fsizes, QMAX, MMAX, NQ, TSiterations=600, TSlen=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
 
 print((costProgressTbl))
 print(bestCostProgressTbl)
@@ -893,8 +893,7 @@ title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(
 # print('B is: \n', B)
 # print('bNew is: \n', bNew)
 
-visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, 10)))
-
+visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
 
 
 '''
@@ -926,15 +925,19 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     # high number, why not initial? 
     costTotBest = 10 ** 9 
 
+    costList = []
+    BList = []
+
     # iterate over the number of Optimizing steps, given the function as argument 
     for optimizationstep in range(numOptimizationSteps): 
 
-        print('Iteration no', optimizationstep)
-        print(np.shape(bNew))
-        print(bNew)
+
+        print('total cost 0, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
 
         # deterministic algorithm, returns updated bNew 
         bNew = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
+
+        print('total cost 1, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
 
         if echo == True: 
             print('echo')
@@ -944,6 +947,11 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
 
         # Tabu Search algorithm, returns updatet bNew!
         bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(bNew, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 3, 0, greedySpread = False, storeAllBestBP= True, echo = False)
+
+        print('total cost 2, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
+
+        costList.append(computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
+        BList.append(copy.deepcopy(bNew))
 
         if echo == True: 
             print('echo')
@@ -961,6 +969,10 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
         #     # last element in list 
         #     costTotBest = bestCostUpdateAll[-1]
 
+    # get the B list for which the cost is minimal, argsort sorts from lowest to highest 
+    costIndices = np.argsort(costList)
+    BList = np.array(BList)
+    BList = BList[costIndices]
 
     # this gets flattened in the mathematica code 
     grPtbl = grPtbl 
@@ -970,11 +982,20 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
 
 
     # 
-    return grPBest, costTotBest, grPtbl, totalBestCostTbl, costTotInitial, bNew
+    return grPBest, costTotBest, grPtbl, totalBestCostTbl, costList, BList[0]
  
-a,b,c,d,e, bNew = optimizeArrangements(B, 10, Fsizes, 4, 1, 10, 100, 10, True, False)
+a,b,c,d,e, bNew = optimizeArrangements(B, NQ, Fsizes, QMAX, MMAX, numOptimizationSteps= 15, TSiterations= 5000, TSlen= 100, echo = True, visualOutput = False)
 
-visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, Fsizes, 4), 10)))
+visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, Fsizes, QMAX), NQ)))
+
+plt.figure()
+plt.plot(e, label = 'cost')
+plt.title('Evolution of the cost with the iterations \n')
+plt.xlabel('Iterations')
+plt.ylabel('Cost')
+plt.legend()
+plt.show()
+
 
 '''
 Alternating algorithm over 

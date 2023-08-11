@@ -47,7 +47,7 @@ And the last step is to set up an algorithm that alterantes between tabu search 
 
 
 
-B = blockProcessCircuit(circuit_of_qubits, 10, Fsizes, 4, 1)
+B = blockProcessCircuit(circuit_of_qubits, NQ, Fsizes, QMAX, MMAX)
 
 
 print('##########')
@@ -75,7 +75,7 @@ def computeArrangements(B, Fsizes, Qmax):
             
             if s1 == 'p':
                 # plot green node at position pos(processing zone 1) + q[2]
-                y_temp = - Fsizes[0] - k
+                y_temp = - Fsizes[0] - z* (Fsizes[0] + Qmax) - k
 
                 
             elif s1 == 'i':
@@ -91,7 +91,12 @@ def computeArrangements(B, Fsizes, Qmax):
     return y
 
 # list of y positions is returned correctly 
-y_list = computeArrangements(B, Fsizes, 4)
+y_list = computeArrangements(B, Fsizes, QMAX)
+
+# print(y_list)
+
+
+# exit()
 
 # print(np.shape(y_list))
 # print(y_list)
@@ -118,7 +123,7 @@ def computeTotalCost(Y, Nq):
     totCost = 0
 
     for step in range(1, numSteps):
-        print('step:', step)
+        # print('step:', step)
 
         # look at layers step and step+1
         Yc = Y[step - 1]
@@ -538,7 +543,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                 for qi in range(Qmax):
 
                     # if we were to swap, how would the distances look like? 
-                    distswap += ( Y[step, SPz2[qi]] - Y[step-1, SPz[qi]] )**2 + ( Y[step, SPz[qi]] - Y[step-1, SPz2[qi]] )**2
+                    distswap += ( Y[step][SPz2[qi]] - Y[step-1][SPz[qi]] )**2 + ( Y[step][SPz[qi]] - Y[step-1][SPz2[qi]] )**2
                 
                 # if swapping actually decreases the distance 
                 if distswap < dist:
@@ -557,7 +562,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                         bNew[step][3][SPz[qi]][1] = z2
                         bNew[step][3][SPz2[qi]][1] = z
                         # we have to do this in the for loop, because we can always only swap two qubits, not a set of qubits - maybe np.vectorize at some point 
-                        costTot, Y[step] = updateStep(Y, step, numSteps, SPz[qi], SPz2[qi], costTot)
+                        costTot, Y[step] = updateStep(Y, step, SPz[qi], SPz2[qi], costTot)
 
                     break
 
@@ -593,7 +598,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                 q1 = SPz[qi]
 
                 # position of q1 in processing zone z
-                print('qubit one: ', q1)
+                # print('qubit one: ', q1)
                 k = c[q1][2]
 
                 # previous processing zone of qubit 
@@ -676,9 +681,9 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     return bNew    
 
 
-visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, 4), 10)))
+visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
 
-bTest = improvePlacement(B, 10, Fsizes, 4, 1, True)
+bTest = improvePlacement(B, NQ, Fsizes, QMAX, MMAX, True)
 
 
 
@@ -696,7 +701,7 @@ The function does this once. This means: The function does this for every layer 
 
 
 # plot_and_print(bTest)
-visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, 4), 10)))
+visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, QMAX), NQ)))
 
 # show_circuit_after_optimizing(B, 10, circuit_of_qubits)
 

@@ -30,9 +30,9 @@ What is also of interest is:
 
 '''
 
-NQ = 10
-GATES = 20
-MMAX = 1
+NQ = 20
+GATES = 40
+MMAX = 2
 QMAX = 4
 
 
@@ -601,10 +601,10 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
 
 
 # test of storage zone algorithm, funktioniert. 
-Fsizes = [3,3]
+# Fsizes = [3,3]
 
 # second try:
-# Fsizes = [4,4,4]
+Fsizes = [4,4,4]
 
 
 
@@ -757,11 +757,11 @@ def visualize_blocks(B, title):
         # depending if in storage, or processing zone, assign y coordinates 
         # storage zone 
         if c_total[layer_idx][node_idx][0] == 'i':
-            y = c_total[layer_idx][node_idx][1]*-7 - c_total[layer_idx][node_idx][2]
+            y = c_total[layer_idx][node_idx][1]*-8 - c_total[layer_idx][node_idx][2]
 
         # processing zone 
         elif c_total[layer_idx][node_idx][0] == 'p':
-            y = -3 - c_total[layer_idx][node_idx][2]
+            y = -4 - 8*(c_total[layer_idx][node_idx][1]) - c_total[layer_idx][node_idx][2]
 
         # pos is a dictionary, pos((processingblock_number, qubit_number) = (x, y)). 
         # pos stores this for all the qubits in all the blocks 
@@ -773,7 +773,6 @@ def visualize_blocks(B, title):
     # We always add an edge between a qubit and the one in the layer next to it on the right. So, for the rightmost layer, we do not have to add an edge.
     for layer_no in range(len(c_total)-1):
         for qb_no in range(len(c_total[layer_no])):
-
             # current node is tuple
             current_node = (layer_no, qb_no)
 
