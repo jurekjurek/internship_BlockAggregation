@@ -702,9 +702,20 @@ Displaying
 def visualize_blocks(B, title):
     '''
     Given a list B, this function plots the qubits in the corresponding processing blocks. Same qubits are connected to each other between neighbouring layers. 
+    The visualization is done for an arbitrary number of qubits, arranged in arbitrarily sized processing and storage zones. 
+    Only constraint:    All processing and storage zones have to be equal in size, respectively. 
+                        And the system has to be arranged like: 
+
+                        Storage zone
+                        Processing zone
+                        Storage zone
+                        Processing zone 
+                        ...
+                        Storage zone
 
     Accepts: 
         B:          List of interest in optimization procedure 
+        title:      A title for the plot 
     Returns: 
         Nothing 
 
@@ -746,6 +757,14 @@ def visualize_blocks(B, title):
 
     # assign positions to all the qubits 
     pos = {}
+
+    lenProcessingZones =  len(B[0][0][0]) # corresponds to S list 
+    print((B[0][0][0]))
+    print(len(B[0][2][0]))
+    # print(c_total[0])
+    # print(c_total[0][2])
+    lenStorageZones =  len(B[0][2][0]) # corresponds to F list 
+
     for node in G.nodes():
 
         # node is a tuple, node = (layer_number, node_number)
@@ -757,11 +776,11 @@ def visualize_blocks(B, title):
         # depending if in storage, or processing zone, assign y coordinates 
         # storage zone 
         if c_total[layer_idx][node_idx][0] == 'i':
-            y = c_total[layer_idx][node_idx][1]*-8 - c_total[layer_idx][node_idx][2]
+            y = c_total[layer_idx][node_idx][1]*- (lenStorageZones + lenProcessingZones) - c_total[layer_idx][node_idx][2]
 
         # processing zone 
         elif c_total[layer_idx][node_idx][0] == 'p':
-            y = -4 - 8*(c_total[layer_idx][node_idx][1]) - c_total[layer_idx][node_idx][2]
+            y = - lenStorageZones - (lenStorageZones + lenProcessingZones) *(c_total[layer_idx][node_idx][1]) - c_total[layer_idx][node_idx][2]
 
         # pos is a dictionary, pos((processingblock_number, qubit_number) = (x, y)). 
         # pos stores this for all the qubits in all the blocks 
@@ -825,7 +844,7 @@ def show_circuit_after_optimizing(BP, Nq, circ):
     # print(circuit)
 
 # show_circuit_after_optimizing(B, 10, circuit_of_qubits)
-# visualize_blocks(B, '')
+visualize_blocks(B, 'Visualizing Test')
 
 
 
