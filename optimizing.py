@@ -59,6 +59,14 @@ print('##########')
 def computeArrangements(B, Fsizes, Qmax):
     '''
     Given: 
+        B: 
+        Fsizes: 
+        Qmax: 
+    Returns: 
+        y: a list of Y positions for the qubits in the processing block s
+
+    Given a list of processing blocks, this function returns a list of y positions for the qubits in these processing blocks. 
+    The cost metric will be minimized with respect to a metric that quantifies the distances between qubits between layers. That's why we need y positions
     '''
 
     y = []
@@ -93,13 +101,6 @@ def computeArrangements(B, Fsizes, Qmax):
 # list of y positions is returned correctly 
 y_list = computeArrangements(B, Fsizes, QMAX)
 
-# print(y_list)
-
-
-# exit()
-
-# print(np.shape(y_list))
-# print(y_list)
 
 
 def computeTotalCost(Y, Nq):
@@ -113,7 +114,7 @@ def computeTotalCost(Y, Nq):
         Nq: Number of qubits in the circuit 
 
     Returns:
-        total rearrangement cost (int)
+        totCost: total rearrangement cost (int), from all layers to all neighbouring layers 
 
 
     '''
@@ -140,13 +141,6 @@ def computeTotalCost(Y, Nq):
 
 
 
-# test total cost calculation
-
-# totalCost = computeTotalCost(y_list, 10)
-# print('totalcost:',totalCost)
-
-
-# exit()
 
 
 def updateStep(Y, step, q1, q2, totCost):
@@ -189,14 +183,7 @@ def updateStep(Y, step, q1, q2, totCost):
     # return only the part of the Y list that is of interest 
     return newCost, Y[step]
 
-# print(y_list, totalCost)
 
-# newCost, Y_new = updateStep(y_list, 2, 2, 3, totalCost)
-
-# print(Y_new, newCost)
-
-
-# exit()
 
 def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     '''
@@ -215,7 +202,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     echo:   Do we want to print (debugging reasons)
 
     Returns: 
-        Updated list bNew of qubits in processing blocks 
+        bNew: Updated list bNew of qubits in processing blocks 
         List of total rearrangemet cost per iteration for displaying reasons
 
 
@@ -681,29 +668,12 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     return bNew    
 
 
-visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
+# visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
 
 bTest = improvePlacement(B, NQ, Fsizes, QMAX, MMAX, True)
 
 
 
+# visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, QMAX), NQ)))
 
-
-
-'''
-This is it for the algorithm! 
-
-Here, one can further investigate the developement of the totalcost with the swaps done. What we did now is we just swapped two qubits when the metric was okay with it. 
-The function does this once. This means: The function does this for every layer and every qubit in every layer. And looks at every qubit in every layer as a potential swapping partner.
-'''
-
-
-
-
-# plot_and_print(bTest)
-visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, QMAX), NQ)))
-
-# show_circuit_after_optimizing(B, 10, circuit_of_qubits)
-
-print(bTest == B)
 

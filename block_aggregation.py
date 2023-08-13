@@ -31,7 +31,7 @@ What is also of interest is:
 '''
 
 NQ = 20
-GATES = 40
+GATES = 50
 MMAX = 2
 QMAX = 4
 
@@ -60,15 +60,15 @@ repeat until termination condition is satisfied
 def EvaluateGateCoverage(S, G, Nq, Qmax, Mmax):
     '''
     evaluates gate coverage given: 
-        1. A set of qubit sets S
-        2. A gate Coverage set G
-        3. The total number of qubits 
-        4. The maximal number of qubits in a processing zone Qmax  
-        5. The maximal number of processing zones Mmax
+        1. S: A set of qubit sets S
+        2. G: A gate Coverage set G
+        3. Nq: The total number of qubits 
+        4. Qmax: The maximal number of qubits in a processing zone Qmax  
+        5. Mmax: The maximal number of processing zones Mmax
 
     returns two ints gateCoverage and qubitNonCoverage, indicating 
-        1. how many gates are covered with this constellation and 
-        2. the number of qubits that are in sets that are bigger than the maximum number of qubits in a processing zone. These qubits cannot be covered anymore
+        1. gateCoverage: how many gates are covered with this constellation and 
+        2. qubitNonCoverage: the number of qubits that are in sets that are bigger than the maximum number of qubits in a processing zone. These qubits cannot be covered anymore
 
     The gateCoverage is to be maximized in the course of this algorithm 
 
@@ -122,6 +122,18 @@ Mmax is the number of processing zones in one processing block
 def AggregateBlocksStep(layeredCirc, Nq, Qmax, Mmax):
     '''
     The goal is to find the set of S and G that produce the best GateCoverage!!
+
+    Given: 
+        layeredcirc:        A circuit, arranged in layers 
+        Nq:                 Number of qubits in the circuit
+        Qmax:               Maximum number of qubits in a processing zone 
+        Mmax:               Maximum number of processing zones 
+
+    Returns: 
+        SBest:              Set of qubits that maximize the gatecoverage
+        GBest:              Gates covered by the set of qubits that maximize the gatecoverage 
+        gateCoverageList:   For displaying purposes of the course of the algorithm 
+
     '''
 
     # S is a list of lists! G is a list of lists! 
@@ -379,7 +391,17 @@ print(G_best)
 def AggregateBlocksStepPostProcess(S, G, Nq, Qmax, Mmax):
     '''
     Given:
-        S - A set of qubits
+        S - A set of qubits in the processing zones 
+        G - Set of gates covered by these qubits 
+        Nq - Number of qubits 
+        Qmax -
+        Mmax - 
+    Returns: 
+        SP - Qubit sets in processing zones after padding with idle qubits 
+        GP - Gates covered by these new qubit sets (does not change)
+        Iset - A global pool of idle qubits that are not in processing zones  
+        c - Updatet pointers for all the qubits 
+
 
     After the block aggregation step, this function does a couple of things: 
         1. It selects the sets to be used as processing zone sets 
@@ -516,11 +538,14 @@ def PlaceIdlePoolQB(Fsizes, Iset, c):
     '''
     Given: 
         Fsizes, a list of sizes of storage zones. E.g. for two storages zones with size 10 each: Fsizes = [10,10]
+        Iset: A pool of idle qubits that are not inside processing zones
+        c: Pointer variables for the qubits in the idle pool
     Returns: 
         Fset, a set of storage zones filled with qubits 
+        cnew: An updated pointer list for the idle qubits 
 
     this function places qubits from a global idle pool into idle storage zones with max capacities specified by F sizes 
-    The qubits, in this version, are placed starting from the middle, outwards. 
+    The qubits, in this version, are placed starting from the middle outwards. 
     '''
 
     # number of storage zones: 
@@ -621,14 +646,15 @@ def blockProcessCircuit(rawCircuit, Nq, Fsizes, Qmax, Mmax):
     This function step by step removes gates from the given circuit rawCircuit, based on  
 
     Accepts: 
-    rawCircuit: The raw Circuit, 
-    Nq:         the number of Qubits in the circuit, 
-    Fsizes:     The sizes of the processing zones 
-    Qmax:       The maximal number of Qubits that can be stored within a processing zone 
-    Mmax:       The number of processing zones within a processing block 
+        rawCircuit: The raw Circuit, 
+        Nq:         the number of Qubits in the circuit, 
+        Fsizes:     The sizes of the processing zones 
+        Qmax:       The maximal number of Qubits that can be stored within a processing zone 
+        Mmax:       The number of processing zones within a processing block 
 
     Returns: 
-    B:          List of aggregated processing blocks
+        B:          List of aggregated processing blocks, arranged like: [[S, G, F, c], [....], ..., [S,G,F,c]] with len(B) = number of processing blocks 
+        
 
     '''
 
@@ -809,8 +835,16 @@ def visualize_blocks(B, title):
     node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
     plt.figure(figsize=(10, 8))
     plt.title(title)
-    nx.draw(G, pos, node_size=400, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
+    nx.draw(G, pos, node_size=200, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
     
+    # Add layer labels above nodes
+    for layer_no in range(len(c_total)):
+        layer_label = f'B{layer_no + 1}'
+        x = layer_no
+        y = max(pos[node][1] for node in pos if node[0] == layer_no) + 0.7  # Adjust the y-coordinate for the label placement
+        plt.text(x, y, layer_label, fontsize=12, ha='center', va='bottom')
+
+
     plt.show()       
 
 
@@ -844,7 +878,7 @@ def show_circuit_after_optimizing(BP, Nq, circ):
     # print(circuit)
 
 # show_circuit_after_optimizing(B, 10, circuit_of_qubits)
-visualize_blocks(B, 'Visualizing Test')
+# visualize_blocks(B, 'Visualizing Test')
 
 
 

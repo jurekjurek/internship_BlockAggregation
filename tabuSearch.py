@@ -6,22 +6,6 @@ from optimizing import *
 
 
 
-'''
-In this file, the so called tabu search is performed. 
-'''
-
-
-
-
-'''
-General note: 
-
-manchmal habe ich nicht auf dem Schirm, ob funktionen schon die debugging sachen (die listen zum plotten zum Beispiel) mit zuruckgeben, 
-daran koennte es also immer liegen 
-
-
-'''
-
 print('###########')
 print('Tabu Search')
 print('###########')
@@ -863,8 +847,6 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
 bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(B, Fsizes, QMAX, MMAX, NQ, TSiterations=600, TSlen=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
 
-print((costProgressTbl))
-print(bestCostProgressTbl)
 
 
 '''
@@ -893,7 +875,7 @@ title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(
 # print('B is: \n', B)
 # print('bNew is: \n', bNew)
 
-visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
+# visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
 
 
 '''
@@ -905,6 +887,19 @@ Now, for the alternating optimization.
 print('OPTIMIZING EVERYTING')
 
 def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSiterations, TSlen, echo, visualOutput):
+    '''
+    In this function, the deterministic and the tabu search algorithm are applied to a set of processing blocks B in an alternating manner. 
+    First, the deterministic algorithm is applied, then the tabu search. This scheme is repeated numOptimizationSteps times. 
+
+    Given: 
+        BP:                     List of processing blocks 
+        numOptimizationSteps:   Number of iterations for the alternating algorithm 
+        TSiterations:           Number of iterations for the tabu search 
+        TSlen:                  Length of the tabu list
+    Returns: 
+        bNew:                   The one constellation of qubits in processing blocks that minimizes the total cost
+        costList:               Evoluation of the cost over the iterations of the alternating algorithm
+    '''
     bNew = BP 
 
     # keeps track of the total best cost 
@@ -938,6 +933,7 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
         bNew = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
 
         print('total cost 1, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
+
 
         if echo == True: 
             print('echo')
@@ -984,13 +980,17 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     # 
     return grPBest, costTotBest, grPtbl, totalBestCostTbl, costList, BList[0]
  
-a,b,c,d,e, bNew = optimizeArrangements(B, NQ, Fsizes, QMAX, MMAX, numOptimizationSteps= 15, TSiterations= 5000, TSlen= 100, echo = True, visualOutput = False)
+a,b,c,d,costEvolution, bNew = optimizeArrangements(B, NQ, Fsizes, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, TSlen= 100, echo = True, visualOutput = False)
+
+
+visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
 
 visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, Fsizes, QMAX), NQ)))
 
+
 plt.figure()
-plt.plot(e, label = 'cost')
-plt.title('Evolution of the cost with the iterations \n')
+plt.plot(costEvolution, label = 'cost')
+plt.title('Evolution of total cost with alternating iterations \n')
 plt.xlabel('Iterations')
 plt.ylabel('Cost')
 plt.legend()
