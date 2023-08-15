@@ -875,7 +875,7 @@ title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(
 # print('B is: \n', B)
 # print('bNew is: \n', bNew)
 
-# visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
+visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
 
 
 '''

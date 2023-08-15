@@ -1,8 +1,15 @@
 
 
-Eigentlich ist der Fahrplan ab jetzt sehr klar. 
+Quantum Fourier Transformation  
 
-Einfach die Tabu search mit Debugger nachvollziehen, entsprechend anpassen. 
+Gatter als Matrizen - Algorithmus verallgemeinern 
 
-Dann numpy. Und dann Uli fragen, was ich nochmal machen sollte. 
+Animation 
+
+Greedy search 
+
+Displayment of qubits in gatters in the end 
+
+wajanis@uni-mainz.de
+
 
