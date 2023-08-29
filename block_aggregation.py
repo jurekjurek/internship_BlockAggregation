@@ -30,19 +30,19 @@ What is also of interest is:
 
 '''
 
-NQ = 10
-GATES = 20
-MMAX = 1
+NQ = 20
+GATES = 40
+MMAX = 2
 QMAX = 4
 
 
 circuit_of_qubits = random_circuit(NQ, GATES)
 
-show_circuit(10,circuit_of_qubits)
+# show_circuit(10,circuit_of_qubits)
 
 layeredcircuit = LayerCircuit(10, circuit_of_qubits)
 # print(layeredcircuit)
-show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
+# show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
 
 # print(layeredcircuit)
 # exit()

@@ -10,6 +10,8 @@ Greedy search
 
 Displayment of qubits in gatters in the end 
 
+PDF anpassen. 
+
 wajanis@uni-mainz.de
 
 
