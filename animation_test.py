@@ -51,6 +51,8 @@ for i in range(20):
     artists.append(container)
 
 
+print(np.shape(artists))
+
 ani = animation.ArtistAnimation(fig=fig, artists=artists, interval=400)
 plt.show()
 

@@ -246,6 +246,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
     Note that it doesn't make any sense to swap whole storage zones, because we can freely swap qubits between the storage zones. 
     '''
 
+    bList = []
+
     # Iterate over the processing blocks, in original file we started at one but I guess its fine 
     for step in range(numSteps):
 
@@ -265,6 +267,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
             SPf, GPf, FPf, cf = bNew[step+1]
         
 
+
+        bList.append(bNew)
 
 
         '''
@@ -665,15 +669,15 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     break 
 
     # here, more parameters are returned in the future, for debugging and displaying reaasons 
-    return bNew    
+    return bNew, bList    
 
 
-visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
+# visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
 
-bTest = improvePlacement(B, NQ, Fsizes, QMAX, MMAX, True)
+bTest, bList = improvePlacement(B, NQ, Fsizes, QMAX, MMAX, True)
 
+animate_solving(bList, 'animation_test')
 
-
-visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, QMAX), NQ)))
+# visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, QMAX), NQ)))
 
 
