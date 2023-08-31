@@ -994,6 +994,134 @@ def animate_solving(bList, title):
 
 
 
+def update(num, bList, title, ax):
+    ax.clear()
+
+    B = bList[num]
+    
+    if num < len(bList)-1:
+        print('DEBUG: ', bList[num] == bList[num+1])
+
+    # extract c from B
+    c_total = []
+    for i in range(len(B)):
+        c_total.append(B[i][3])
+
+    # Graph 
+    G = nx.Graph() 
+
+    
+
+    # add nodes for all the qubits in the different layers 
+    # every qubit gets assigned a zone keyword indicating in what zone it is and a label keyword indicating what number qubit it is. Also a layer number indicating what layer it is in. 
+
+    # iterate over blocks 
+    for layer_no in range(len(c_total)):
+
+        # iterate over qubits in block 
+        for qb_no in range(len(c_total[layer_no])):
+
+            # if in storage zone, add with corresponding label and zone keyword 
+            if c_total[layer_no][qb_no][0] == 'i':
+                G.add_node((layer_no, qb_no), layer=layer_no, zone='storage', label=str(qb_no))
+
+            # if in storage zone, add with corresponding label and zone keyword, remember: qbs can still be idle in processing zone, so we have to differentiate 
+            elif c_total[layer_no][qb_no][0] == 'p': 
+
+                if c_total[layer_no][qb_no][3] == 'i':
+                    G.add_node((layer_no, qb_no), layer=layer_no, zone='processing_idle', label=str(qb_no))
+
+                elif c_total[layer_no][qb_no][3] == 'a':
+                    G.add_node((layer_no, qb_no), layer=layer_no, zone='processing_active', label=str(qb_no))
+
+            # print(G.nodes())
+
+    # assign positions to all the qubits 
+    pos = {}
+
+    lenProcessingZones =  len(B[0][0][0]) # corresponds to S list 
+    print((B[0][0][0]))
+    print(len(B[0][2][0]))
+    # print(c_total[0])
+    # print(c_total[0][2])
+    lenStorageZones =  len(B[0][2][0]) # corresponds to F list 
+
+    for node in G.nodes():
+
+        # node is a tuple, node = (layer_number, node_number)
+        layer_idx, node_idx = node
+        
+        # x position is just the layer number 
+        x = layer_idx
+
+        # depending if in storage, or processing zone, assign y coordinates 
+        # storage zone 
+        if c_total[layer_idx][node_idx][0] == 'i':
+            y = c_total[layer_idx][node_idx][1]*- (lenStorageZones + lenProcessingZones) - c_total[layer_idx][node_idx][2]
+
+        # processing zone 
+        elif c_total[layer_idx][node_idx][0] == 'p':
+            y = - lenStorageZones - (lenStorageZones + lenProcessingZones) *(c_total[layer_idx][node_idx][1]) - c_total[layer_idx][node_idx][2]
+
+        # pos is a dictionary, pos((processingblock_number, qubit_number) = (x, y)). 
+        # pos stores this for all the qubits in all the blocks 
+
+        pos[node] = (x, y)
+
+
+    # add edges 
+    # We always add an edge between a qubit and the one in the layer next to it on the right. So, for the rightmost layer, we do not have to add an edge.
+    for layer_no in range(len(c_total)-1):
+        for qb_no in range(len(c_total[layer_no])):
+            # current node is tuple
+            current_node = (layer_no, qb_no)
+
+            # want to find the node in the layer next to it on the right that has the same label (corresponds to the same qubit)
+            for qb_no_ in range(len(c_total[layer_no+1])):
+
+                # if we found the qubit with the same label 
+                if G.nodes[current_node]['label'] == G.nodes[(layer_no+1, qb_no_)]['label']:
+                    next_node = (layer_no + 1, qb_no_) 
+
+                    # add an edge connecting these two nodes to the graph 
+                    G.add_edge(current_node, next_node)
+
+    # clarifying that the label keyword is actually the label that we want to use 
+    node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
+    # plt.figure(figsize=(10, 8))
+    # plt.title(title)
+    
+    nx.draw(G, pos, node_size=200, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
+
+    ax.set_title(title + ', iteration: ' + str(num))
+
+    # Add layer labels above nodes
+    # for layer_no in range(len(c_total)):
+    #     layer_label = f'B{layer_no + 1}'
+    #     x = layer_no
+    #     y = max(pos[node][1] for node in pos if node[0] == layer_no) + 0.7  # Adjust the y-coordinate for the label placement
+    #     plt.text(x, y, layer_label, fontsize=12, ha='center', va='bottom')
+
+
+    # plt.show() 
+
+    # Scale plot ax
+    # ax.set_title("Frame %d:    "%(num+1) +  " - ".join(path), fontweight="bold")
+    # ax.set_xticks([])
+    # ax.set_yticks([])
+
+
+
+
+def animate_solving(bList, title):
+    fig, ax = plt.subplots(figsize=(10,8))
+
+    ani = animation.FuncAnimation(fig, update, frames=6, interval=1000, repeat=True, fargs= (bList, title, ax))
+    plt.show()
+
+
+
+
 
 def show_circuit_after_optimizing(BP, Nq, circ):
     '''

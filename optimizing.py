@@ -268,7 +268,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
         
 
 
-        bList.append(bNew)
+        
 
 
         '''
@@ -372,6 +372,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     # swap q1 and q2 in Y and update the costTot
                     costTot, Y[step] = updateStep(Y, step, q_temp, q2_temp, costTot)
+
+                    bList.append(bNew)
 
                     # break, because we're not going to swap anymore. 
                     # This is all the swapping we were interested in for 1)
@@ -479,6 +481,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     # update total cost and swap qubits in Y list 
                     costTot, Y[step] = updateStep(Y, step, q_temp, q2_temp, costTot)
 
+                    bList.append(bNew)
+
                     break 
 
 
@@ -554,6 +558,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                         bNew[step][3][SPz2[qi]][1] = z
                         # we have to do this in the for loop, because we can always only swap two qubits, not a set of qubits - maybe np.vectorize at some point 
                         costTot, Y[step] = updateStep(Y, step, SPz[qi], SPz2[qi], costTot)
+
+                    bList.append(bNew)
 
                     break
 
@@ -664,6 +670,8 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     costTot, Y[step] = updateStep(Y, step, q1, q2, costTot)
 
+                    bList.append(bNew)
+
                     # break has to be here, I put it one to the right and it did not work. Obviously. It just kept exchanging already exchanged qubits. 
                     # So: After one qubit exchange, we don't want to further exchange and break! 
                     break 
@@ -675,6 +683,11 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 # visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
 
 bTest, bList = improvePlacement(B, NQ, Fsizes, QMAX, MMAX, True)
+
+for i in range(0, len(bList)):
+    if bList[i] == bList[i-1]:
+        print('this is not supposed to happen')
+
 
 animate_solving(bList, 'animation_test')
 
