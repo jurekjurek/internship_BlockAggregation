@@ -373,7 +373,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     # swap q1 and q2 in Y and update the costTot
                     costTot, Y[step] = updateStep(Y, step, q_temp, q2_temp, costTot)
 
-                    bList.append(bNew)
+                    bList.append(copy.deepcopy(bNew))
 
                     # break, because we're not going to swap anymore. 
                     # This is all the swapping we were interested in for 1)
@@ -481,7 +481,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                     # update total cost and swap qubits in Y list 
                     costTot, Y[step] = updateStep(Y, step, q_temp, q2_temp, costTot)
 
-                    bList.append(bNew)
+                    bList.append(copy.deepcopy(bNew))
 
                     break 
 
@@ -559,7 +559,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
                         # we have to do this in the for loop, because we can always only swap two qubits, not a set of qubits - maybe np.vectorize at some point 
                         costTot, Y[step] = updateStep(Y, step, SPz[qi], SPz2[qi], costTot)
 
-                    bList.append(bNew)
+                    bList.append(copy.deepcopy(bNew))
 
                     break
 
@@ -670,7 +670,7 @@ def improvePlacement(BP, Nq, Fsizes, Qmax, Mmax, echo):
 
                     costTot, Y[step] = updateStep(Y, step, q1, q2, costTot)
 
-                    bList.append(bNew)
+                    bList.append(copy.deepcopy(bNew))
 
                     # break has to be here, I put it one to the right and it did not work. Obviously. It just kept exchanging already exchanged qubits. 
                     # So: After one qubit exchange, we don't want to further exchange and break! 

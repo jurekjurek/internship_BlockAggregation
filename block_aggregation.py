@@ -1116,7 +1116,7 @@ def update(num, bList, title, ax):
 def animate_solving(bList, title):
     fig, ax = plt.subplots(figsize=(10,8))
 
-    ani = animation.FuncAnimation(fig, update, frames=6, interval=1000, repeat=True, fargs= (bList, title, ax))
+    ani = animation.FuncAnimation(fig, update, frames=len(bList), interval=100, repeat=False, fargs= (bList, title, ax))
     plt.show()
 
 

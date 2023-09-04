@@ -350,6 +350,9 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
     bNew = BP
 
+    # for animation reasons 
+    bList = []
+
     # at this point, the stuff is also timed 
     # and reap and sow again due to displaying and developement reasons 
 
