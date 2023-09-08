@@ -279,7 +279,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     # create the list of Y positions
     Y = computeArrangements(BP, Fsizes, Qmax)
 
-    # computet total cost 
+    # compute total cost 
     costTot = computeTotalCost(Y, Nq)
 
 
@@ -482,7 +482,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             swapQBListsSwapped = [swapQBLists[ssi][rot:] + swapQBLists[ssi][:rot] for ssi in range(len(swapQBLists))]
 
 
-        # In case we want to exchange whole processing zones
+        # In case we want to exchange whole processing zones / and still can 
         else: 
 
             # I guess, if there is only one processing zone, we can skip this step 
