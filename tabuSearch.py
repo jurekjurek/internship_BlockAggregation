@@ -848,9 +848,7 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     return bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr
             
 
-bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(B, Fsizes, QMAX, MMAX, NQ, TSiterations=600, TSlen=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
-
-
+bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(processingBlockListAfterOptimizing, FSIZES, QMAX, MMAX, NQ, TSiterations=600, TSlen=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
 
 '''
 Plotting cost evolution
@@ -878,7 +876,8 @@ title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(
 # print('B is: \n', B)
 # print('bNew is: \n', bNew)
 
-visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
+# visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
+
 
 
 '''
@@ -888,6 +887,7 @@ Now, for the alternating optimization.
 '''
 
 print('OPTIMIZING EVERYTING')
+
 
 def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSiterations, TSlen, echo, visualOutput):
     '''
@@ -903,7 +903,7 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
         bNew:                   The one constellation of qubits in processing blocks that minimizes the total cost
         costList:               Evoluation of the cost over the iterations of the alternating algorithm
     '''
-    bNew = BP 
+    bNew = BP
 
     # keeps track of the total best cost 
     totalBestCostTbl = [[] for _ in range(2 * numOptimizationSteps)]
@@ -929,11 +929,10 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     # iterate over the number of Optimizing steps, given the function as argument 
     for optimizationstep in range(numOptimizationSteps): 
 
-
         print('total cost 0, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
 
         # deterministic algorithm, returns updated bNew 
-        bNew = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
+        bNew, tempListUnimportant = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
 
         print('total cost 1, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
 
@@ -983,12 +982,15 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     # 
     return grPBest, costTotBest, grPtbl, totalBestCostTbl, costList, BList[0]
  
-a,b,c,d,costEvolution, bNew = optimizeArrangements(B, NQ, Fsizes, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, TSlen= 100, echo = True, visualOutput = False)
+
+a,b,c,d,costEvolution, bNew = optimizeArrangements(processingBlockList, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 600, TSlen= 30, echo = True, visualOutput = False)
 
 
-visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, QMAX), NQ)))
+visualize_blocks(processingBlockList, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockList, FSIZES, QMAX), NQ)))
 
-visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, Fsizes, QMAX), NQ)))
+
+
+visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, FSIZES, QMAX), NQ)))
 
 
 plt.figure()
