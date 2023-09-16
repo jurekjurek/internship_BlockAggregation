@@ -983,7 +983,7 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     return grPBest, costTotBest, grPtbl, totalBestCostTbl, costList, BList[0]
  
 
-a,b,c,d,costEvolution, bNew = optimizeArrangements(processingBlockList, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 600, TSlen= 30, echo = True, visualOutput = False)
+a,b,c,d,costEvolution, bNew = optimizeArrangements(processingBlockList, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, TSlen= 100, echo = True, visualOutput = False)
 
 
 visualize_blocks(processingBlockList, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockList, FSIZES, QMAX), NQ)))

@@ -314,3 +314,190 @@ def animate_solving(bList, title):
 
     # return None
 
+
+
+'''
+Was in blockaggreation.py
+'''
+
+            # zoneCtr = 1
+            # gateCoverage = 0
+
+
+
+            # # essentially the same as is done in EvaulateGateCoverage???
+
+
+            # # evaluate the gate coverage for this specific constellation of sets 
+            # for qubitSetNumber in range(len(gatesCovered)):
+            #     if len(processingZoneQubits[qubitSetNumber]) < qMax and zoneCtr <= mMax:
+            #         gateCoverage += len(gatesCovered[qubitSetNumber])
+            #         zoneCtr += 1
+
+
+
+
+
+'''
+aus letzter fct in block_aggregation.py
+'''
+
+            # iterate over the gates in the gates sets corresponding to qubit sets in the processing zones 
+            # for gi in range(len(GP[gpi])):
+
+                # print(cRaw[gi][0], GP[gpi][gi])
+
+                # Remove the covered gate from the circuit
+                # for k in range(len(cRaw)):
+                    # if cRaw[k][0] == GP[gpi][gi]:
+                # cRaw.pop(GP[gpi][gi])    
+                # break
+                # cRaw = [x for x in cRaw if x != GP[gpi][gi]]
+
+
+'''
+First try animation function
+'''
+
+
+# def animate_solving(bList, title):
+#     '''
+#     This function animates a solving process given a list of Bs in the course of the iterations 
+#     '''
+
+#     fig, ax = plt.subplots()
+
+#     artists = []
+#     # container = []
+
+#     for i in range(len(bList)):
+
+#         B = bList[i]
+
+#         container = []
+
+#         # extract c from B
+#         c_total = []
+#         for j in range(len(B)):
+#             c_total.append(B[j][3])
+
+#         # Graph 
+#         G = nx.Graph() 
+
+        
+
+#         # add nodes for all the qubits in the different layers 
+#         # every qubit gets assigned a zone keyword indicating in what zone it is and a label keyword indicating what number qubit it is. Also a layer number indicating what layer it is in. 
+
+#         # iterate over blocks 
+#         for layerNumber in range(len(c_total)):
+
+#             # iterate over qubits in block 
+#             for qubitNumber in range(len(c_total[layerNumber])):
+
+#                 # if in storage zone, add with corresponding label and zone keyword 
+#                 if c_total[layerNumber][qubitNumber][0] == 'i':
+#                     G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='storage', label=str(qubitNumber))
+
+#                 # if in storage zone, add with corresponding label and zone keyword, remember: qbs can still be idle in processing zone, so we have to differentiate 
+#                 elif c_total[layerNumber][qubitNumber][0] == 'p': 
+
+#                     if c_total[layerNumber][qubitNumber][3] == 'i':
+#                         G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='processing_idle', label=str(qubitNumber))
+
+#                     elif c_total[layerNumber][qubitNumber][3] == 'a':
+#                         G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='processing_active', label=str(qubitNumber))
+
+#                 # print(G.nodes())
+
+#         # assign positions to all the qubits 
+#         pos = {}
+
+#         lenProcessingZones =  len(B[0][0][0]) # corresponds to S list 
+#         lenStorageZones =  len(B[0][2][0]) # corresponds to F list 
+
+#         for node in G.nodes():
+
+#             # node is a tuple, node = (layer_number, node_number)
+#             layer_idx, node_idx = node
+            
+#             # x position is just the layer number 
+#             x = layer_idx
+
+#             # depending if in storage, or processing zone, assign y coordinates 
+#             # storage zone 
+#             if c_total[layer_idx][node_idx][0] == 'i':
+#                 y = c_total[layer_idx][node_idx][1]*- (lenStorageZones + lenProcessingZones) - c_total[layer_idx][node_idx][2]
+
+#             # processing zone 
+#             elif c_total[layer_idx][node_idx][0] == 'p':
+#                 y = - lenStorageZones - (lenStorageZones + lenProcessingZones) *(c_total[layer_idx][node_idx][1]) - c_total[layer_idx][node_idx][2]
+
+#             # pos is a dictionary, pos((processingblock_number, qubit_number) = (x, y)). 
+#             # pos stores this for all the qubits in all the blocks 
+
+#             pos[node] = (x, y)
+
+
+#         # add edges 
+#         # We always add an edge between a qubit and the one in the layer next to it on the right. So, for the rightmost layer, we do not have to add an edge.
+#         for layerNumber in range(len(c_total)-1):
+#             for qubitNumber in range(len(c_total[layerNumber])):
+#                 # current node is tuple
+#                 current_node = (layerNumber, qubitNumber)
+
+#                 # want to find the node in the layer next to it on the right that has the same label (corresponds to the same qubit)
+#                 for qubitNumber_ in range(len(c_total[layerNumber+1])):
+
+#                     # if we found the qubit with the same label 
+#                     if G.nodes[current_node]['label'] == G.nodes[(layerNumber+1, qubitNumber_)]['label']:
+#                         next_node = (layerNumber + 1, qubitNumber_) 
+
+#                         # add an edge connecting these two nodes to the graph 
+#                         G.add_edge(current_node, next_node)
+
+#         # clarifying that the label keyword is actually the label that we want to use 
+#         node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
+#         # plt.figure(figsize=(10, 8))
+#         plt.title(title + ', iteration' + str(i))
+#         nx.draw(G, pos, node_size=200, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
+        
+#         # Add layer labels above nodes
+#         # for layerNumber in range(len(c_total)):
+#         #     layer_label = f'B{layerNumber + 1}'
+#         #     x = layerNumber
+#         #     y = max(pos[node][1] for node in pos if node[0] == layerNumber) + 0.7  # Adjust the y-coordinate for the label placement
+#         #     plt.text(x, y, layer_label, fontsize=12, ha='center', va='bottom')
+
+
+#         # Collect artists for the frame
+#         frame_artists = ax.findobj()
+#         container.extend(frame_artists)  # Extend the container with the artists for this frame
+
+
+
+#         artists.append(container.copy())
+
+#         # container = 
+#         # artists.append(frame_artists)
+#         print('appended' + str(i))
+
+       
+
+#     for k in range(len(artists)):
+#         if k < len(artists)-1:
+#             print(artists[k] == artists[k+1])
+
+#     print(np.shape(artists)) 
+#     artists = np.array(artists)
+
+#     artists = artists.flatten()
+
+#     ani = animation.ArtistAnimation(fig=fig, artists=artists, interval=40)
+#     plt.show()
+
+#     # return None
+
+
+
+

@@ -14,4 +14,9 @@ PDF anpassen.
 
 wajanis@uni-mainz.de
 
+Renamed in the following manner: 
+
+S -> processingZoneQubits
+G = gatesCovered
+
 

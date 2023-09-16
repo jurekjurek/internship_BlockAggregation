@@ -10,7 +10,7 @@ import math
 import matplotlib.animation as animation
 
 import networkx as nx
-
+from fancify_text import italic, bold, italicSerif
  
 from randomcircuit import * 
 from layeredcircuit import * 
@@ -44,11 +44,8 @@ circuitOfQubits = random_circuit(NQ, GATES)
 # show_circuit(10,circuit_of_qubits)
 
 layeredCircuit = LayerCircuit(10, circuitOfQubits)
-# print(layeredcircuit)
 # show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
 
-# print(layeredcircuit)
-# exit()
 
 '''
 Now that we have the layered circle going, we can focus on the block aggregation. 
@@ -145,23 +142,19 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
 
     # before starting the iteration over layers and gates, initialize the S and G lists
     # The s list, the list containing the qubits, will be initialized as follows: S = [[1],[2],...], so the first qubit set contains only the first qubit, the second set only the second qubit and so on
-    sList = [[n] for n in range(nQ)]
+    aggregatedQubits = [[n] for n in range(nQ)]
 
 
     # same for the gate coverage sets
-    gList = [[] for _ in range(nQ)]
-
-    # try some numpy stuff out 
-    G_test = [[None] for _ in range(nQ)]
-    G_np = np.array(G_test)
+    gatesCovered = [[] for _ in range(nQ)]
 
     # also the pointer variables will be initialized, in the beginning cn = n, because every qubit has its own set S_n, later the sets will get merged and more qubits will have the same cn
     pointerTable = [n for n in range(nQ)]
 
 
     # shall be overwritten quickly, 
-    sListBest = []
-    gListBest = []
+    aggregatedQubitsBest = []
+    gatesCoveredBest = []
 
     # initialize gate coverage counter, the variable to be maximized
     bestGateCoverage = 0
@@ -171,40 +164,27 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
 
     # iterate over layers 
     for layerNumber in range(len(layeredCirc)):
-        
+
         # iterate over gates in layers 
         for gateNumber in range(len(layeredCirc[layerNumber])):
-            # print(layeredCirc)
 
             gate = layeredCirc[layerNumber][gateNumber]
-
-            # print('gate test: ', gate)
             
             # define qubit one and two, that are part of the gate gateNumber in layer layerNumber 
             firstGateQubit = gate[1][0]
             secondGateQubit = gate[1][1]
 
-            # print("Qubits one and two: ", QB_n, QB_m)
-            # print('belonging to gate ', gate)
-
-            # now we define, for this specific for loop, the two pointers cm and cn. We get them from the pointer list pointerTable
-            # Remember: cm and cn are just two numbers. 
             # To what qubit set do the two qubits belong? 
             pointerFirstGateQubit = pointerTable[firstGateQubit]
             pointerSecondGateQubit = pointerTable[secondGateQubit]
 
-            # print('Corresponding pointers to qubit sets: ', cn, cm)
             
             # append gate (which is not just a number) to gate coverage set of qubit set corresponding to cn
-            if gList[pointerFirstGateQubit] != []:
-                gList[pointerFirstGateQubit].append(gate[0])
-            if gList[pointerFirstGateQubit] == []:
-                gList[pointerFirstGateQubit] = [gate[0]]
+            if gatesCovered[pointerFirstGateQubit] != []:
+                gatesCovered[pointerFirstGateQubit].append(gate[0])
+            if gatesCovered[pointerFirstGateQubit] == []:
+                gatesCovered[pointerFirstGateQubit] = [gate[0]]
             
-            # print(G_np[cn], G_np, gate[0])
-            G_np[pointerFirstGateQubit] = gate[0]
-
-            # print(G_np[cn], G_np, gate[0], type(G_np), np.shape(G_np))
 
             # if cn and cm are equal, meaning they are part of the same qubit set, continue
             if pointerFirstGateQubit == pointerSecondGateQubit: 
@@ -212,49 +192,30 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
 
             # Merge Qubit sets
             # We always merge the smaller to the larger set. So if the set belonging to cm is larger than the set belonging to cn, swap them 
-            if len(sList[pointerFirstGateQubit]) < len(sList[pointerSecondGateQubit]):
+            if len(aggregatedQubits[pointerFirstGateQubit]) < len(aggregatedQubits[pointerSecondGateQubit]):
                 temp = pointerSecondGateQubit
                 pointerSecondGateQubit = pointerFirstGateQubit 
                 pointerFirstGateQubit = temp
 
             # We merge the qubit sets together
-            sList[pointerFirstGateQubit] = sList[pointerFirstGateQubit] + sList[pointerSecondGateQubit]
+            aggregatedQubits[pointerFirstGateQubit] = aggregatedQubits[pointerFirstGateQubit] + aggregatedQubits[pointerSecondGateQubit]
 
             # And we merge the gate coverage sets together
             # Remember: Gate n connects qubits n and m, so we dont have to append the gate to G[cm] as well, if we did, we would have it twice 
-            gList[pointerFirstGateQubit] = gList[pointerFirstGateQubit] + gList[pointerSecondGateQubit]
-
-            # a = np.array(G_np[cn])
-            # b = np.array(G_np[cm])
-
-
-            # print(a, b)
-            if G_np[pointerFirstGateQubit] != None and G_np[pointerSecondGateQubit] != None: 
-                # print('Want to concatenate:', G_np[cn], G_np[cm])
-                np.concatenate((G_np[pointerFirstGateQubit], G_np[pointerSecondGateQubit])) 
-        
-            # G_np[cn] = np.append(G_np[cn], temp_np)
-
+            gatesCovered[pointerFirstGateQubit] = gatesCovered[pointerFirstGateQubit] + gatesCovered[pointerSecondGateQubit]
 
 
             # All the pointers that belonged to the qubits in set S[cm] will now be pointing to set S[cn]
-            for i in range(len(sList[pointerSecondGateQubit])):
+            for qubitNo in range(len(aggregatedQubits[pointerSecondGateQubit])):
 
                 # qubits are just numbers in the code, so S[cm][i] returns exactly the n-th qubit of all qubits. 
-                pointerTable[sList[pointerSecondGateQubit][i]] = pointerFirstGateQubit     # all elements in S[cm] which represent qubits stored as numbers are assigned an element in the pointerTable list corresponding to cn
+                pointerTable[aggregatedQubits[pointerSecondGateQubit][qubitNo]] = pointerFirstGateQubit     # all elements in S[cm] which represent qubits stored as numbers are assigned an element in the pointerTable list corresponding to cn
 
             # The qubit set S[cm] is emptied 
-            sList[pointerSecondGateQubit] = []
+            aggregatedQubits[pointerSecondGateQubit] = []
 
             # The gate coverage set corresponding to Set cm is emptied, because it was merged above
-            gList[pointerSecondGateQubit] = []
-            G_np[pointerSecondGateQubit] = [None]
-
-            # G_np[cm] = np.empty(1)
-
-            # print('the list looks like this:', S)
-            # print('the gatelist looks like this:', G)
-            # print('the pointerlist looks like: ', pointerTable)
+            gatesCovered[pointerSecondGateQubit] = []
 
             # Remember: S is sorted list and G is a sorted list
             # They are sorted by size; biggest qubits sets as first elements, biggest gate coverage sets as first elements
@@ -263,8 +224,8 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
             # if cn is not the first element in the list already (if we append something to the biggest element, it stays the biggest element), we dont have to do anything 
             if pointerFirstGateQubit > 0:
 
-                # we want to move S[cn] to the appropriate position in S. Compare to the element that is one element after it in the list. If it is bigger, move S[cn] up one element
-                while (len(sList[pointerFirstGateQubit]) > len(sList[pointerFirstGateQubit-1]) and pointerFirstGateQubit != 0) or gList[pointerFirstGateQubit-1] == None:
+                # we want to move the qubit to the appropriate position in aggregatedQubits. Compare to the element that is one element after it in the list. If it is bigger, move S[cn] up one element
+                while (len(aggregatedQubits[pointerFirstGateQubit]) > len(aggregatedQubits[pointerFirstGateQubit-1]) and pointerFirstGateQubit != 0) or gatesCovered[pointerFirstGateQubit-1] == None:
                     
                     # in the pointer list pointerTable, assign cn to all elements that are assigned cn - 1
 
@@ -272,22 +233,22 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
 
                     # remember: We effectively move S[] up in the set of qubits S, so upon moving up one step, we effectively replace S[cn] and S[cn-1] as well as the pointers that point to them;
                     # the pointers of the qubits that are stored in set cn will become cn-1 and vice versa 
-                    for k in range(len(sList[pointerFirstGateQubit])):
-                        pointerTable[sList[pointerFirstGateQubit][k]] = pointerFirstGateQubit - 1
+                    for k in range(len(aggregatedQubits[pointerFirstGateQubit])):
+                        pointerTable[aggregatedQubits[pointerFirstGateQubit][k]] = pointerFirstGateQubit - 1
 
-                    for k in range(len(sList[pointerFirstGateQubit-1])):
-                        pointerTable[sList[pointerFirstGateQubit-1][k]] = pointerFirstGateQubit
+                    for k in range(len(aggregatedQubits[pointerFirstGateQubit-1])):
+                        pointerTable[aggregatedQubits[pointerFirstGateQubit-1][k]] = pointerFirstGateQubit
 
 
                     # swap the two elements S[cn] and S[cn-1], effectively moving S[cn] up one element in the list. 
-                    templist = sList[pointerFirstGateQubit]
-                    sList[pointerFirstGateQubit] = sList[pointerFirstGateQubit-1]
-                    sList[pointerFirstGateQubit-1] = templist
+                    templist = aggregatedQubits[pointerFirstGateQubit]
+                    aggregatedQubits[pointerFirstGateQubit] = aggregatedQubits[pointerFirstGateQubit-1]
+                    aggregatedQubits[pointerFirstGateQubit-1] = templist
 
                     # swap the two elements G[cn] and G[cn-1]
-                    templist = gList[pointerFirstGateQubit]
-                    gList[pointerFirstGateQubit] = gList[pointerFirstGateQubit-1]
-                    gList[pointerFirstGateQubit-1] = templist 
+                    templist = gatesCovered[pointerFirstGateQubit]
+                    gatesCovered[pointerFirstGateQubit] = gatesCovered[pointerFirstGateQubit-1]
+                    gatesCovered[pointerFirstGateQubit-1] = templist 
 
                     pointerFirstGateQubit -= 1
 
@@ -297,24 +258,21 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
 
             if pointerSecondGateQubit < nQ-1:
 
-                # if cm < len(S):
-                #     break 
+                while len(aggregatedQubits[pointerSecondGateQubit+1]) > 0:
+                    for k in range(len(aggregatedQubits[pointerSecondGateQubit+1])):
+                        pointerTable[aggregatedQubits[pointerSecondGateQubit+1][k]] = pointerSecondGateQubit
 
-                while len(sList[pointerSecondGateQubit+1]) > 0:
-                    for k in range(len(sList[pointerSecondGateQubit+1])):
-                        pointerTable[sList[pointerSecondGateQubit+1][k]] = pointerSecondGateQubit
+                    aggregatedQubits[pointerSecondGateQubit] = aggregatedQubits[pointerSecondGateQubit+1]
+                    aggregatedQubits[pointerSecondGateQubit+1] = []
 
-                    sList[pointerSecondGateQubit] = sList[pointerSecondGateQubit+1]
-                    sList[pointerSecondGateQubit+1] = []
-
-                    gList[pointerSecondGateQubit] = gList[pointerSecondGateQubit+1]
-                    gList[pointerSecondGateQubit+1] = []        
+                    gatesCovered[pointerSecondGateQubit] = gatesCovered[pointerSecondGateQubit+1]
+                    gatesCovered[pointerSecondGateQubit+1] = []        
 
                     pointerSecondGateQubit += 1
 
 
 
-                    if pointerSecondGateQubit >= len(sList)-1:
+                    if pointerSecondGateQubit >= len(aggregatedQubits)-1:
                         break
                 
 
@@ -328,7 +286,7 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
             # Now that the qubit set as well as the gate coverage set are updatet, check the gate coverage
             # So: How many gates are covered by the Qubit sets S = [S_1, S_2, ...] ?
 
-            gateCoverage1, qubitNonCoverage = EvaluateGateCoverage(sList, gList, nQ, qMax, mMax)
+            gateCoverage, qubitNonCoverage = EvaluateGateCoverage(aggregatedQubits, gatesCovered, nQ, qMax, mMax)
 
             # termination condition: 
             # if the remaining qubits - those that can be covered by the constellation (excluding these that cannot be covered because they are more than Q) - are less than the qubits that can be stored in the processing zones 
@@ -336,46 +294,26 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
             if nQ - qubitNonCoverage < mMax * qMax: 
 
                 print('Termination condition reached!')
-                # function returns S_best and G_best, because we're running out of space 
-
-                print(np.shape(gListBest))
-                return sListBest, gListBest, gateCoverageList
-            
-            zoneCtr = 1
-            gateCoverage = 0
-
-
-
-            # essentially the same as is done in EvaulateGateCoverage???
-
-
-            # evaluate the gate coverage for this specific constellation of sets 
-            for qubitSetNumber in range(len(gList)):
-                if len(sList[qubitSetNumber]) < qMax and zoneCtr <= mMax:
-                    gateCoverage += len(gList[qubitSetNumber])
-                    zoneCtr += 1
-
-
-            gateCoverageList.append(gateCoverage1)
-
-            # if the gatecoverage for this particular constellation of sets is better than for the last constellation of sets
-            if gateCoverage1 > bestGateCoverage: 
-                bestGateCoverage = gateCoverage1
-                
-
-                # also, this particular constellation of Qubit sets and of Gate sets are updatet as the best ones so far 
-                # S_best = S.copy()
-                # G_best = G.copy()
-
-                sListBest = np.copy(sList)
-                gListBest = np.copy(gList)
-
-
-    return sListBest, gListBest, gateCoverageList        
+                # function returns the two best lists, because we're running out of space 
+                return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList
             
 
 
-sBest, gBest, gcList = AggregateBlocksStep(layeredCircuit, NQ, QMAX, MMAX)
+            gateCoverageList.append(gateCoverage)
+
+            # store best gateCoverage
+            if gateCoverage > bestGateCoverage: 
+                bestGateCoverage = gateCoverage
+
+                aggregatedQubitsBest    = aggregatedQubits.copy()
+                gatesCoveredBest        = gatesCovered.copy()
+
+
+    return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList        
+            
+
+
+aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(layeredCircuit, NQ, QMAX, MMAX)
 
 
 
@@ -383,13 +321,13 @@ sBest, gBest, gcList = AggregateBlocksStep(layeredCircuit, NQ, QMAX, MMAX)
 
 # plt.figure()
 # plt.title('Developement of the gatecoverage during blockaggregation \n')
-# plt.plot(GC_list)
+# plt.plot(gateCoverageTest, label = 'gateCoverage')
+# plt.legend()
 # plt.ylabel('Gatecoverage')
 # plt.xlabel('Iterations')
 # plt.show()
 
-
-def AggregateBlocksStepPostProcess(qubitList, gateList, nQ, qMax, mMax):
+def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMax):
     '''
     Given:
         S - A set of qubits in the processing zones 
@@ -422,7 +360,7 @@ def AggregateBlocksStepPostProcess(qubitList, gateList, nQ, qMax, mMax):
     qubitsInProcessingZones = []
 
     # set of covered gates corresponding to processing zone sets, GP 
-    gatesQubitsInProcessingZones = []
+    gatesCoveredProcessingZones = []
 
     pointerQuadruple = [[] for _ in range(nQ)]
 
@@ -433,19 +371,19 @@ def AggregateBlocksStepPostProcess(qubitList, gateList, nQ, qMax, mMax):
     processingZoneCtr = 0
 
     # iterate over the aggregated sets (processing blocks so far)
-    for n in range(len(qubitList)):
+    for n in range(len(aggregatedQubits)):
 
         # if this particular set of qubits fits into the processing zone, append to processing zone sets and corresponding gate coverage set
-        if len(qubitList[n]) <= qMax and processingZoneCtr <= mMax - 1: 
-            qubitsInProcessingZones.append(qubitList[n])
-            gatesQubitsInProcessingZones.append(gateList[n])
+        if len(aggregatedQubits[n]) <= qMax and processingZoneCtr <= mMax - 1: 
+            qubitsInProcessingZones.append(aggregatedQubits[n])
+            gatesCoveredProcessingZones.append(gatesCovered[n])
 
             # first position is zeroth position
             positionInZone = 0
 
             # assign pointers to the qubits in this set 
-            for qi in range(len(qubitList[n])):
-                q =  qubitList[n][qi]
+            for qi in range(len(aggregatedQubits[n])):
+                q =  aggregatedQubits[n][qi]
                 pointerQuadruple[q] = ['p', processingZoneCtr, positionInZone, 'a']
                 positionInZone += 1 
 
@@ -455,37 +393,37 @@ def AggregateBlocksStepPostProcess(qubitList, gateList, nQ, qMax, mMax):
            
         # if the qubits do not fit into the processing zone, we add them to the idle pool!    
         else:
-            idlePool = idlePool + qubitList[n]  
+            idlePool = idlePool + aggregatedQubits[n]  
 
     # now, all the processing zone sets with good sizes are padded with qubits from the idle pool 
 
     # iterate over processing zones 
-    for m in range(mMax):
+    for processingZone in range(mMax):
 
-        # idle subset of processing zone m 
+        # idle subset of processing zone 
         idleqQubitsInProcessingZones = []
 
         # if there is only one qubit in the m-th processing zone
-        if len(qubitsInProcessingZones[m]) == 1:
+        if len(qubitsInProcessingZones[processingZone]) == 1:
 
             # take this qubit 
-            q = qubitsInProcessingZones[m][0]
+            q = qubitsInProcessingZones[processingZone][0]
 
             # and empty this list 
-            qubitsInProcessingZones[m] = []
+            qubitsInProcessingZones[processingZone] = []
 
             # append this qubit to the idle subset of the processing zone m 
             idleqQubitsInProcessingZones = [q]
 
             # this qubit is now idle, but it is still in a processing zone, not a storage zone  
-            pointerQuadruple[q] = ['p', m, 1, 'i']
+            pointerQuadruple[q] = ['p', processingZone, 1, 'i']
         
         # a qubit that is appended to a certain processing zone will have this position: 
-        positionInZone = len(qubitsInProcessingZones[m]) + len(idleqQubitsInProcessingZones)
+        positionInZone = len(qubitsInProcessingZones[processingZone]) + len(idleqQubitsInProcessingZones)
 
         # while all qubits (active and idle) in the processing zone are less than the maximum possible number of qubits in the processing zone, 
         # we pad the processing zone with more idle qubits from the idle pool 
-        while len(qubitsInProcessingZones[m])+ len(idleqQubitsInProcessingZones) < qMax:
+        while len(qubitsInProcessingZones[processingZone])+ len(idleqQubitsInProcessingZones) < qMax:
 
             # take the first qubit in the idle pool
             q = idlePool[0]
@@ -494,38 +432,34 @@ def AggregateBlocksStepPostProcess(qubitList, gateList, nQ, qMax, mMax):
             idleqQubitsInProcessingZones.append(q)
 
             # and adjust its pointer accordingly, it's idle, but now in a processing zone 
-            pointerQuadruple[q] = ['p', m, positionInZone, 'i']
+            pointerQuadruple[q] = ['p', processingZone, positionInZone, 'i']
 
             # erase this qubit from the idle pool - it was moved to the processing zone 
             idlePool = idlePool[1:]
             positionInZone += 1 
         
         # update the qubits in processing zone m 
-        qubitsInProcessingZones[m] = qubitsInProcessingZones[m] + idleqQubitsInProcessingZones
+        qubitsInProcessingZones[processingZone] = qubitsInProcessingZones[processingZone] + idleqQubitsInProcessingZones
 
     # end of for loop 
 
     # now, as a last step, assign the pointer variables for all qubits remaining in the global idle pool 
-    for qi in range(len(idlePool)):
-        q = idlePool[qi]
+    for qubitIndex in range(len(idlePool)):
+        qubitInIdlePool = idlePool[qubitIndex]
 
         # qubits are idle in idle pool, no processing zones in idle pool - number always 1
-        pointerQuadruple[q] = ['i', 1, qi, 'i']
+        pointerQuadruple[qubitInIdlePool] = ['i', 1, qubitIndex, 'i']
 
 
-    return qubitsInProcessingZones, gatesQubitsInProcessingZones, idlePool, pointerQuadruple
+    return qubitsInProcessingZones, gatesCoveredProcessingZones, idlePool, pointerQuadruple
 
 
 
 # test 
-SP, GP, Iset, c = AggregateBlocksStepPostProcess(sBest, gBest, NQ, QMAX, MMAX)
+SP, GP, Iset, c = AggregateBlocksStepPostProcess(aggregatedQubitsTest, gatesCoveredBestTest, NQ, QMAX, MMAX)
 
-# print('sbest:', S_best) 
-# print('gbest:', G_best)
-# print('SP:', SP)
-# print('GP:', GP)
-
-
+print('SP:', SP)
+print('GP:', GP)
 
 '''
 Now, we have padded the processing zones with idle qubits, so the processing zones are now filled with active and idle qubits. 
@@ -535,7 +469,7 @@ Now, as one last step, we have to take the qubits from the idle pool and place t
 '''
 
 
-def PlaceIdlePoolQB(Fsizes, idlePool, pointerQuadruple):
+def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
     '''
     Given: 
         Fsizes, a list of sizes of storage zones. E.g. for two storages zones with size 10 each: Fsizes = [10,10]
@@ -550,13 +484,13 @@ def PlaceIdlePoolQB(Fsizes, idlePool, pointerQuadruple):
     '''
 
     # number of storage zones: 
-    numF = len(Fsizes)
+    numF = len(storageZoneShape)
 
     # first storage zone to be filled up, remember: we're starting in the middle, keeping in mind the indexing by python
     storageZoneNumber = math.floor(numF / 2) - 1
 
     # initialize empty storage zones, list of empty lists
-    Fset = [[] for _ in range(numF)]
+    storageZoneQubits = [[] for _ in range(numF)]
 
     # idle pool, create a copy that will be continuosly decreased 
     newIdlePool = idlePool
@@ -566,31 +500,31 @@ def PlaceIdlePoolQB(Fsizes, idlePool, pointerQuadruple):
 
     # Now, to fill up these idle zones. We start in the starting zone, moving left and right, filling up the zones 
     # we go through the storage zones starting with a right zone, corresponding to fp, then a left zone, corresponding to fm 
-    fm = storageZoneNumber
-    fp = storageZoneNumber+1 
+    storageZone = storageZoneNumber
+    nextStorageZone = storageZoneNumber+1 
     ctr = 1 
 
     # while there's still qubits left in the idle pool 
     while len(newIdlePool) > 0: 
-        print(newIdlePool)
+        # print('Idle Pool:', newIdlePool)
         '''
         Right zone
         '''
         # if we are still within the allowed number of storage zones but the number of qubits in this storage zone is too high, move to the left 
-        if fp < numF and len(Fset[fp]) >= Fsizes[fp]:
-            fp += 1
+        if nextStorageZone < numF and len(storageZoneQubits[nextStorageZone]) >= storageZoneShape[nextStorageZone]:
+            nextStorageZone += 1
 
         # if we are within the allowed number of storage zones and the fp-th storage zone still needs to be filled 
-        if fp < numF and len(Fset[fp]) < Fsizes[fp]:
+        if nextStorageZone < numF and len(storageZoneQubits[nextStorageZone]) < storageZoneShape[nextStorageZone]:
 
                 # take the first qubit in the idle pool 
                 q = newIdlePool[0]
 
                 # append this qubit to the storage zone 
-                Fset[fp].append(q)
+                storageZoneQubits[nextStorageZone].append(q)
 
                 # and adjust their pointer variables accordingly, where fp is the number of the storage zone
-                newPointerQuadruple[q] = ['i', fp, len(Fset[fp])-1, 'i']
+                newPointerQuadruple[q] = ['i', nextStorageZone, len(storageZoneQubits[nextStorageZone])-1, 'i']
 
                 # eliminate qubit q from idle pool 
                 newIdlePool = [x for x in newIdlePool if x != q]
@@ -599,37 +533,31 @@ def PlaceIdlePoolQB(Fsizes, idlePool, pointerQuadruple):
         Left zone 
         '''
         # if within the allowed number of storage zones and the fm-th storage zone is too full 
-        if fm > 0 and len(Fset[fm]) >= Fsizes[fm]:
-            fm -= 1
+        if storageZone > 0 and len(storageZoneQubits[storageZone]) >= storageZoneShape[storageZone]:
+            storageZone -= 1
         
         # if the fm-th storage zone still has to be filled 
-        if fm >= 0 and len(Fset[fm]) < Fsizes[fm]:
+        if storageZone >= 0 and len(storageZoneQubits[storageZone]) < storageZoneShape[storageZone]:
 
             # take the first qubit in the idle pool 
             q = newIdlePool[0]
 
             # append this qubit to the storage zone 
-            Fset[fm].append(q)
+            storageZoneQubits[storageZone].append(q)
 
             # and adjust their pointer variables accordingly 
-            newPointerQuadruple[q] = ['i', fm, len(Fset[fm])-1, 'i']
+            newPointerQuadruple[q] = ['i', storageZone, len(storageZoneQubits[storageZone])-1, 'i']
 
             # eliminate qubit q from idle pool 
             newIdlePool = [x for x in newIdlePool if x != q]
 
 
         # if all storage zones are filled up and there's qubits left in the idle pool, error 
-        if fp == numF-1 and len(Fset[fp-1]) >= Fsizes[fp-1] and fm == 1 and len(Fset[fm-1]) >= Fsizes[fm-1] and len(newIdlePool) > 0:
+        if nextStorageZone == numF-1 and len(storageZoneQubits[nextStorageZone-1]) >= storageZoneShape[nextStorageZone-1] and storageZone == 1 and len(storageZoneQubits[storageZone-1]) >= storageZoneShape[storageZone-1] and len(newIdlePool) > 0:
             print('ERROR: No more storage zones left, but not all qubits placed.')
-            return Fset, newPointerQuadruple
+            return storageZoneQubits, newPointerQuadruple
 
-    return Fset, newPointerQuadruple          
-
-
-# test of storage zone algorithm, funktioniert. 
-# Fsizes = [3,3]
-
-# second try:
+    return storageZoneQubits, newPointerQuadruple          
 
 
 
@@ -640,7 +568,7 @@ We can implement the main algorithm
 '''
 
 
-def blockProcessCircuit(rawCircuit, nQ, Fsizes, qMax, mMax):
+def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
     '''
     This is the Main function executing the Block aggregation algorithm step by step. 
 
@@ -665,10 +593,10 @@ def blockProcessCircuit(rawCircuit, nQ, Fsizes, qMax, mMax):
     # list of aggregated blocks 
     aggregatedBlocks = []
 
-    i = 0
+    iterationCounter = 0
 
     # while stuff still left in circuit 
-    while rawCircuitChange != [] and i<100:
+    while rawCircuitChange != [] and iterationCounter<100:
 
 
         # Make layeredcircuit
@@ -676,54 +604,42 @@ def blockProcessCircuit(rawCircuit, nQ, Fsizes, qMax, mMax):
 
 
         # Get best set of qubits and gates from algorithm 
-        S_best, G_best, gc_list_test      = AggregateBlocksStep(tempLayeredCircuit, nQ, qMax, mMax)
+        aggregatedQubitsBest, gatesCoveredBest, gc_list_test      = AggregateBlocksStep(tempLayeredCircuit, nQ, qMax, mMax)
 
 
         # Get set of qubits and gates, for the different processing zones. And the 'remaining' idle pool Iset 
-        SP, GP, Iset, c     = AggregateBlocksStepPostProcess(S_best, G_best, nQ, qMax, mMax)
+        processingZoneQubits, coveredGates, Iset, pointerQuadruple     = AggregateBlocksStepPostProcess(aggregatedQubitsBest, gatesCoveredBest, nQ, qMax, mMax)
 
 
         # Finally, fill storage zones with qubits in 'remaining' idle pool 
-        FP, cnew            = PlaceIdlePoolQB(Fsizes, Iset, c)
+        storageZoneQubits, pointerQuadrupleNew            = PlaceIdlePoolQB(storageZoneShape, Iset, pointerQuadruple)
 
         # iterate over the different sets of gates in GP
-        for gpi in range(len(GP)):
+        for gateNo in range(len(coveredGates)):
 
-            rawCircuitChange = [rawCircuitChange[i] for i in range(len(rawCircuitChange)) if rawCircuitChange[i][0] not in GP[gpi]]
-            # for i in range(len(cRaw)):
+            rawCircuitChange = [rawCircuitChange[i] for i in range(len(rawCircuitChange)) if rawCircuitChange[i][0] not in coveredGates[gateNo]]
 
-
-            # iterate over the gates in the gates sets corresponding to qubit sets in the processing zones 
-            # for gi in range(len(GP[gpi])):
-
-                # print(cRaw[gi][0], GP[gpi][gi])
-
-                # Remove the covered gate from the circuit
-                # for k in range(len(cRaw)):
-                    # if cRaw[k][0] == GP[gpi][gi]:
-                # cRaw.pop(GP[gpi][gi])    
-                # break
-                # cRaw = [x for x in cRaw if x != GP[gpi][gi]]
         
         # append this set of S, G, F and c to the collection of processing blocks 
-        aggregatedBlocks.append([SP, GP, FP, cnew])
+        aggregatedBlocks.append([processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadrupleNew])
 
-        # print('cRaw looks like:',cRaw)
-        # print('where GP is:', GP)
-        i += 1
+        iterationCounter += 1
 
     return aggregatedBlocks
 
 
-# test of the whole algorithm 
-# seems to work 
-
 processingBlockList = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+
+# for i in range(len(processingBlockList)):   
+#     print(processingBlockList[i][0])
+
 
 
 
 '''
-Displaying 
+
+DISPLAYING
+
 '''
 
 def visualize_blocks(B, title):
@@ -840,7 +756,8 @@ def visualize_blocks(B, title):
     
     # Add layer labels above nodes
     for layerNumber in range(len(c_total)):
-        layer_label = f'B{layerNumber + 1}'
+        romanNumberList = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XII', 'XIII']
+        layer_label = f'{romanNumberList[layerNumber]}'
         x = layerNumber
         y = max(pos[node][1] for node in pos if node[0] == layerNumber) + 0.7  # Adjust the y-coordinate for the label placement
         plt.text(x, y, layer_label, fontsize=12, ha='center', va='bottom')
@@ -849,150 +766,17 @@ def visualize_blocks(B, title):
     plt.show()    
 
 
- 
-def animate_solving(bList, title):
-    '''
-    This function animates a solving process given a list of Bs in the course of the iterations 
-    '''
-
-    fig, ax = plt.subplots()
-
-    artists = []
-    # container = []
-
-    for i in range(len(bList)):
-
-        B = bList[i]
-
-        container = []
-
-        # extract c from B
-        c_total = []
-        for j in range(len(B)):
-            c_total.append(B[j][3])
-
-        # Graph 
-        G = nx.Graph() 
-
-        
-
-        # add nodes for all the qubits in the different layers 
-        # every qubit gets assigned a zone keyword indicating in what zone it is and a label keyword indicating what number qubit it is. Also a layer number indicating what layer it is in. 
-
-        # iterate over blocks 
-        for layerNumber in range(len(c_total)):
-
-            # iterate over qubits in block 
-            for qubitNumber in range(len(c_total[layerNumber])):
-
-                # if in storage zone, add with corresponding label and zone keyword 
-                if c_total[layerNumber][qubitNumber][0] == 'i':
-                    G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='storage', label=str(qubitNumber))
-
-                # if in storage zone, add with corresponding label and zone keyword, remember: qbs can still be idle in processing zone, so we have to differentiate 
-                elif c_total[layerNumber][qubitNumber][0] == 'p': 
-
-                    if c_total[layerNumber][qubitNumber][3] == 'i':
-                        G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='processing_idle', label=str(qubitNumber))
-
-                    elif c_total[layerNumber][qubitNumber][3] == 'a':
-                        G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='processing_active', label=str(qubitNumber))
-
-                # print(G.nodes())
-
-        # assign positions to all the qubits 
-        pos = {}
-
-        lenProcessingZones =  len(B[0][0][0]) # corresponds to S list 
-        lenStorageZones =  len(B[0][2][0]) # corresponds to F list 
-
-        for node in G.nodes():
-
-            # node is a tuple, node = (layer_number, node_number)
-            layer_idx, node_idx = node
-            
-            # x position is just the layer number 
-            x = layer_idx
-
-            # depending if in storage, or processing zone, assign y coordinates 
-            # storage zone 
-            if c_total[layer_idx][node_idx][0] == 'i':
-                y = c_total[layer_idx][node_idx][1]*- (lenStorageZones + lenProcessingZones) - c_total[layer_idx][node_idx][2]
-
-            # processing zone 
-            elif c_total[layer_idx][node_idx][0] == 'p':
-                y = - lenStorageZones - (lenStorageZones + lenProcessingZones) *(c_total[layer_idx][node_idx][1]) - c_total[layer_idx][node_idx][2]
-
-            # pos is a dictionary, pos((processingblock_number, qubit_number) = (x, y)). 
-            # pos stores this for all the qubits in all the blocks 
-
-            pos[node] = (x, y)
+'''
+Show the arrangement of qubits after the Block aggregation
+'''
+visualize_blocks(processingBlockList, 'Qubits arranged after block aggregation')
 
 
-        # add edges 
-        # We always add an edge between a qubit and the one in the layer next to it on the right. So, for the rightmost layer, we do not have to add an edge.
-        for layerNumber in range(len(c_total)-1):
-            for qubitNumber in range(len(c_total[layerNumber])):
-                # current node is tuple
-                current_node = (layerNumber, qubitNumber)
+exit()
 
-                # want to find the node in the layer next to it on the right that has the same label (corresponds to the same qubit)
-                for qubitNumber_ in range(len(c_total[layerNumber+1])):
-
-                    # if we found the qubit with the same label 
-                    if G.nodes[current_node]['label'] == G.nodes[(layerNumber+1, qubitNumber_)]['label']:
-                        next_node = (layerNumber + 1, qubitNumber_) 
-
-                        # add an edge connecting these two nodes to the graph 
-                        G.add_edge(current_node, next_node)
-
-        # clarifying that the label keyword is actually the label that we want to use 
-        node_labels = {node: G.nodes[node]['label'] for node in G.nodes()}
-        # plt.figure(figsize=(10, 8))
-        plt.title(title + ', iteration' + str(i))
-        nx.draw(G, pos, node_size=200, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
-        
-        # Add layer labels above nodes
-        # for layerNumber in range(len(c_total)):
-        #     layer_label = f'B{layerNumber + 1}'
-        #     x = layerNumber
-        #     y = max(pos[node][1] for node in pos if node[0] == layerNumber) + 0.7  # Adjust the y-coordinate for the label placement
-        #     plt.text(x, y, layer_label, fontsize=12, ha='center', va='bottom')
-
-
-        # Collect artists for the frame
-        frame_artists = ax.findobj()
-        container.extend(frame_artists)  # Extend the container with the artists for this frame
-
-
-
-        artists.append(container.copy())
-
-        # container = 
-        # artists.append(frame_artists)
-        print('appended' + str(i))
-
-       
-
-    for k in range(len(artists)):
-        if k < len(artists)-1:
-            print(artists[k] == artists[k+1])
-
-    print(np.shape(artists)) 
-    artists = np.array(artists)
-
-    artists = artists.flatten()
-
-    ani = animation.ArtistAnimation(fig=fig, artists=artists, interval=40)
-    plt.show()
-
-    # return None
-
-
-
-
-
-
+'''
+ANIMATION
+'''
 def update(num, bList, title, ax):
     ax.clear()
 
@@ -1094,21 +878,6 @@ def update(num, bList, title, ax):
 
     ax.set_title(title + ', iteration: ' + str(num))
 
-    # Add layer labels above nodes
-    # for layerNumber in range(len(c_total)):
-    #     layer_label = f'B{layerNumber + 1}'
-    #     x = layerNumber
-    #     y = max(pos[node][1] for node in pos if node[0] == layerNumber) + 0.7  # Adjust the y-coordinate for the label placement
-    #     plt.text(x, y, layer_label, fontsize=12, ha='center', va='bottom')
-
-
-    # plt.show() 
-
-    # Scale plot ax
-    # ax.set_title("Frame %d:    "%(num+1) +  " - ".join(path), fontweight="bold")
-    # ax.set_xticks([])
-    # ax.set_yticks([])
-
 
 
 
@@ -1151,7 +920,7 @@ def show_circuit_after_optimizing(BP, nQ, circ):
     plt.show()
     # print(circuit)
 
-# show_circuit_after_optimizing(B, 10, circuit_of_qubits)
+# show_circuit_after_optimizing(processingBlockList, NQ, circuitOfQubits)
 # visualize_blocks(B, 'Visualizing Test')
 
 

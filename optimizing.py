@@ -688,7 +688,7 @@ for i in range(0, len(bList)):
         print('this is not supposed to happen')
 
 
-# animate_solving(bList, 'animation_test')
+animate_solving(bList, 'animation_test')
 
 # visualize_blocks(bTest, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(bTest, Fsizes, maxProcessingZoneQubits), nQ)))
 
