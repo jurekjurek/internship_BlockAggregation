@@ -771,9 +771,6 @@ Show the arrangement of qubits after the Block aggregation
 '''
 visualize_blocks(processingBlockList, 'Qubits arranged after block aggregation')
 
-
-exit()
-
 '''
 ANIMATION
 '''

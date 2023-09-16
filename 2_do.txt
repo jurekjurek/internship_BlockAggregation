@@ -19,4 +19,11 @@ Renamed in the following manner:
 S -> processingZoneQubits
 G = gatesCovered
 
+Z = zoneNumber
+S1 = zoneStatus
+K = positionInZone
+S2 = natureStatus
 
+qubitIndex - qubitNo
+
+...Two -> ...QubitTwo
