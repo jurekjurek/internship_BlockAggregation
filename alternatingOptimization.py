@@ -1,0 +1,146 @@
+from tabuSearch import *
+from helperFunctions import *
+
+
+
+def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, numOptimizationSteps, TSiterations, tabuListLength, echo, visualOutput):
+    '''
+    In this function, the deterministic and the tabu search algorithm are applied to a set of processing blocks B in an alternating manner. 
+    First, the deterministic algorithm is applied, then the tabu search. This scheme is repeated numOptimizationSteps times. 
+
+    Given: 
+        processingBlockArrangement:                     List of processing blocks 
+        numOptimizationSteps:   Number of iterations for the alternating algorithm 
+        TSiterations:           Number of iterations for the tabu search 
+        tabuListLength:                  Length of the tabu list
+    Returns: 
+        newProcessingBlockArrangement:                   The one constellation of qubits in processing blocks that minimizes the total cost
+        costList:               Evoluation of the cost over the iterations of the alternating algorithm
+    '''
+    newProcessingBlockArrangement = processingBlockArrangement
+
+    # keeps track of the total best cost 
+    totalBestCostTbl = [[] for _ in range(2 * numOptimizationSteps)]
+
+    # 
+    grPtbl = [[] for _ in range(2 * numOptimizationSteps)]
+
+    # 
+    grPBest = []
+
+    # list of Y positions to start with 
+    YTemp = computeArrangements(newProcessingBlockArrangement, Fsizes, qMax)
+
+    # total cost to start with, to be minimized 
+    costTotInitial = computeTotalCost(YTemp, nQ)
+
+    # high number, why not initial? 
+    costTotBest = 10 ** 9 
+
+    costList = []
+    BList = []
+
+    numberOfTabuStepsList = []
+
+    processingBlockArrangementDisplaying = []
+
+    # iterate over the number of Optimizing steps, given the function as argument 
+    for optimizationstep in range(numOptimizationSteps): 
+
+        # print('total cost 0, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
+
+        # deterministic algorithm, returns updated newProcessingBlockArrangement 
+        newProcessingBlockArrangement, processingBlockArrangementDisplayingDeterministic = improvePlacement(newProcessingBlockArrangement, nQ, Fsizes, qMax, mMax, False)
+
+        # print('total cost 1, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
+
+
+        if echo == True: 
+            print('echo')
+
+        if visualOutput == True:
+            print('visualoutput')
+
+        # Tabu Search algorithm, returns updatet newProcessingBlockArrangement!
+        newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(newProcessingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, 3, 0, greedySpread = False, storeAllBestprocessingBlockArrangement= True, echo = False)
+
+        numberOfTabuStepsList.append(numberOfTabuSteps)
+
+        processingBlockArrangementDisplaying += processingBlockArrangementDisplayingDeterministic
+        processingBlockArrangementDisplaying += processingBlockArrangementDisplayingTabuSearch
+        # processingBlockArrangementDisplaying.append(processingBlockArrangementDisplayingTabuSearch)
+
+        # print('total cost 2, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
+
+        costList.append(computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
+        BList.append(copy.deepcopy(newProcessingBlockArrangement))
+
+        if echo == True: 
+            print('')
+
+        if visualOutput == True: 
+            print('visualoutput')
+
+        # still needs to be returned by tabusearch 
+        # if the minimal cost obtained by the tabu search is smaller than the best cost so far, replace the best cost with the Tabu Search one. 
+        # if bestCostUpdateAll[-1] < costTotBest:
+
+        #     if visualOutput == True: 
+        #         print('visualoutput')
+
+        #     # last element in list 
+        #     costTotBest = bestCostUpdateAll[-1]
+
+    # get the B list for which the cost is minimal, argsort sorts from lowest to highest 
+    costIndices = np.argsort(costList)
+    BList = np.array(BList)
+    BList = BList[costIndices]
+
+    # this gets flattened in the mathematica code 
+    grPtbl = grPtbl 
+
+    # this as well 
+    totalBestCostTbl = totalBestCostTbl
+
+    # processingBlockArrangementDisplaying += BList[0]
+
+    # 
+    return processingBlockArrangementDisplaying, costTotBest, grPtbl, numberOfTabuStepsList, costList, BList[0]
+ 
+
+processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, newProcessingBlockArrangement = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
+
+
+visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
+
+
+
+visualize_blocks(newProcessingBlockArrangement, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(newProcessingBlockArrangement, FSIZES, QMAX), NQ)))
+
+animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
+
+
+plt.figure()
+plt.plot(costEvolution, label = 'cost')
+plt.title('Evolution of total cost with alternating iterations \n')
+plt.xlabel('Iterations')
+plt.ylabel('Cost')
+plt.legend()
+plt.show()
+
+# how many tabu steps? 
+plt.figure()
+plt.plot(numberOfTabuStepsList, label = '# tabuSteps')
+plt.title('Number of Tabu Steps')
+plt.xlabel('Iterations')
+plt.ylabel('Number')
+plt.legend()
+plt.show()
+
+
+'''
+Show here the circuit
+'''
+
+# show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
+# show_circuit_after_optimizing(newProcessingBlockArrangement, 10, circuit_of_qubits)

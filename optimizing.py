@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import copy 
 from block_aggregation import *
-
+from helperFunctions import *
 
 
 '''
@@ -34,153 +34,11 @@ The way we approach this optimization problem is:
 1. We compute the total rearrangement cost for all the processing blocks. At this point we restrict ourselves to associating the qubits solely to their y positions. 
 2. Updatestepfunction: swaps the position of two given qubits and returns the list of Y positions as well as the updated total rearrangement cost. 
 3. A function ImprovePlacement 
-
-
-
-The next step is setting up a tabu search algorithm. 
-
-
-And the last step is to set up an algorithm that alterantes between tabu search and deterministic search. 
-
-
 '''
 
 
 
 processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
-
-
-print('##########')
-print('Optimizing')
-print('##########')
-
-# start with a function that returns a list of Y positions given B
-
-def computeArrangements(processingBlockArrangement, storageZoneSizes, maxProcessingZoneQubits):
-    '''
-    Given: 
-        B: 
-        storageZoneSizes: 
-        maxProcessingZoneQubits: 
-    Returns: 
-        y: a list of Y positions for the qubits in the processing block s
-
-    Given a list of processing blocks, this function returns a list of y positions for the qubits in these processing blocks. 
-    The cost metric will be minimized with respect to a metric that quantifies the distances between qubits between layers. That's why we need y positions
-    '''
-
-    yPositionList = []
-
-    for step in range(len(processingBlockArrangement)): 
-
-        pointerQuadruple = processingBlockArrangement[step][3] 
-
-        ySubList = []
-
-        for q in range(len(pointerQuadruple)): 
-
-            zoneStatus, zoneNumber, positionInZone, natureStatus = pointerQuadruple[q]
-            
-            if zoneStatus == 'p':
-                # plot green node at position pos(processing zone 1) + q[2]
-                tempYList = - storageZoneSizes[0] - zoneNumber* (storageZoneSizes[0] + maxProcessingZoneQubits) - positionInZone
-
-                
-            elif zoneStatus == 'i':
-                # plot red node at position q[1] * pos(storage zone)
-                tempYList = - zoneNumber *  (storageZoneSizes[0] + maxProcessingZoneQubits)  - positionInZone
-
-
-            ySubList.append(tempYList)
-
-        # y = y + y_sublist
-        yPositionList.append(ySubList)
-
-    return yPositionList
-
-# list of y positions is returned correctly 
-yTestList = computeArrangements(processingBlockArrangement, FSIZES, QMAX)
-
-
-def computeTotalCost(yPositionList, nQ):
-    '''
-    Computes the cost of a given arrangement, characterised by the y positions of the qubits. 
-    The rearrangement cost is computed based on a metric. 
-
-    This metric shall guide us through the optimization process. 
-
-    Given: 
-        yPositionList:  A sequence of Y positions, corresponding to all the qubits in the circuit 
-        nQ: Number of qubits in the circuit 
-
-    Returns:
-        totCost: total rearrangement cost (int), for the arrangement, given by cost metric in PDF
-    '''
-
-    numberProcessingBlocks = len(yPositionList)
-
-    totCost = 0
-
-    for processingBlock in range(1, numberProcessingBlocks):
-        # print('step:', step)
-
-        # look at layers step and step+1
-        yPositionsCurrentBlock = yPositionList[processingBlock - 1]
-        yPositionsNextBlock = yPositionList[processingBlock]
-
-        # iterate over y positions in both layers 
-        # if y position of the qi-th qubit in layer step-1 is not the same as of the qi-th qubit in layer step, add their y distance squared to the total cost 
-        for qubitNo in range(nQ):
-            totCost += (yPositionsCurrentBlock[qubitNo] - yPositionsNextBlock[qubitNo]) ** 2
-
-
-    # return total cost 
-    return totCost  
-
-
-
-
-
-def updateStep(yPositionList, processingBlock, qubit1, qubit2, totCost):
-    '''
-    Given the list of Y positions and the layer number (step),
-    this function returns a Y list that has qubits q1 and q2 exchanged (retuns only the part of the Y list that corresponds to the processing block) 
-    in this layer and the updatet cost due to the swapping. 
-    '''
-
-
-    numberProcessingBlocks = len(yPositionList)
-
-    newCost = totCost
-
-    # if the layer of interest is not the leftmost layer 
-    if processingBlock > 0: 
-
-        # subtract the contribution to the total cost caused by the first and second qubit and their left neighbours 
-
-        newCost -= (yPositionList[processingBlock][qubit1] - yPositionList[processingBlock - 1][qubit1]) ** 2 + (yPositionList[processingBlock][qubit2] - yPositionList[processingBlock - 1][qubit2]) ** 2
-
-    # if the layer of interest is not the rightmost layer 
-    if processingBlock < numberProcessingBlocks-1: 
-
-        # subtract the contribution to the total cost caused by the first and second qubit and their right neighbours 
-        newCost -= ( yPositionList[processingBlock][qubit1] - yPositionList[processingBlock+1][qubit1] ) ** 2 + (yPositionList[processingBlock][qubit2] - yPositionList[processingBlock+1][qubit2]) ** 2
-    
-    # swap qubits in layer
-    temp = yPositionList[processingBlock][qubit1]
-    yPositionList[processingBlock][qubit1] = yPositionList[processingBlock][qubit2]
-    yPositionList[processingBlock][qubit2] = temp
-
-
-    # add cost due to the new constellation of qubits, equal procedure as above. 
-    if processingBlock > 0:
-        newCost += (yPositionList[processingBlock][qubit1] - yPositionList[processingBlock - 1][qubit1])**2 + (yPositionList[processingBlock][qubit2] - yPositionList[processingBlock - 1][qubit2])**2
-
-    if processingBlock < numberProcessingBlocks-1:
-        newCost += (yPositionList[processingBlock][qubit1] - yPositionList[processingBlock + 1][qubit1])**2 + (yPositionList[processingBlock][qubit2] - yPositionList[processingBlock + 1][qubit2])**2
-
-    # return only the part of the Y list that is of interest 
-    return newCost, yPositionList[processingBlock]
 
 
 def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProcessingZoneQubits, numberProcessingZones, echo):
@@ -675,21 +533,13 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
     return newprocessingBlockArrangement, processingBlockArrangementDisplaying    
 
 
-# visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, maxProcessingZoneQubits), nQ)))
 
 processingBlockArrangementAfterOptimizing, bList = improvePlacement(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, True)
 
 
-for i in range(0, len(bList)):
-    if bList[i] == bList[i-1]:
-        print('this is not supposed to happen')
-
-
 # animate_solving(bList, 'animation_test')
-
-
 # visualize_blocks(processingBlockArrangementAfterOptimizing, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangementAfterOptimizing, FSIZES, MMAX), NQ)))
-
 # # and before optimizing
-# visualize_blocks(processingBlockArrangement, 'Qubits arranged before optimizing')
+# visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, maxProcessingZoneQubits), nQ)))
+
 

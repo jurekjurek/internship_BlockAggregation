@@ -117,5 +117,3 @@ def show_layeredCircuit(Nq, circ, layeredcirc):
     plt.show()
     # print(circuit)
 
-
-# show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
