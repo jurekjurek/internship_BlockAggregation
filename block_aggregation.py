@@ -633,5 +633,9 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
 
 
 processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
+
+visualize_blocks(processingBlockArrangement, 'test')
+visualize_blocks(processingBlockArrangement2, 'test')
 

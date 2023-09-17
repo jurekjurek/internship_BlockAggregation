@@ -1,6 +1,15 @@
-a = [1,2,3]
-b = [5,6,3,2]
-c = [4,5,6]
-c += a
-c += b
-print(c)
+import random
+
+my_list = [1, 2, 3, 4, 5]
+
+# Generate a random index within the range of the list
+random_index = random.randint(0, len(my_list) - 1)
+
+# Remove the element at the random index
+random_element = my_list.pop(random_index)
+
+print("Random element:", random_element)
+print("Updated list:", my_list)
+
+
+

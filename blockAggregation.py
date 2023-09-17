@@ -386,6 +386,7 @@ def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMa
         else:
             idlePool = idlePool + aggregatedQubits[n]  
 
+
     # Pad processing zones with qubits from idle pool 
     for processingZone in range(mMax):
 
@@ -414,17 +415,18 @@ def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMa
         # we pad the processing zone with more idle qubits from the idle pool 
         while len(qubitsInProcessingZones[processingZone])+ len(idleqQubitsInProcessingZones) < qMax:
 
-            # take the first qubit in the idle pool
-            q = idlePool[0]
+            # take random qubit from idle pool 
+            randomQubitNo = random.randint(0, len(idlePool) - 1)
+
+            idleQubit = idlePool.pop(randomQubitNo)
 
             # append the qubit from the idle pool to the idle subset of the processing zone 
-            idleqQubitsInProcessingZones.append(q)
+            idleqQubitsInProcessingZones.append(idleQubit)
 
             # and adjust its pointer accordingly, it's idle, but now in a processing zone 
-            pointerQuadruple[q] = ['p', processingZone, positionInZone, 'i']
+            pointerQuadruple[idleQubit] = ['p', processingZone, positionInZone, 'i']
 
             # erase this qubit from the idle pool - it was moved to the processing zone 
-            idlePool = idlePool[1:]
             positionInZone += 1 
         
         # update the qubits in processing zone m 
@@ -473,13 +475,13 @@ def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
     '''
 
     # number of storage zones: 
-    numF = len(storageZoneShape)
+    numberOfStorageZones = len(storageZoneShape)
 
     # first storage zone to be filled up, remember: we're starting in the middle, keeping in mind the indexing by python
-    storageZoneNumber = math.floor(numF / 2) - 1
+    storageZoneNumber = math.floor(numberOfStorageZones / 2) - 1
 
     # initialize empty storage zones, list of empty lists
-    storageZoneQubits = [[] for _ in range(numF)]
+    storageZoneQubits = [[] for _ in range(numberOfStorageZones)]
 
     # idle pool, create a copy that will be continuosly decreased 
     newIdlePool = idlePool
@@ -499,23 +501,27 @@ def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
         Right zone
         '''
         # if we are still within the allowed number of storage zones but the number of qubits in this storage zone is too high, move to the left 
-        if nextStorageZone < numF and len(storageZoneQubits[nextStorageZone]) >= storageZoneShape[nextStorageZone]:
+        if nextStorageZone < numberOfStorageZones and len(storageZoneQubits[nextStorageZone]) >= storageZoneShape[nextStorageZone]:
             nextStorageZone += 1
 
         # if we are within the allowed number of storage zones and the fp-th storage zone still needs to be filled 
-        if nextStorageZone < numF and len(storageZoneQubits[nextStorageZone]) < storageZoneShape[nextStorageZone]:
+        if nextStorageZone < numberOfStorageZones and len(storageZoneQubits[nextStorageZone]) < storageZoneShape[nextStorageZone]:
 
                 # take the first qubit in the idle pool 
-                q = newIdlePool[0]
+                # q = newIdlePool[0]
+
+                randomQubitNo = random.randint(0, len(newIdlePool) - 1)
+
+                randomIdleQubit = newIdlePool.pop(randomQubitNo)
 
                 # append this qubit to the storage zone 
-                storageZoneQubits[nextStorageZone].append(q)
+                storageZoneQubits[nextStorageZone].append(randomIdleQubit)
 
                 # and adjust their pointer variables accordingly, where fp is the number of the storage zone
-                newPointerQuadruple[q] = ['i', nextStorageZone, len(storageZoneQubits[nextStorageZone])-1, 'i']
+                newPointerQuadruple[randomIdleQubit] = ['i', nextStorageZone, len(storageZoneQubits[nextStorageZone])-1, 'i']
 
                 # eliminate qubit q from idle pool 
-                newIdlePool = [x for x in newIdlePool if x != q]
+                # newIdlePool = [x for x in newIdlePool if x != randomIdleQubit]
 
         '''
         Left zone 
@@ -528,20 +534,24 @@ def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
         if storageZone >= 0 and len(storageZoneQubits[storageZone]) < storageZoneShape[storageZone]:
 
             # take the first qubit in the idle pool 
-            q = newIdlePool[0]
+            # q = newIdlePool[0]
+
+            randomQubitNo = random.randint(0, len(newIdlePool) - 1)
+
+            randomIdleQubit = newIdlePool.pop(randomQubitNo)
 
             # append this qubit to the storage zone 
-            storageZoneQubits[storageZone].append(q)
+            storageZoneQubits[storageZone].append(randomIdleQubit)
 
             # and adjust their pointer variables accordingly 
-            newPointerQuadruple[q] = ['i', storageZone, len(storageZoneQubits[storageZone])-1, 'i']
+            newPointerQuadruple[randomIdleQubit] = ['i', storageZone, len(storageZoneQubits[storageZone])-1, 'i']
 
             # eliminate qubit q from idle pool 
-            newIdlePool = [x for x in newIdlePool if x != q]
+            # newIdlePool = [x for x in newIdlePool if x != q]
 
 
         # if all storage zones are filled up and there's qubits left in the idle pool, error 
-        if nextStorageZone == numF-1 and len(storageZoneQubits[nextStorageZone-1]) >= storageZoneShape[nextStorageZone-1] and storageZone == 1 and len(storageZoneQubits[storageZone-1]) >= storageZoneShape[storageZone-1] and len(newIdlePool) > 0:
+        if nextStorageZone == numberOfStorageZones-1 and len(storageZoneQubits[nextStorageZone-1]) >= storageZoneShape[nextStorageZone-1] and storageZone == 1 and len(storageZoneQubits[storageZone-1]) >= storageZoneShape[storageZone-1] and len(newIdlePool) > 0:
             print('ERROR: No more storage zones left, but not all qubits placed.')
             return storageZoneQubits, newPointerQuadruple
 
@@ -612,5 +622,9 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
 
 
 processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
+
+visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
+visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
 

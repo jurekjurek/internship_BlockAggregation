@@ -10,15 +10,100 @@ We could also do this in the block aggregation procedure.
 '''
 
 from helperFunctions import * 
+from blockAggregation import *
 
-numberIndividuals = 5
-individuals = []
-fitnessList = []
 
-for individual in range(numberIndividuals): 
 
-    # create processingBlockArrangement 
-    individuals.append(processingBlockArrangement)
-    # store the corresponding fitnessvalue in a fitnesslist 
 
+
+
+'''
+
+We initialized the population and the corresponding fitness for this population
+Now for the 
+1. mutation and the 
+2. crossover and the 
+3. tournament selection 
+functions 
+
+'''
+
+
+def TournamentSelection(fitnessList, tournamentProbability):
+    populationSize = len(fitnessList)
+
+    randomIndividualOne = random.randint(0, populationSize-1)    
+    randomIndividualTwo = random.randint(0, populationSize-1)
+
+    randomProbability = random.random()
+
+    if randomProbability < tournamentProbability: 
+        if fitnessList[randomIndividualOne] > fitnessList[randomIndividualTwo]: 
+            return(randomIndividualOne)
+        else: 
+            return(randomIndividualTwo)
+
+    if randomProbability > tournamentProbability: 
+        if fitnessList[randomIndividualOne] > fitnessList[randomIndividualTwo]: 
+            return(randomIndividualTwo)
+        else: 
+            return(randomIndividualOne)
+
+
+
+
+
+
+def Crossover(individualOne, individualTwo): 
+    '''
+    Given two individuals (processingBlockArrangements), this function performs something corresponding to the genetic crossover of two genes
+    Accepts: 
+        Two processingBlockLists
+    Returns: 
+        Two new processingBlockLists
+    '''
+
+    return None 
+
+
+def Mutation(population, mutationProbability): 
+    '''
+    For an entire population of individuals, this function iterates over all the individuals and manipulates each one of these with the probability mutationProbability
+    With each the propability mutationProbability, the following operations are done: 
+        1. Two qubits between idle zones are swapped
+        2. Two qubits in idle zones are swapped 
+        3. Whole processing Zones are swapped 
+        4. Qubits within processing zones are swapped
+
+    '''
+    return None 
     
+
+
+
+def MainGeneticAlgorithm(numberOfGenerations, numberOfIndividuals): 
+    
+    # initialize population, evaluate cost 
+    population = []
+    fitnessList = []
+    for individual in range(numberOfIndividuals): 
+
+            temporaryProcessingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+
+            population.append(temporaryProcessingBlockArrangement)
+
+            
+
+
+    for generation in numberOfGenerations: 
+        
+        for individual in range(numberOfIndividuals): 
+            # store the corresponding fitnessvalue in a fitnesslist 
+            temporaryProcessingBlockArrangement = population[individual]
+            temporaryCost = computeTotalCost(computeArrangements(temporaryProcessingBlockArrangement, FSIZES, QMAX), NQ)
+
+            fitnessList.append(1/ temporaryCost)
+
+
+
+        
