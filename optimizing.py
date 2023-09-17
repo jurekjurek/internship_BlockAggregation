@@ -47,7 +47,7 @@ And the last step is to set up an algorithm that alterantes between tabu search 
 
 
 
-processingBlockList = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
 print('##########')
@@ -56,7 +56,7 @@ print('##########')
 
 # start with a function that returns a list of Y positions given B
 
-def computeArrangements(processingBlockList, storageZoneSizes, maxProcessingZoneQubits):
+def computeArrangements(processingBlockArrangement, storageZoneSizes, maxProcessingZoneQubits):
     '''
     Given: 
         B: 
@@ -71,9 +71,9 @@ def computeArrangements(processingBlockList, storageZoneSizes, maxProcessingZone
 
     yPositionList = []
 
-    for step in range(len(processingBlockList)): 
+    for step in range(len(processingBlockArrangement)): 
 
-        pointerQuadruple = processingBlockList[step][3] 
+        pointerQuadruple = processingBlockArrangement[step][3] 
 
         ySubList = []
 
@@ -99,7 +99,7 @@ def computeArrangements(processingBlockList, storageZoneSizes, maxProcessingZone
     return yPositionList
 
 # list of y positions is returned correctly 
-yTestList = computeArrangements(processingBlockList, FSIZES, QMAX)
+yTestList = computeArrangements(processingBlockArrangement, FSIZES, QMAX)
 
 
 def computeTotalCost(yPositionList, nQ):
@@ -183,7 +183,7 @@ def updateStep(yPositionList, processingBlock, qubit1, qubit2, totCost):
     return newCost, yPositionList[processingBlock]
 
 
-def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZoneQubits, numberProcessingZones, echo):
+def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProcessingZoneQubits, numberProcessingZones, echo):
     '''
     This function improves the placement of the qubits, subsequently minimizing the metric used in the function 
     computeTotalCost()
@@ -192,7 +192,7 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
     It just iterates over all the qubits and thei possible swapping partners and checks if a global cost metric is minimized upon each swap. 
 
     Given: 
-    processingBlockList:     a list of Blocks and their corresponding variables S, G, c, 
+    processingBlockArrangement:     a list of Blocks and their corresponding variables S, G, c, 
     nQ:     Number of total qubits
     storageZoneSizes: Sizes of the storage zones 
     maxProcessingZoneQubits:   Maximum amount of qubits in processing zones 
@@ -200,7 +200,7 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
     echo:   Do we want to print (debugging reasons)
 
     Returns: 
-        newProcessingBlockList: Updated list newProcessingBlockList of qubits in processing blocks 
+        newprocessingBlockArrangement: Updated list newprocessingBlockArrangement of qubits in processing blocks 
         List of total rearrangemet cost per iteration for displaying reasons
 
 
@@ -209,26 +209,26 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
     # firstly, define variables of interest
 
     # list of Y positions of qubits for all the processing blocks, shape: shape(Y) = (num_processing_blocks, num_qubits)
-    yPositionList = computeArrangements(processingBlockList, storageZoneSizes, maxProcessingZoneQubits)
+    yPositionList = computeArrangements(processingBlockArrangement, storageZoneSizes, maxProcessingZoneQubits)
 
     # total cost to start with (of the initial qubit constellation)
     costTot = computeTotalCost(yPositionList, nQ)
 
     # number of processing blocks
-    numberProcessingBlocks = len(processingBlockList)
+    numberProcessingBlocks = len(processingBlockArrangement)
 
     # number of storage zones 
     numberStorageZones = len(storageZoneSizes)
 
     # for nested lists, this has to be done in python. copy() does not work for nested lists 
-    newProcessingBlockList = copy.deepcopy(processingBlockList)
+    newprocessingBlockArrangement = copy.deepcopy(processingBlockArrangement)
 
     '''
     There are different types of swaps that can be done. Of course, we cannot swap active qubits from a processing zone with qubits in storage zones. 
     
-    at every iteration, we safe the best processingBlockList so far, as well as the totcost. In the mathematica file, the expressions:
+    at every iteration, we safe the best processingBlockArrangement so far, as well as the totcost. In the mathematica file, the expressions:
         Sow[costTot, 1];
-        Sow[processingBlockListnew, 2];
+        Sow[processingBlockArrangementnew, 2];
     safe these values for every iteration corresponding to the index 1 and 2. The reap and sow in the original file is only done for displaying reasons. 
 
     this function is split into four parts: 
@@ -241,7 +241,7 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
     Note that it doesn't make any sense to swap whole storage zones, because we can freely swap qubits between the storage zones. 
     '''
 
-    processingBlockListDisplaying = []
+    processingBlockArrangementDisplaying = []
 
     # Iterate over the processing blocks, in original file we started at one but I guess its fine 
     for processingBlock in range(numberProcessingBlocks):
@@ -253,13 +253,13 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
             continue 
 
         # get information from previous step to compare to current step
-        previousProcessingZoneQubits, previousCoveredGates, previousStorageZoneQubits, previousPointerQuadruple = newProcessingBlockList[processingBlock-1]
+        previousProcessingZoneQubits, previousCoveredGates, previousStorageZoneQubits, previousPointerQuadruple = newprocessingBlockArrangement[processingBlock-1]
 
         # if we have not reached the end of the blocks yet, also define the right partner
         if processingBlock < numberProcessingBlocks-1:
 
             # variables for the processing block on the right 
-            nextProcessingZoneQubits, nextCoveredGates, nextStorageZoneQubits, nextPointerQuadruple = newProcessingBlockList[processingBlock+1]
+            nextProcessingZoneQubits, nextCoveredGates, nextStorageZoneQubits, nextPointerQuadruple = newprocessingBlockArrangement[processingBlock+1]
         
 
 
@@ -276,7 +276,7 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
         # iterate over all the storage zones in the step-th processing block 
         for storageZone in range(numberStorageZones):
 
-            processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple = newProcessingBlockList[processingBlock]
+            processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple = newprocessingBlockArrangement[processingBlock]
 
            
 
@@ -347,26 +347,26 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
                     
 
                     '''
-                    swap qubit one and two in newProcessingBlockList and in the Y list 
+                    swap qubit one and two in newprocessingBlockArrangement and in the Y list 
                     '''
 
                     q_temp = qubitOneInStorageZone
                     q2_temp = qubitTwoInStorageZone
-                    # 1. Swap values in the sublist at the 4th position of processingBlockListnew, corresponding to c 
-                    newProcessingBlockList[processingBlock][3][qubitOneInStorageZone], newProcessingBlockList[processingBlock][3][qubitTwoInStorageZone] = pointerQuadruple[qubitTwoInStorageZone], pointerQuadruple[qubitOneInStorageZone]
+                    # 1. Swap values in the sublist at the 4th position of processingBlockArrangementnew, corresponding to c 
+                    newprocessingBlockArrangement[processingBlock][3][qubitOneInStorageZone], newprocessingBlockArrangement[processingBlock][3][qubitTwoInStorageZone] = pointerQuadruple[qubitTwoInStorageZone], pointerQuadruple[qubitOneInStorageZone]
 
-                    # 2. Swap qubit indices in the sublist at the 3rd position of processingBlockListnew for 'z'
-                    newProcessingBlockList[processingBlock][2][storageZone] = [q2_temp if x == q_temp else x for x in newProcessingBlockList[processingBlock][2][storageZone]]
+                    # 2. Swap qubit indices in the sublist at the 3rd position of processingBlockArrangementnew for 'z'
+                    newprocessingBlockArrangement[processingBlock][2][storageZone] = [q2_temp if x == q_temp else x for x in newprocessingBlockArrangement[processingBlock][2][storageZone]]
 
-                    # 3. Swap qubit indices in the sublist at the 3rd position of processingBlockListnew for 'zp'
-                    newProcessingBlockList[processingBlock][2][previousStorageZone] = [q_temp if x == q2_temp else x for x in newProcessingBlockList[processingBlock][2][previousStorageZone]]
+                    # 3. Swap qubit indices in the sublist at the 3rd position of processingBlockArrangementnew for 'zp'
+                    newprocessingBlockArrangement[processingBlock][2][previousStorageZone] = [q_temp if x == q2_temp else x for x in newprocessingBlockArrangement[processingBlock][2][previousStorageZone]]
 
 
                     # swap q1 and q2 in Y and update the costTot
                     costTot, yPositionList[processingBlock] = updateStep(yPositionList, processingBlock, q_temp, q2_temp, costTot)
 
 
-                    processingBlockListDisplaying.append(copy.deepcopy(newProcessingBlockList))
+                    processingBlockArrangementDisplaying.append(copy.deepcopy(newprocessingBlockArrangement))
 
                     # break, because we're not going to swap anymore. 
                     # This is all the swapping we were interested in for 1)
@@ -387,7 +387,7 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
         for storageZone in range(numberStorageZones):
 
             # THIS step!
-            processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple = newProcessingBlockList[processingBlock]
+            processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple = newprocessingBlockArrangement[processingBlock]
 
             # iterate over all idle qubits 
             for qubitNo in range(len(storageZoneQubits[storageZone])):
@@ -462,21 +462,21 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
 
                     # swap pointers 
 
-                    # important, because apparently, when newProcessingBlockList gets altered, so does the corresponding c sublist... 
+                    # important, because apparently, when newprocessingBlockArrangement gets altered, so does the corresponding c sublist... 
                     c_temp = pointerQuadruple[qubit1].copy()
-                    newProcessingBlockList[processingBlock][3][qubit1] = pointerQuadruple[qubit2]
-                    newProcessingBlockList[processingBlock][3][qubit2] = c_temp # c[q1] 
+                    newprocessingBlockArrangement[processingBlock][3][qubit1] = pointerQuadruple[qubit2]
+                    newprocessingBlockArrangement[processingBlock][3][qubit2] = c_temp # c[q1] 
 
                     # swap qubits in storage zones (B = [[SP, GP, FP, c], ..., []]), so third element in B 
                     q_temp = qubit1
                     q2_temp = qubit2
-                    newProcessingBlockList[processingBlock][2][storageZone][qubitNo] = q2_temp
-                    newProcessingBlockList[processingBlock][2][storageZone][qubitNo2] = q_temp
+                    newprocessingBlockArrangement[processingBlock][2][storageZone][qubitNo] = q2_temp
+                    newprocessingBlockArrangement[processingBlock][2][storageZone][qubitNo2] = q_temp
                     
                     # update total cost and swap qubits in Y list 
                     costTot, yPositionList[processingBlock] = updateStep(yPositionList, processingBlock, q_temp, q2_temp, costTot)
 
-                    processingBlockListDisplaying.append(copy.deepcopy(newProcessingBlockList))
+                    processingBlockArrangementDisplaying.append(copy.deepcopy(newprocessingBlockArrangement))
 
                     break 
 
@@ -498,8 +498,8 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
                 continue
 
 
-            # this is defined *in* the for loop since newProcessingBlockList alters during the course of the for loop
-            processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple = newProcessingBlockList[processingBlock]
+            # this is defined *in* the for loop since newprocessingBlockArrangement alters during the course of the for loop
+            processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple = newprocessingBlockArrangement[processingBlock]
 
             # The list of interest is now SP, which contains the qubits in the processing zones #
             # in the easiest case, we only have one processing zone which means: SP = [[q1,q2,q3,q4,q5]] with five qubits 
@@ -538,23 +538,23 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
                 # if swapping actually decreases the distance 
                 if distanceAfterSwapping < distance:
                     # the two processing zones are swapped 
-                    # first, in the list newProcessingBlockList, so essentially we swap the elements in the SP list 
+                    # first, in the list newprocessingBlockArrangement, so essentially we swap the elements in the SP list 
 
 
-                    temp_b = newProcessingBlockList[processingBlock][0][processingZone].copy()
-                    newProcessingBlockList[processingBlock][0][processingZone] = newProcessingBlockList[processingBlock][0][processingZoneTwo]
-                    newProcessingBlockList[processingBlock][0][processingZoneTwo] = temp_b
+                    temp_b = newprocessingBlockArrangement[processingBlock][0][processingZone].copy()
+                    newprocessingBlockArrangement[processingBlock][0][processingZone] = newprocessingBlockArrangement[processingBlock][0][processingZoneTwo]
+                    newprocessingBlockArrangement[processingBlock][0][processingZoneTwo] = temp_b
                     # c[1], so the processing zone number is changed as well. That's all that changes for the qubits 
                     for qubitNo in range(maxProcessingZoneQubits):
                         
                         
                         # c[qi-th qubit in the z-th processing zone][1], the '1' indicates that we want to change the processing zone number 
-                        newProcessingBlockList[processingBlock][3][qubitsInOneProcessingZone[qubitNo]][1] = processingZoneTwo
-                        newProcessingBlockList[processingBlock][3][qubitsInOneProcessingZoneTwo[qubitNo]][1] = processingZone
+                        newprocessingBlockArrangement[processingBlock][3][qubitsInOneProcessingZone[qubitNo]][1] = processingZoneTwo
+                        newprocessingBlockArrangement[processingBlock][3][qubitsInOneProcessingZoneTwo[qubitNo]][1] = processingZone
                         # we have to do this in the for loop, because we can always only swap two qubits, not a set of qubits - maybe np.vectorize at some point 
                         costTot, yPositionList[processingBlock] = updateStep(yPositionList, processingBlock, qubitsInOneProcessingZone[qubitNo], qubitsInOneProcessingZoneTwo[qubitNo], costTot)
 
-                    processingBlockListDisplaying.append(copy.deepcopy(newProcessingBlockList))
+                    processingBlockArrangementDisplaying.append(copy.deepcopy(newprocessingBlockArrangement))
 
                     break
 
@@ -573,7 +573,7 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
         for processingZone in range(numberProcessingZones):
 
 
-            processingZoneQubits, gatesCovered, storageZoneQubits, pointerQuadruple = newProcessingBlockList[processingBlock]
+            processingZoneQubits, gatesCovered, storageZoneQubits, pointerQuadruple = newprocessingBlockArrangement[processingBlock]
             
             # list of qubits in z-th processing zone 
             qubitsInOneProcessingZone = processingZoneQubits[processingZone]
@@ -632,7 +632,7 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
                         continue 
 
                     # position of q2 in this step 
-                    positionInZoneQubitTwo = c[qubitTwo][2]
+                    positionInZoneQubitTwo = pointerQuadruple[qubitTwo][2]
 
                     # position of q2 in previous step 
                     previousPositionInZoneTwo = previousPointerQuadruple[qubitTwo][2]
@@ -659,25 +659,25 @@ def improvePlacement(processingBlockList, nQ, storageZoneSizes, maxProcessingZon
 
                     # all that is exchanged between those two qubits is the position inside the processing zone. This is the only part of the pointerlist c that we have to update 
 
-                    newProcessingBlockList[processingBlock][3][qubitOne][2] = positionInZoneQubitTwo
-                    newProcessingBlockList[processingBlock][3][qubitTwo][2] = positionInZoneQubitOne
+                    newprocessingBlockArrangement[processingBlock][3][qubitOne][2] = positionInZoneQubitTwo
+                    newprocessingBlockArrangement[processingBlock][3][qubitTwo][2] = positionInZoneQubitOne
 
 
                     costTot, yPositionList[processingBlock] = updateStep(yPositionList, processingBlock, qubitOne, qubitTwo, costTot)
 
-                    processingBlockListDisplaying.append(copy.deepcopy(newProcessingBlockList))
+                    processingBlockArrangementDisplaying.append(copy.deepcopy(newprocessingBlockArrangement))
 
                     # break has to be here, I put it one to the right and it did not work. Obviously. It just kept exchanging already exchanged qubits. 
                     # So: After one qubit exchange, we don't want to further exchange and break! 
                     break 
 
     # here, more parameters are returned in the future, for debugging and displaying reaasons 
-    return newProcessingBlockList, processingBlockListDisplaying    
+    return newprocessingBlockArrangement, processingBlockArrangementDisplaying    
 
 
 # visualize_blocks(B, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(B, Fsizes, maxProcessingZoneQubits), nQ)))
 
-processingBlockListAfterOptimizing, bList = improvePlacement(processingBlockList, NQ, FSIZES, QMAX, MMAX, True)
+processingBlockArrangementAfterOptimizing, bList = improvePlacement(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, True)
 
 
 for i in range(0, len(bList)):
@@ -685,11 +685,11 @@ for i in range(0, len(bList)):
         print('this is not supposed to happen')
 
 
-# animate_solving(bList, 'animation_test')
+animate_solving(bList, 'animation_test')
 
 
-visualize_blocks(processingBlockListAfterOptimizing, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockListAfterOptimizing, FSIZES, MMAX), NQ)))
+# visualize_blocks(processingBlockArrangementAfterOptimizing, 'Processing block arrangement after deterministic optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangementAfterOptimizing, FSIZES, MMAX), NQ)))
 
 # # and before optimizing
-visualize_blocks(processingBlockList, 'Qubits arranged before optimizing')
+visualize_blocks(processingBlockArrangement, 'Qubits arranged before optimizing')
 

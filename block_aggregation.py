@@ -395,9 +395,7 @@ def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMa
         else:
             idlePool = idlePool + aggregatedQubits[n]  
 
-    # now, all the processing zone sets with good sizes are padded with qubits from the idle pool 
-
-    # iterate over processing zones 
+    # Pad processing zones with qubits from idle pool 
     for processingZone in range(mMax):
 
         # idle subset of processing zone 
@@ -416,7 +414,7 @@ def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMa
             idleqQubitsInProcessingZones = [q]
 
             # this qubit is now idle, but it is still in a processing zone, not a storage zone  
-            pointerQuadruple[q] = ['p', processingZone, 1, 'i']
+            pointerQuadruple[q] = ['p', processingZone, 0, 'i']
         
         # a qubit that is appended to a certain processing zone will have this position: 
         positionInZone = len(qubitsInProcessingZones[processingZone]) + len(idleqQubitsInProcessingZones)
@@ -456,10 +454,10 @@ def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMa
 
 
 # test 
-SP, GP, Iset, c = AggregateBlocksStepPostProcess(aggregatedQubitsTest, gatesCoveredBestTest, NQ, QMAX, MMAX)
+# SP, GP, Iset, c = AggregateBlocksStepPostProcess(aggregatedQubitsTest, gatesCoveredBestTest, NQ, QMAX, MMAX)
 
-print('SP:', SP)
-print('GP:', GP)
+# print('SP:', SP)
+# print('GP:', GP)
 
 '''
 Now, we have padded the processing zones with idle qubits, so the processing zones are now filled with active and idle qubits. 
@@ -506,7 +504,6 @@ def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
 
     # while there's still qubits left in the idle pool 
     while len(newIdlePool) > 0: 
-        # print('Idle Pool:', newIdlePool)
         '''
         Right zone
         '''
@@ -628,11 +625,7 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
     return aggregatedBlocks
 
 
-processingBlockList = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
-
-# for i in range(len(processingBlockList)):   
-#     print(processingBlockList[i][0])
-
+processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
 
@@ -687,7 +680,7 @@ def visualize_blocks(B, title):
             if c_total[layerNumber][qubitNumber][0] == 'i':
                 G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='storage', label=str(qubitNumber))
 
-            # if in storage zone, add with corresponding label and zone keyword, remember: qbs can still be idle in processing zone, so we have to differentiate 
+            # if in processing zone, add with corresponding label and zone keyword, remember: qbs can still be idle in processing zone, so we have to differentiate 
             elif c_total[layerNumber][qubitNumber][0] == 'p': 
 
                 if c_total[layerNumber][qubitNumber][3] == 'i':
@@ -695,8 +688,6 @@ def visualize_blocks(B, title):
 
                 elif c_total[layerNumber][qubitNumber][3] == 'a':
                     G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='processing_active', label=str(qubitNumber))
-
-            # print(G.nodes())
 
     # assign positions to all the qubits 
     pos = {}
@@ -766,15 +757,24 @@ def visualize_blocks(B, title):
     plt.show()    
 
 
-'''
-Show the arrangement of qubits after the Block aggregation
-'''
-visualize_blocks(processingBlockList, 'Qubits arranged after block aggregation')
+# show arrangement of qubits after block aggregation
+# visualize_blocks(processingBlockArrangement, 'Qubits arranged after block aggregation')
+
 
 '''
 ANIMATION
 '''
+
 def update(num, bList, title, ax):
+    '''
+    this function is used in the function animateSolving below
+    Given a
+    number of frames for the animation
+    list of processingBlockArrangements - corresponding to certain swaps in the optimization algorithm procedure
+    title
+    and ax, a matplotlib object
+    it creates the plot of the graph for every element in the processingBlockArrangementList 
+    '''
     ax.clear()
 
     B = bList[num]
@@ -814,7 +814,6 @@ def update(num, bList, title, ax):
                 elif c_total[layerNumber][qubitNumber][3] == 'a':
                     G.add_node((layerNumber, qubitNumber), layer=layerNumber, zone='processing_active', label=str(qubitNumber))
 
-            # print(G.nodes())
 
     # assign positions to all the qubits 
     pos = {}
@@ -822,8 +821,6 @@ def update(num, bList, title, ax):
     lenProcessingZones =  len(B[0][0][0]) # corresponds to S list 
     print((B[0][0][0]))
     print(len(B[0][2][0]))
-    # print(c_total[0])
-    # print(c_total[0][2])
     lenStorageZones =  len(B[0][2][0]) # corresponds to F list 
 
     for node in G.nodes():
@@ -917,7 +914,7 @@ def show_circuit_after_optimizing(BP, nQ, circ):
     plt.show()
     # print(circuit)
 
-# show_circuit_after_optimizing(processingBlockList, NQ, circuitOfQubits)
+# show_circuit_after_optimizing(processingBlockArrangement, NQ, circuitOfQubits)
 # visualize_blocks(B, 'Visualizing Test')
 
 
