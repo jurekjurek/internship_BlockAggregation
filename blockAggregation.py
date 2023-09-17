@@ -12,15 +12,7 @@ import matplotlib.animation as animation
 import networkx as nx
 from fancify_text import italic, bold, italicSerif
  
-from layeredcircuit import * 
 from helperFunctions import *
-
-'''
-NOTE: this is an old version: 
-Here, the qubits are layered before applying the blockAggregation. This is not necessary. 
-In the new file, the layering part has been skipped completely. 
-'''
-
 
 '''
 In this file, the mathematica file ... 
@@ -29,9 +21,8 @@ will be transcripted into python, extended and commented in order for other peop
 There are a few important files involved in this project. 
 The first one is randomcircuit.py - it creates a random circuit and plots it using qiskit. 
 
-The second one is layeredcircuit.py - it creates a layered circuit given a raw circuit as input 
 
-The third one is blockprocessing.py - it applies the block aggregation algorithm to the layered circuit. 
+The third one is blockprocessing.py - it applies the block aggregation algorithm to the circuit. 
 
 What is also of interest is: 
     1. The commutation rule: Not only do two gates commute if they just do not share two qubits. It is possible to have more general commutation rules. Implement this. 
@@ -50,12 +41,8 @@ circuitOfQubits = random_circuit(NQ, GATES)
 
 # show_circuit(NQ,circuitOfQubits)
 
-layeredCircuit = LayerCircuit(10, circuitOfQubits)
-# show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
-
-
 '''
-Now that we have the layered circle going, we can focus on the block aggregation. 
+Focus on the block aggregation. 
 This will be done ... 
 
 Structure: 
@@ -126,12 +113,12 @@ mMax is the number of processing zones in one processing block
 
 '''
 
-def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
+def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
     '''
     The goal is to find the set of S and G that produce the best GateCoverage!!
 
     Given: 
-        layeredcirc:        A circuit, arranged in layers 
+        circuitOfQubits:    A circuit
         nQ:                 Number of qubits in the circuit
         qMax:               Maximum number of qubits in a processing zone 
         mMax:               Maximum number of processing zones 
@@ -170,158 +157,155 @@ def AggregateBlocksStep(layeredCirc, nQ, qMax, mMax):
     gateCoverageList = []
 
     # iterate over layers 
-    for layerNumber in range(len(layeredCirc)):
+    for gateNo in range(len(circuitOfQubits)):
 
-        # iterate over gates in layers 
-        for gateNumber in range(len(layeredCirc[layerNumber])):
-
-            gate = layeredCirc[layerNumber][gateNumber]
-            
-            # define qubit one and two, that are part of the gate gateNumber in layer layerNumber 
-            firstGateQubit = gate[1][0]
-            secondGateQubit = gate[1][1]
-
-            # To what qubit set do the two qubits belong? 
-            pointerFirstGateQubit = pointerTable[firstGateQubit]
-            pointerSecondGateQubit = pointerTable[secondGateQubit]
-
-            
-            # append gate (which is not just a number) to gate coverage set of qubit set corresponding to cn
-            if gatesCovered[pointerFirstGateQubit] != []:
-                gatesCovered[pointerFirstGateQubit].append(gate[0])
-            if gatesCovered[pointerFirstGateQubit] == []:
-                gatesCovered[pointerFirstGateQubit] = [gate[0]]
-            
-
-            # if cn and cm are equal, meaning they are part of the same qubit set, continue
-            if pointerFirstGateQubit == pointerSecondGateQubit: 
-                continue        # we don't have to merge the Qubit sets 
-
-            # Merge Qubit sets
-            # We always merge the smaller to the larger set. So if the set belonging to cm is larger than the set belonging to cn, swap them 
-            if len(aggregatedQubits[pointerFirstGateQubit]) < len(aggregatedQubits[pointerSecondGateQubit]):
-                temp = pointerSecondGateQubit
-                pointerSecondGateQubit = pointerFirstGateQubit 
-                pointerFirstGateQubit = temp
-
-            # We merge the qubit sets together
-            aggregatedQubits[pointerFirstGateQubit] = aggregatedQubits[pointerFirstGateQubit] + aggregatedQubits[pointerSecondGateQubit]
-
-            # And we merge the gate coverage sets together
-            # Remember: Gate n connects qubits n and m, so we dont have to append the gate to G[cm] as well, if we did, we would have it twice 
-            gatesCovered[pointerFirstGateQubit] = gatesCovered[pointerFirstGateQubit] + gatesCovered[pointerSecondGateQubit]
+        gate = circuitOfQubits[gateNo]
+        
+        # define qubit one and two, that are part of the gate gateNumber in layer layerNumber 
+        firstGateQubit = gate[1][0]
+        secondGateQubit = gate[1][1]
 
 
-            # All the pointers that belonged to the qubits in set S[cm] will now be pointing to set S[cn]
-            for qubitNo in range(len(aggregatedQubits[pointerSecondGateQubit])):
+        # To what qubit set do the two qubits belong? 
+        pointerFirstGateQubit = pointerTable[firstGateQubit]
+        pointerSecondGateQubit = pointerTable[secondGateQubit]
 
-                # qubits are just numbers in the code, so S[cm][i] returns exactly the n-th qubit of all qubits. 
-                pointerTable[aggregatedQubits[pointerSecondGateQubit][qubitNo]] = pointerFirstGateQubit     # all elements in S[cm] which represent qubits stored as numbers are assigned an element in the pointerTable list corresponding to cn
+        
+        # append gate (which is not just a number) to gate coverage set of qubit set corresponding to cn
+        if gatesCovered[pointerFirstGateQubit] != []:
+            gatesCovered[pointerFirstGateQubit].append(gate[0])
+        if gatesCovered[pointerFirstGateQubit] == []:
+            gatesCovered[pointerFirstGateQubit] = [gate[0]]
+        
 
-            # The qubit set S[cm] is emptied 
-            aggregatedQubits[pointerSecondGateQubit] = []
+        # if cn and cm are equal, meaning they are part of the same qubit set, continue
+        if pointerFirstGateQubit == pointerSecondGateQubit: 
+            continue        # we don't have to merge the Qubit sets 
 
-            # The gate coverage set corresponding to Set cm is emptied, because it was merged above
-            gatesCovered[pointerSecondGateQubit] = []
+        # Merge Qubit sets
+        # We always merge the smaller to the larger set. So if the set belonging to cm is larger than the set belonging to cn, swap them 
+        if len(aggregatedQubits[pointerFirstGateQubit]) < len(aggregatedQubits[pointerSecondGateQubit]):
+            temp = pointerSecondGateQubit
+            pointerSecondGateQubit = pointerFirstGateQubit 
+            pointerFirstGateQubit = temp
 
-            # Remember: S is sorted list and G is a sorted list
-            # They are sorted by size; biggest qubits sets as first elements, biggest gate coverage sets as first elements
+        # We merge the qubit sets together
+        aggregatedQubits[pointerFirstGateQubit] = aggregatedQubits[pointerFirstGateQubit] + aggregatedQubits[pointerSecondGateQubit]
 
-            # first, let's take care of the set cn that we appended stuff to:
-            # if cn is not the first element in the list already (if we append something to the biggest element, it stays the biggest element), we dont have to do anything 
-            if pointerFirstGateQubit > 0:
-
-                # we want to move the qubit to the appropriate position in aggregatedQubits. Compare to the element that is one element after it in the list. If it is bigger, move S[cn] up one element
-                while (len(aggregatedQubits[pointerFirstGateQubit]) > len(aggregatedQubits[pointerFirstGateQubit-1]) and pointerFirstGateQubit != 0) or gatesCovered[pointerFirstGateQubit-1] == None:
-                    
-                    # in the pointer list pointerTable, assign cn to all elements that are assigned cn - 1
-
-                    # What's happening here is essentially swapping all the elements in the lists pointerTable, G and S accordingly. 
-
-                    # remember: We effectively move S[] up in the set of qubits S, so upon moving up one step, we effectively replace S[cn] and S[cn-1] as well as the pointers that point to them;
-                    # the pointers of the qubits that are stored in set cn will become cn-1 and vice versa 
-                    for k in range(len(aggregatedQubits[pointerFirstGateQubit])):
-                        pointerTable[aggregatedQubits[pointerFirstGateQubit][k]] = pointerFirstGateQubit - 1
-
-                    for k in range(len(aggregatedQubits[pointerFirstGateQubit-1])):
-                        pointerTable[aggregatedQubits[pointerFirstGateQubit-1][k]] = pointerFirstGateQubit
+        # And we merge the gate coverage sets together
+        # Remember: Gate n connects qubits n and m, so we dont have to append the gate to G[cm] as well, if we did, we would have it twice 
+        gatesCovered[pointerFirstGateQubit] = gatesCovered[pointerFirstGateQubit] + gatesCovered[pointerSecondGateQubit]
 
 
-                    # swap the two elements S[cn] and S[cn-1], effectively moving S[cn] up one element in the list. 
-                    templist = aggregatedQubits[pointerFirstGateQubit]
-                    aggregatedQubits[pointerFirstGateQubit] = aggregatedQubits[pointerFirstGateQubit-1]
-                    aggregatedQubits[pointerFirstGateQubit-1] = templist
+        # All the pointers that belonged to the qubits in set S[cm] will now be pointing to set S[cn]
+        for qubitNo in range(len(aggregatedQubits[pointerSecondGateQubit])):
 
-                    # swap the two elements G[cn] and G[cn-1]
-                    templist = gatesCovered[pointerFirstGateQubit]
-                    gatesCovered[pointerFirstGateQubit] = gatesCovered[pointerFirstGateQubit-1]
-                    gatesCovered[pointerFirstGateQubit-1] = templist 
+            # qubits are just numbers in the code, so S[cm][i] returns exactly the n-th qubit of all qubits. 
+            pointerTable[aggregatedQubits[pointerSecondGateQubit][qubitNo]] = pointerFirstGateQubit     # all elements in S[cm] which represent qubits stored as numbers are assigned an element in the pointerTable list corresponding to cn
 
-                    pointerFirstGateQubit -= 1
+        # The qubit set S[cm] is emptied 
+        aggregatedQubits[pointerSecondGateQubit] = []
 
-            # now, for the second list element corresponding to the pointer cm 
-            # if cm is not the last element in the list already (if we clear the last element of the list, )
-            # We cannot just append [] to the end of S and G, since we have to move the stuff inside the pointerTable list as well
+        # The gate coverage set corresponding to Set cm is emptied, because it was merged above
+        gatesCovered[pointerSecondGateQubit] = []
 
-            if pointerSecondGateQubit < nQ-1:
+        # Remember: S is sorted list and G is a sorted list
+        # They are sorted by size; biggest qubits sets as first elements, biggest gate coverage sets as first elements
 
-                while len(aggregatedQubits[pointerSecondGateQubit+1]) > 0:
-                    for k in range(len(aggregatedQubits[pointerSecondGateQubit+1])):
-                        pointerTable[aggregatedQubits[pointerSecondGateQubit+1][k]] = pointerSecondGateQubit
+        # first, let's take care of the set cn that we appended stuff to:
+        # if cn is not the first element in the list already (if we append something to the biggest element, it stays the biggest element), we dont have to do anything 
+        if pointerFirstGateQubit > 0:
 
-                    aggregatedQubits[pointerSecondGateQubit] = aggregatedQubits[pointerSecondGateQubit+1]
-                    aggregatedQubits[pointerSecondGateQubit+1] = []
-
-                    gatesCovered[pointerSecondGateQubit] = gatesCovered[pointerSecondGateQubit+1]
-                    gatesCovered[pointerSecondGateQubit+1] = []        
-
-                    pointerSecondGateQubit += 1
-
-
-
-                    if pointerSecondGateQubit >= len(aggregatedQubits)-1:
-                        break
+            # we want to move the qubit to the appropriate position in aggregatedQubits. Compare to the element that is one element after it in the list. If it is bigger, move S[cn] up one element
+            while (len(aggregatedQubits[pointerFirstGateQubit]) > len(aggregatedQubits[pointerFirstGateQubit-1]) and pointerFirstGateQubit != 0) or gatesCovered[pointerFirstGateQubit-1] == None:
                 
+                # in the pointer list pointerTable, assign cn to all elements that are assigned cn - 1
+
+                # What's happening here is essentially swapping all the elements in the lists pointerTable, G and S accordingly. 
+
+                # remember: We effectively move S[] up in the set of qubits S, so upon moving up one step, we effectively replace S[cn] and S[cn-1] as well as the pointers that point to them;
+                # the pointers of the qubits that are stored in set cn will become cn-1 and vice versa 
+                for k in range(len(aggregatedQubits[pointerFirstGateQubit])):
+                    pointerTable[aggregatedQubits[pointerFirstGateQubit][k]] = pointerFirstGateQubit - 1
+
+                for k in range(len(aggregatedQubits[pointerFirstGateQubit-1])):
+                    pointerTable[aggregatedQubits[pointerFirstGateQubit-1][k]] = pointerFirstGateQubit
+
+
+                # swap the two elements S[cn] and S[cn-1], effectively moving S[cn] up one element in the list. 
+                templist = aggregatedQubits[pointerFirstGateQubit]
+                aggregatedQubits[pointerFirstGateQubit] = aggregatedQubits[pointerFirstGateQubit-1]
+                aggregatedQubits[pointerFirstGateQubit-1] = templist
+
+                # swap the two elements G[cn] and G[cn-1]
+                templist = gatesCovered[pointerFirstGateQubit]
+                gatesCovered[pointerFirstGateQubit] = gatesCovered[pointerFirstGateQubit-1]
+                gatesCovered[pointerFirstGateQubit-1] = templist 
+
+                pointerFirstGateQubit -= 1
+
+        # now, for the second list element corresponding to the pointer cm 
+        # if cm is not the last element in the list already (if we clear the last element of the list, )
+        # We cannot just append [] to the end of S and G, since we have to move the stuff inside the pointerTable list as well
+
+        if pointerSecondGateQubit < nQ-1:
+
+            while len(aggregatedQubits[pointerSecondGateQubit+1]) > 0:
+                for k in range(len(aggregatedQubits[pointerSecondGateQubit+1])):
+                    pointerTable[aggregatedQubits[pointerSecondGateQubit+1][k]] = pointerSecondGateQubit
+
+                aggregatedQubits[pointerSecondGateQubit] = aggregatedQubits[pointerSecondGateQubit+1]
+                aggregatedQubits[pointerSecondGateQubit+1] = []
+
+                gatesCovered[pointerSecondGateQubit] = gatesCovered[pointerSecondGateQubit+1]
+                gatesCovered[pointerSecondGateQubit+1] = []        
+
+                pointerSecondGateQubit += 1
 
 
 
-            '''
-            At this point, the sets have been merged and sorted. Now, to evaluate how well the gates are covered by these particular sets. 
-            '''        
-
-                
-            # Now that the qubit set as well as the gate coverage set are updatet, check the gate coverage
-            # So: How many gates are covered by the Qubit sets S = [S_1, S_2, ...] ?
-
-            gateCoverage, qubitNonCoverage = EvaluateGateCoverage(aggregatedQubits, gatesCovered, nQ, qMax, mMax)
-
-            # termination condition: 
-            # if the remaining qubits - those that can be covered by the constellation (excluding these that cannot be covered because they are more than Q) - are less than the qubits that can be stored in the processing zones 
-            # in total, so mMax (no of processing zones) times qMax (no of qubits in processing zones)
-            if nQ - qubitNonCoverage < mMax * qMax: 
-
-                print('Termination condition reached!')
-                # function returns the two best lists, because we're running out of space 
-                return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList
+                if pointerSecondGateQubit >= len(aggregatedQubits)-1:
+                    break
             
 
 
-            gateCoverageList.append(gateCoverage)
 
-            # store best gateCoverage
-            if gateCoverage > bestGateCoverage: 
-                bestGateCoverage = gateCoverage
+        '''
+        At this point, the sets have been merged and sorted. Now, to evaluate how well the gates are covered by these particular sets. 
+        '''        
 
-                aggregatedQubitsBest    = aggregatedQubits.copy()
-                gatesCoveredBest        = gatesCovered.copy()
+            
+        # Now that the qubit set as well as the gate coverage set are updatet, check the gate coverage
+        # So: How many gates are covered by the Qubit sets S = [S_1, S_2, ...] ?
+
+        gateCoverage, qubitNonCoverage = EvaluateGateCoverage(aggregatedQubits, gatesCovered, nQ, qMax, mMax)
+
+        # termination condition: 
+        # if the remaining qubits - those that can be covered by the constellation (excluding these that cannot be covered because they are more than Q) - are less than the qubits that can be stored in the processing zones 
+        # in total, so mMax (no of processing zones) times qMax (no of qubits in processing zones)
+        if nQ - qubitNonCoverage < mMax * qMax: 
+
+            print('Termination condition reached!')
+            # function returns the two best lists, because we're running out of space 
+            return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList
+        
+
+
+        gateCoverageList.append(gateCoverage)
+
+        # store best gateCoverage
+        if gateCoverage > bestGateCoverage: 
+            bestGateCoverage = gateCoverage
+
+            aggregatedQubitsBest    = aggregatedQubits.copy()
+            gatesCoveredBest        = gatesCovered.copy()
 
 
     return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList        
             
 
 
-aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(layeredCircuit, NQ, QMAX, MMAX)
-
+aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
 
 
 # Plot the blockaggregation procedure  
@@ -602,13 +586,8 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
     # while stuff still left in circuit 
     while rawCircuitChange != [] and iterationCounter<100:
 
-
-        # Make layeredcircuit
-        tempLayeredCircuit                   = LayerCircuit(nQ, rawCircuitChange)
-
-
         # Get best set of qubits and gates from algorithm 
-        aggregatedQubitsBest, gatesCoveredBest, gc_list_test      = AggregateBlocksStep(tempLayeredCircuit, nQ, qMax, mMax)
+        aggregatedQubitsBest, gatesCoveredBest, gc_list_test      = AggregateBlocksStep(rawCircuitChange, nQ, qMax, mMax)
 
 
         # Get set of qubits and gates, for the different processing zones. And the 'remaining' idle pool Iset 

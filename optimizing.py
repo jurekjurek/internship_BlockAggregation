@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 import copy 
-from block_aggregation import *
+from blockAggregation import *
 from helperFunctions import *
 
 
