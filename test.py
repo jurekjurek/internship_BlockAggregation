@@ -1,11 +1,6 @@
-import networkx as nx
-import matplotlib.pyplot as plt
-import random
-
-a = 5
-b = 5 
-print(a)
-del a, b
-a = 8
-print(a)
-# print(b)
+a = [1,2,3]
+b = [5,6,3,2]
+c = [4,5,6]
+c += a
+c += b
+print(c)

@@ -499,5 +499,20 @@ First try animation function
 #     # return None
 
 
+'''
+intabusearch firstf unction
+'''
 
 
+                # KOKOLORES
+                # if it is an active qubit in a processing zone 
+                # if s2 == "a":
+
+                #     # store it in the first position in the SPnew list S = [[active, idle], [active, idle] ... , [active, idle]]
+                #     SPnew[z][0][0].append(q)
+
+                # # if it is an idle qubit in a processing zone 
+                # else:
+
+                #     # store it in the according position 
+                #     SPnew[z][0][1].append(q)

@@ -10,7 +10,7 @@ print('###########')
 print('Tabu Search')
 print('###########')
 
-def reconstructBlocksFromArrangements(BPold, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl, s1Tbl, s2Tbl):
+def reconstructBlocksFromArrangements(processingBlockArrangementOld, storageZoneSizes, qMax, mMax, nQ, yPositionList, zoneNumberList, zoneStatusList, natureStatusList):
     '''
     This function iteratively creates a new B list, given an old B list and a corresponding list with Y positions. 
 
@@ -19,122 +19,106 @@ def reconstructBlocksFromArrangements(BPold, Fsizes, Qmax, Mmax, Nq, Y, zonesTbl
     For each element in the Y list, it creates a processing block in the new B list. 
 
 
-    For efficiency reasons, the tabu search algorithm below does not operate on the BP data structure itself.  
+    For efficiency reasons, the tabu search algorithm below does not operate on the processingBlockArrangement data structure itself.  
     It merely updates the list of Y positions, the zone tables and the s1 Tables. (s2 never changes, an active qubit stays active, an idle qubit stays idle)
-    For this reason, this function, after the execution of the Tabu Search, rebuilds the BP list, most importantly the c list
+    For this reason, this function, after the execution of the Tabu Search, rebuilds the processingBlockArrangement list, most importantly the c list
     
     Accepts: 
 
-        BPold:          input BP structure
+        processingBlockArrangementold:          input processingBlockArrangement structure
         Fsizes:         table of idle storage zone capacities
-        Qmax:           Processing zone capacity
-        Mmax:           Number of processing zones
-        Nq:             Number of qubits
+        qMax:           Processing zone capacity
+        mMax:           Number of processing zones
+        nQ:             Number of qubits
         Y:              arrangements, output of tabu search
-        zonesTbl:       table of zone indices for each step, output of tabu search
-        s1Tbl:          table of QB status "i" or "p", output of tabu search
+        zoneNumberList:       table of zone indices for each step, output of tabu search
+        zoneStatusList:          table of QB status "i" or "p", output of tabu search
         s2Tabl:         table of QB status "a" or "i", not affected by tabu search
 
     Returns:
 
-        BPnew:          reconstructed BP structure
+        processingBlockArrangementnew:          reconstructed processingBlockArrangement structure
 
     '''
 
     # create new B list to be filled iteratively
-    BPnew = []
+    processingBlockArrangement = []
 
     # create a table of qubits? 
-    qbTbl = np.arange(Nq)
+    qubitList = np.arange(nQ)
     
     # iterate over all the blocks in the Y list 
-    for step in range(len(Y)):
+    for processingBlock in range(len(yPositionList)):
 
         # get the list of the qubits in this step, [::-1] reverses the list 
-        qbTblSort = qbTbl[np.argsort(Y[step])][::-1]
+        listOfAllQubitsSort = qubitList[np.argsort(yPositionList[processingBlock])][::-1]
 
         # get the old GP, this will stay the same. Remember: The gates that are covered will not change, since the qubits will not move in- or out of the processing zones. Only their arrangements within the processing 
         # zones will be adapted. 
-        GP = BPold[step][1]
+        coveredGates = processingBlockArrangementOld[processingBlock][1]
 
-        # create a new S array to be filled
-        # SPnew = ([[[[], []] for _ in range(Mmax)] for _ in range(Mmax)])
-
-        SPnew = [[] for _ in range((Mmax))]
+        processingZoneQubits = [[] for _ in range((mMax))]
 
         # create a new F array to be filled 
-        FPnew = [[] for _ in range(len(Fsizes))]
+        storageZoneQubits = [[] for _ in range(len(storageZoneSizes))]
 
         # create a new c array to be filled 
-        cNew = [[] for _ in range(Nq)]
+        pointerQuadruple = [[] for _ in range(nQ)]
 
         # for processing and idle qubits, create empty arrays to be filled with positions?
         # processing zone qubits 
-        kpTbl = np.ones(Mmax, dtype=int)
+        positionInProcessingZoneList = np.ones(mMax, dtype=int)
 
         # idle zone qubits 
-        kiTbl = np.ones(len(Fsizes), dtype=int)
+        positionInStorageZoneList = np.ones(len(storageZoneSizes), dtype=int)
         
         # iterate over all qubits in the processing block 
-        for qi in range(Nq):
+        for qubitNo in range(nQ):
 
             # get qubit corresponding to number qi 
-            q = qbTblSort[qi]
+            qubit = listOfAllQubitsSort[qubitNo]
 
-            # WHAT EXACTLY DO S1TBL AND S2TBL DO? 
+            # WHAT EXACTLY DO zoneStatusList AND natureStatusList DO? 
             # s1 corresponds to s, s2 corresponds to s', meaning: 
             # s1 indicates if the qubit is stored in idle or processing zone 
-            s1 = s1Tbl[step][q]
+            zoneStatus = zoneStatusList[processingBlock][qubit]
 
             # s2 indicates if the qubit is active or idle 
-            s2 = s2Tbl[step][q]
+            natureStatus = natureStatusList[processingBlock][qubit]
 
             # processing zone number?
-            z = zonesTbl[step][q]
+            zoneNumber = zoneNumberList[processingBlock][qubit]
             
             # if the qubit is stored in idle zone 
-            if s1 == "i":
+            if zoneStatus == "i":
 
                 # use the kiTbl for the position within the zone, corresponding to idle qubits 
-                cNew[q] = [s1, z, kiTbl[z], s2]
+                pointerQuadruple[qubit] = [zoneStatus, zoneNumber, positionInStorageZoneList[zoneNumber], natureStatus]
 
                 # the next qubit has a position in the zone z that is one larger 
-                kiTbl[z] += 1
+                positionInStorageZoneList[zoneNumber] += 1
 
                 # and adjust the idle zone list accordingly 
-                FPnew[z].append(q)
+                storageZoneQubits[zoneNumber].append(qubit)
 
             # if the qubit is stored in processing zone 
             else:
 
                 # use position list corresponding to processing zones 
-                cNew[q] = [s1, z, kpTbl[z], s2]
+                pointerQuadruple[qubit] = [zoneStatus, zoneNumber, positionInProcessingZoneList[zoneNumber], natureStatus]
 
                 # increase position by one 
-                kpTbl[z] += 1
+                positionInProcessingZoneList[zoneNumber] += 1
 
                 # append qubit in processing zone to Slist 
-                SPnew[z].append(q)
+                processingZoneQubits[zoneNumber].append(qubit)
 
-
-                # KOKOLORES
-                # if it is an active qubit in a processing zone 
-                # if s2 == "a":
-
-                #     # store it in the first position in the SPnew list S = [[active, idle], [active, idle] ... , [active, idle]]
-                #     SPnew[z][0][0].append(q)
-
-                # # if it is an idle qubit in a processing zone 
-                # else:
-
-                #     # store it in the according position 
-                #     SPnew[z][0][1].append(q)
         
         # we create the new B iteratively, for each step in the Y list 
-        BPnew.append([SPnew, GP, FPnew, cNew])
+        processingBlockArrangement.append([processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple])
     
     # return the new B list 
-    return BPnew
+    return processingBlockArrangement
 
 
 
@@ -144,7 +128,7 @@ Now for the actual tabu search.
 '''
 
 
-def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, swapNumMax, processingZoneSwapFraction, greedySpread, storeAllBestBP, echo):
+def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, swapNumMax, processingZoneSwapFraction, greedySpread, storeAllBestprocessingBlockArrangement, echo):
     '''
     This function performs the Tabu search! 
 
@@ -171,30 +155,30 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
 
     Accepts: 
-        BP:                             Output of improvePlacement in the optimizing.py file 
+        processingBlockArrangement:                             Output of improvePlacement in the optimizing.py file 
         Fsizes:                         Table of idle storage zone capacities
-        Qmax:                           Processing zone capacity
-        Mmax:                           Number of processing zones
-        Nq:                             Number of qubits
+        qMax:                           Processing zone capacity
+        mMax:                           Number of processing zones
+        nQ:                             Number of qubits
         TSiterations:                   Number of TabuSearch steps (e.g. 5000) 
-        TSlen:                          Size of the Tabu list 
+        tabuListLength:                          Size of the Tabu list 
         swapNumMax:                     Maximum nuber of Qubits to be swapped during one TabuSearch step
         processingZoneSwapFraction:     How many of the TS steps are ones where entire processing zones are swapped? Relatively speaking 
         greedySpread:                   I dont know 
-        storeAllBestBP:                 I dont understand 
+        storeAllBestprocessingBlockArrangement:                 I dont understand 
         echo:                           Prints debug output 
 
     Returns: 
-        BPnew                           Reconstructed BP list based on optimized Y position list 
-        costProgressTbl                 List that keeps track of total cost for every iteration of the TS algorithm 
-        bestCostProgressTbl             List that keeps track of the best cost so far. Does not decrease
+        processingBlockArrangementnew                           Reconstructed processingBlockArrangement list based on optimized Y position list 
+        costProgressList                 List that keeps track of total cost for every iteration of the TS algorithm 
+        bestcostProgressList             List that keeps track of the best cost so far. Does not decrease
         Ybest                           Best arrangement of Y positions found by the TS algorithm 
-        numImprovements                 Number of TS steps where the cost was actually minimized 
-        tabuCtr                         Number of events where a swap is not allowed / tabu
-        noUpdateCtr                     Number of TS steps where no update has been done 
+        numberOfImprovingSteps                 Number of TS steps where the cost was actually minimized 
+        numberOfTabuSteps                         Number of events where a swap is not allowed / tabu
+        numberOfStepsWithoutUpdate                     Number of TS steps where no update has been done 
         bestYAll                        List that keeps track of all intermediate arrangements of Y positions, where improved (cost decreased)
         bestCostUpdateAll               
-        bestBPTblAll                    List of all intermediate B lists where TS step led to improvement 
+        bestprocessingBlockArrangementTblAll                    List of all intermediate B lists where TS step led to improvement 
         (TStime                          absolute runtime... later)
 
     '''
@@ -202,10 +186,10 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     # initialize all variables
 
     # number of storage zones 
-    numF = len(Fsizes)
+    numberOfStorageZones = len(Fsizes)
 
     # number of blocks (steps)
-    numSteps = len(BP)
+    numberOfProcessingBlocks = len(processingBlockArrangement)
 
     # idlepool to be filled 
     idlePools = []
@@ -214,52 +198,52 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     processingPools = []
 
     # Table of processing zone number for the qubits? 
-    zonesTbl = []
+    zoneNumberList = []
 
     # corresponds to a table of s values ('p' or 'i')
-    s1Tbl = []
+    zoneStatusList = []
 
     # corresponds to a talbe of s' values ('a' or 'i')
-    s2Tbl = []
+    natureStatusList = []
 
     # table of qubits I guess 
-    QBTbl = [q for q in range(Nq)]
+    listOfAllQubits = [q for q in range(nQ)]
 
 
     # iterate over all the blocks - put togehter all the list we are going to need to update. In the end, we're gonna assemble all of these into a B list 
-    for step in range(numSteps):
+    for processingBlock in range(numberOfProcessingBlocks):
 
         # define the S list for every step 
-        SP = BP[step][0]
+        # SP = processingBlockArrangement[processingBlock][0]
 
         # define c list for every step 
-        c = BP[step][3]
+        pointerQuadruple = processingBlockArrangement[processingBlock][3]
         
         # list of idle qubits? 
         idleList = []
 
         # position in processing zone? 
-        processingList = [[] for _ in range(len(BP[step][1]))]
+        processingList = [[] for _ in range(len(processingBlockArrangement[processingBlock][1]))]
 
         # 
-        zonesList = [0] * Nq
+        zonesList = [0] * nQ
 
-        s1List = [0] * Nq
+        tempZoneStatusList = [0] * nQ
 
-        s2List = [0] * Nq
+        tempNatureStatusList = [0] * nQ
 
         # put together the list of qubits in processing and idle zones, fill the according lists iteratively 
-        for q in range(Nq):
-            if c[q][3] == 'i': 
-                idleList.append(q)
+        for qubitNo in range(nQ):
+            if pointerQuadruple[qubitNo][3] == 'i': 
+                idleList.append(qubitNo)
             else: 
-                processingList[c[q][1]].append(q)
+                processingList[pointerQuadruple[qubitNo][1]].append(qubitNo)
             
-            zonesList[q] = c[q][1]
+            zonesList[qubitNo] = pointerQuadruple[qubitNo][1]
 
-            s1List[q] = c[q][0]
+            tempZoneStatusList[qubitNo] = pointerQuadruple[qubitNo][0]
 
-            s2List[q] = c[q][3]
+            tempNatureStatusList[qubitNo] = pointerQuadruple[qubitNo][3]
 
         # Idlepools is structured like [[idle list block one], [idle list block two], ...]
         idlePools.append(idleList)
@@ -268,19 +252,19 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
         processingPools.append(processingList)
 
         # same for numbers of processing zones I guess 
-        zonesTbl.append(zonesList)
+        zoneNumberList.append(zonesList)
 
         # those are just lists of lists of strings ('i' and 'p', or 'i' and 'a') indicating the property for each qubit 
-        s1Tbl.append(s1List)
-        s2Tbl.append(s2List)
+        zoneStatusList.append(tempZoneStatusList)
+        natureStatusList.append(tempNatureStatusList)
 
 
 
     # create the list of Y positions
-    Y = computeArrangements(BP, Fsizes, Qmax)
+    Y = computeArrangements(processingBlockArrangement, Fsizes, qMax)
 
     # compute total cost 
-    costTot = computeTotalCost(Y, Nq)
+    costTot = computeTotalCost(Y, nQ)
 
 
     if echo == True:
@@ -295,33 +279,33 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     '''
 
     # tabu list, to be filled iteratively with Y lists. So with arrangements of Y positions corresponding to processing blocks that are not allowed 
-    TSList = [0] * TSlen
+    tabuList = [0] * tabuListLength
 
-    # position of current element in tabu list, first element is at zeroth position, so tsfill = 0. 
+    # position of current element in tabu list, first element is at zepermutationPositionh position, so positionInTabuList = 0. 
     # After adding an element to the tabu list, we increase this counter 
-    TSFill = 0
+    positionInTabuList = 0
 
     # number of TS steps where improvement was found 
-    numImprovements = 0
+    numberOfImprovingSteps = 0
 
     # number of TS steps where a step was tabu 
-    tabuCtr = 0 
+    numberOfTabuSteps = 0 
 
     # number of steps where no update was done
-    noUpdateCtr = 0
+    numberOfStepsWithoutUpdate = 0
 
     # No idea 
     memberQqueries = 0
 
     # Just for debugging reasons... Keep track of the number of steps where more than two, or only two qubits were swapped 
-    numImprovementMultiSwaps = 0
-    numImprovementTwoSwaps = 0
+    numberOfMultipleSwapSteps = 0
+    numberOfOneSwapSteps = 0
 
     # How many of those were processing zone swaps? 
-    numProcessingZoneSwaps = 0
+    numberOfProcessingZoneSwapSteps = 0
 
     # Number of steps where we improved upon swapping processing zones? 
-    numImprovementProcessingZonesSwaps = 0
+    numImprovementsAfterProcessingZoneSwaps = 0
 
     # costBest so far is just the total cost 
     costBest = costTot
@@ -330,17 +314,17 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     YBest = Y
 
     # keep track of cost over the iterations
-    costProgressTbl = [[] for _ in range(TSiterations)]
+    costProgressList = [[] for _ in range(TSiterations)]
 
     # keep track of best cost over iterations 
-    bestCostProgressTbl = [[] for _ in range(TSiterations)]
+    bestcostProgressList = [[] for _ in range(TSiterations)]
 
     # keep track of arrangements of processing zones for qubits corresponding to the arrangements that minimize the cost, I guess... 
-    zonesTblBest = zonesTbl
+    zoneNumberListBest = zoneNumberList
 
     # and then this, as always 
-    s1TblBest = s1Tbl
-    s2TblBest = s2Tbl
+    zoneStatusListBest = zoneStatusList
+    natureStatusListBest = natureStatusList
 
     # I ADDED THIS, IDK MAYBE WRONG, but why should it be wrong? 
     # if we focus on exchanging processing zones, the number just decreases to one
@@ -348,16 +332,16 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     # also set this to false, can be set to true in the according section... just so we dont get a referenced before assignment error 
     swapProcessingZones = False
 
-    bNew = BP
+    newProcessingBlockArrangement = processingBlockArrangement
 
     # for animation reasons 
-    bList = []
+    processingBlockArrangementDisplaying = []
 
     # at this point, the stuff is also timed 
     # and reap and sow again due to displaying and developement reasons 
 
     # this is the Tabu Search; iterate TSiterations times. 
-    for i in range(TSiterations): 
+    for iterationStep in range(TSiterations): 
         
 
         '''
@@ -365,155 +349,151 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
         '''
 
 
-        # generate random number in range numSteps 
-        # chooose random block 
-        step = random.randint(0, numSteps-1) 
+        # choose processing block at random 
+        processingBlock = random.randint(0, numberOfProcessingBlocks-1) 
 
         # if we can not swap whole processing zones anymore? 
-        if i >= processingZoneSwapFraction:
+        if iterationStep >= processingZoneSwapFraction:
 
-            # generate random integer between 0 and Nq-1 (both included)
-            # look at random qubit in this block - what qubit do we want to switch? 
             # Choose a qubit at random
-            q1 = random.randint(0, Nq-1) 
+            qubit1 = random.randint(0, nQ-1) 
 
-            # s1Swap is either 'i' or 'p', in what kinda zone is q1? 
-            s1Swap = s1Tbl[step][q1]
+            # zoneStatusQubitOne is either 'i' or 'p', in what kinda zone is qubit1? 
+            zoneStatusQubitOne = zoneStatusList[processingBlock][qubit1]
 
-            # s2Swap is either 'a' or 'i', what kinda qubit is it? 
-            s2Swap = s2Tbl[step][q1]
+            # natureStatusQubitOne is either 'a' or 'i', what kinda qubit is it? 
+            natureStatusQubitOne = natureStatusList[processingBlock][qubit1]
 
-            # what processing zone number does q1 sit in 
-            processingZoneIndex = zonesTbl[step][q1]
+            # what processing zone number does qubit1 sit in 
+            processingZoneNumberQubitOne = zoneNumberList[processingBlock][qubit1]
              
             # Chooose how many qubits should be exchanged in this step 
-            swapQBnum = random.randint(2, swapNumMax)
+            numberOfQubitsToBeSwapped = random.randint(2, swapNumMax)
 
 
             # We picked a qubit, but we have no idea where it sits in or if it is active or idle. So we have to, based on these facts, 
             # identify some properties of this qubit 
 
             '''
-            Create swappools, so list of possible swap partners for q1 
+            Create swappools, so list of possible swap partners for qubit1 
             '''
 
-            # if q1 is of idle nature
-            if s2Swap == "i":
+            # if qubit1 is of idle nature
+            if natureStatusQubitOne == "i":
 
-                # if q1 is idle, all the qubits that are idle in this very processing zone are potential swapping partners. 
-                swapPool = idlePools[step]
+                # if qubit1 is idle, all the qubits that are idle in this very processing zone are potential swapping partners. 
+                swapPool = idlePools[processingBlock]
 
-                # if q1 is in a processing zone and if we want to exchange two qubits in this step 
-                if s1Swap == 'p' and swapQBnum == 2: 
+                # if qubit1 is in a processing zone and if we want to exchange two qubits in this step 
+                if zoneStatusQubitOne == 'p' and numberOfQubitsToBeSwapped == 2: 
 
-                    # the swappool now consists of all the idle qubits in this processing block as well as the ones that are in the same processing zone as q1 
-                    swapPool = swapPool + processingPools[step][processingZoneIndex]
+                    # the swappool now consists of all the idle qubits in this processing block as well as the ones that are in the same processing zone as qubit1 
+                    swapPool = swapPool + processingPools[processingBlock][processingZoneNumberQubitOne]
 
             else: 
 
                 # whyever this should occur?? 
-                if processingZoneIndex > Mmax:
+                if processingZoneNumberQubitOne > mMax:
                     print('Eror, apparently something is horribly wrong. ')
                     break 
 
-                # if q1 is active, it sits in a processing zone. Then the possible swap partners for q1 are only the qubits that sit in the very same processing zone. 
-                swapPool = processingPools[step][processingZoneIndex]
+                # if qubit1 is active, it sits in a processing zone. Then the possible swap partners for qubit1 are only the qubits that sit in the very same processing zone. 
+                swapPool = processingPools[processingBlock][processingZoneNumberQubitOne]
 
-            # q1 cannot be swapped with itself, remove it from the list of possible swap partners, if its in there, I guess
-            if q1 in swapPool: 
-                swapPool.remove(q1)
+            # qubit1 cannot be swapped with itself, remove it from the list of possible swap partners, if its in there, I guess
+            if qubit1 in swapPool: 
+                swapPool.remove(qubit1)
             # else: 
-                # print('q1 not in swapPool????')
+                # print('qubit1 not in swapPool????')
 
-            # how many qubits in total are possible swap partners for q1? 
+            # how many qubits in total are possible swap partners for qubit1? 
             swapPoolSize = len(swapPool)
 
 
 
             # if we want to exchange more qubits than are possible, given by the size of the swappool 
             # if we want to exchange two, the swappool has to have at least 2-1 = 1 qubits. If less than one - we have to act. 
-            if swapPoolSize < swapQBnum - 1:
+            if swapPoolSize < numberOfQubitsToBeSwapped - 1:
                
                 # decrease the number of qubits we want to exchange to the number of qubits that are potential swap partners 
-                swapQBnum = swapPoolSize
+                numberOfQubitsToBeSwapped = swapPoolSize
 
             # the itertools.combinations() function gives us all possible combinations of 2 elements from the list
             # e.g. we want to swap 3 qubits and we have a swappool = [1,2,3]
-            # subsets would be [(1,2), (1,3), (2,3)]
-            if swapQBnum > 0:
-                subsets = list(itertools.combinations(swapPool, swapQBnum - 1))
+            # temporarySubset would be [(1,2), (1,3), (2,3)]
+            if numberOfQubitsToBeSwapped > 0:
+                temporarySubset = list(itertools.combinations(swapPool, numberOfQubitsToBeSwapped - 1))
             else: 
-                subsets = list(itertools.combinations(swapPool, swapQBnum))
+                temporarySubset = list(itertools.combinations(swapPool, numberOfQubitsToBeSwapped))
 
             # IMPORTANT: 
-            # subsets consits of lists of qubits that act as possible swap partners! These individual lists can contain 1, 2 ... - up to 
-            # swapNQBnum - 1 elements. 
-            # One of the elements in the subsets list will be chosen to swap qubit one with later one, based on which of these possible 
+            # temporarySubset consits of lists of qubits that act as possible swap partners! These individual lists can contain 1, 2 ... - up to 
+            # swapnQBnum - 1 elements. 
+            # One of the elements in the temporarySubset list will be chosen to swap qubit one with later one, based on which of these possible 
             # swaps minimizes the cost!!!  
 
             # the len of the list, as indicated above, indicates how many times we swap in total (taking into account also the total number of qubits that are available for swapping - through swapPool)
-            numPossibleSwaps = len(subsets)
+            numPossibleSwaps = len(temporarySubset)
 
-            # rot seems to be a random integer, that controls the swapping and creation of the swapQBListsSwapped list 
-            # why is it -2? That's because we want to assign an equal probability for all permutations, and rot = 0 achieves the same permutation as rot = swapQBnum 
+            # permutationPosition seems to be a random integer, that controls the swapping and creation of the swappedQubitsToBeSwapped list 
+            # why is it -2? That's because we want to assign an equal probability for all permutations, and permutationPosition = 0 achieves the same permutation as permutationPosition = numberOfQubitsToBeSwapped 
 
             '''
             I just altered this from -2 to -1 !!!
             This has to go later, in the end the swapPool cannot have size 0! This just cannot be -> debug 
             '''
-            if swapQBnum > 1: 
-                # rot == 0 is not allowed, we *have* to swap the qubits. i guess...
-                rot = random.randint(1, swapQBnum-1)
-                # rot = 1
+            if numberOfQubitsToBeSwapped > 1: 
+                # permutationPosition == 0 is not allowed, we *have* to swap the qubits. i guess...
+                permutationPosition = random.randint(1, numberOfQubitsToBeSwapped-1)
             else: 
-                rot = 0 # random.randint(0, 0)
+                permutationPosition = 0 # random.randint(0, 0)
 
             # here, we create the actual list of qubits that shall be swapped. 
             # using the example above, lets assume we already picked qubit 4 to be swapped: 
-            # swapQBLists = [[4] + list((1,2)), [4] + list((1,3)) + [4] + list((2,3))] = [[4,1,2], [4,1,3], [4,2,3]]
-            swapQBLists = [[q1] + list(subset) for subset in subsets]
+            # qubitsToBeSwapped = [[4] + list((1,2)), [4] + list((1,3)) + [4] + list((2,3))] = [[4,1,2], [4,1,3], [4,2,3]]
+            qubitsToBeSwapped = [[qubit1] + list(subset) for subset in temporarySubset]
 
             # for every element in this swapQBList we iterate over all the sublists and do: 
-            # swapQBListsSwapped = [4,1,2][rot:] + [4,1,2][:rot]
-            # Let's assume rot = 1
-            # swapQBListsSwapped = [1,2] + [4] = [1,2,4]
+            # swappedQubitsToBeSwapped = [4,1,2][permutationPosition:] + [4,1,2][:permutationPosition]
+            # Let's assume permutationPosition = 1
+            # swappedQubitsToBeSwapped = [1,2] + [4] = [1,2,4]
             # What is effectively done is, the qubits in the list are permuted by a random factor 
-            # (here, it is clear why we chose -2 above; rot = 0 and rot = 2 would achieve exactly the same swapQBListsSwapped)
-            swapQBListsSwapped = [swapQBLists[ssi][rot:] + swapQBLists[ssi][:rot] for ssi in range(len(swapQBLists))]
+            # (here, it is clear why we chose -2 above; permutationPosition = 0 and permutationPosition = 2 would achieve exactly the same swappedQubitsToBeSwapped)
+            swappedQubitsToBeSwapped = [qubitsToBeSwapped[ssi][permutationPosition:] + qubitsToBeSwapped[ssi][:permutationPosition] for ssi in range(len(qubitsToBeSwapped))]
 
 
         # In case we want to exchange whole processing zones / and still can 
         else: 
 
             # I guess, if there is only one processing zone, we can skip this step 
-            if Mmax > 1: 
+            if mMax > 1: 
 
                 # swap two entire processing zones 
                 swapProcessingZones = True 
 
                 # increase this, obviously 
-                numProcessingZoneSwaps += 1 
+                numberOfProcessingZoneSwapSteps += 1 
 
-                # we want to swap two processing zones, choose 2 numbers from all the processing zones, processingZonesSwap is a list  
-                processingZonesSwap = random.sample(range(Mmax), 2)
+                # we want to swap two processing zones, choose 2 numbers from all the processing zones, processingZonesToBeSwapped is a list  
+                processingZonesToBeSwapped = random.sample(range(mMax), 2)
 
                 # get all the qubits in the two processing zone numbers of the processing zones to be exchanged 
-                # remember: QBTbl = [q for q in range(Nq)] = [1,2,3,4,5,6,...,Nq]
+                # remember: listOfAllQubits = [q for q in range(nQ)] = [1,2,3,4,5,6,...,nQ]
                 # qubits corresponding to number of first processing zone 
-                processingZone1 = [q for q in QBTbl if s1Tbl[step][q] == "p" and zonesTbl[step][q] == processingZonesSwap[0]]
+                qubitsInProcessingZone1 = [qubit for qubit in listOfAllQubits if zoneStatusList[processingBlock][qubit] == "p" and zoneNumberList[processingBlock][qubit] == processingZonesToBeSwapped[0]]
 
                 # qubits corresponding to number of second processing zone 
-                processingZone2 = [q for q in QBTbl if s1Tbl[step][q] == "p" and zonesTbl[step][q] == processingZonesSwap[1]]
+                qubitsInProcessingZone2 = [qubit for qubit in listOfAllQubits if zoneStatusList[processingBlock][qubit] == "p" and zoneNumberList[processingBlock][qubit] == processingZonesToBeSwapped[1]]
 
                 # The list now contains two elements, the two qubit lists 
-                swapQBLists = [processingZone1 + processingZone2]
+                qubitsToBeSwapped = [qubitsInProcessingZone1 + qubitsInProcessingZone2]
 
                 # Also, the list in other direction 
-                swapQBListsSwapped = [processingZone2 + processingZone1]
+                swappedQubitsToBeSwapped = [qubitsInProcessingZone2 + qubitsInProcessingZone1]
 
-                # swapQBLists = [[q1, q2, ...]], so: 
-                # swapQBnum is the number of qubits that have to change their position due to swapping with some partner 
-                swapQBnum = len(swapQBLists[0])
+                # qubitsToBeSwapped = [[qubit1, q2, ...]], so: 
+                # numberOfQubitsToBeSwapped is the number of qubits that have to change their position due to swapping with some partner 
+                numberOfQubitsToBeSwapped = len(qubitsToBeSwapped[0])
 
                 # we only want to allow a limited number of processing zone swaps, namely one
                 numPossibleSwaps = 1 
@@ -529,30 +509,30 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
         # initialize single iteration step 
         # delta cost will indicate how much we can bring the cost down. The difference between the initial cost and the cost after swapping. We want to make this as small as possible.
-        deltaCostBestLocal = 1000000 
+        differenceToCostBeforeSwapping = 1000000 
 
         '''
         Get Y lists 
         '''
 
         # get the Y list corresponding to this particular block 
-        Yc = Y[step]
+        Yc = Y[processingBlock]
 
         # if there's a block to the left, define the corresponding Y list 
-        if step > 1: 
-            Yp = Y[step-1]
+        if processingBlock > 1: 
+            Yp = Y[processingBlock-1]
 
         # if not, dont define it. 
         else: 
-            Yp = [0] * Nq
+            Yp = [0] * nQ
 
         # if there's a block to the right, define the corresponding Y list 
-        if step < numSteps-1: 
-            Yf = Y[step + 1]
+        if processingBlock < numberOfProcessingBlocks-1: 
+            Yf = Y[processingBlock + 1]
 
         # if not, dont 
         else: 
-            Yf = [0] * Nq
+            Yf = [0] * nQ
 
         # What we do here is the following: 
         # we take the Y positions corresponding to the qubits that we want to exchange (in case of complete processing zones, exchange all of the qubits in the processing zones)
@@ -566,21 +546,21 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
 
         # I added this np.array() stuff, not believing that would work but apparently, it did 
-        deltaCostTbl = [2 * np.dot(np.array(Yp)[swapQBLists[ssi]] + np.array(Yf)[swapQBLists[ssi]], np.array(Yc)[swapQBLists[ssi]] - np.array(Yc)[swapQBListsSwapped[ssi]]) for ssi in range(numPossibleSwaps)]
+        listOfCostsForDifferentSwaps = [2 * np.dot(np.array(Yp)[qubitsToBeSwapped[ssi]] + np.array(Yf)[qubitsToBeSwapped[ssi]], np.array(Yc)[qubitsToBeSwapped[ssi]] - np.array(Yc)[swappedQubitsToBeSwapped[ssi]]) for ssi in range(numPossibleSwaps)]
 
-        # deltaCostTbl = []
+        # listOfCostsForDifferentSwaps = []
 
         # for i in range(numPossibleSwaps):
         #     Y_np = np.array(Y)
         #     Y_original = np.array(Y)
-        #     Y_np[step][swapQBLists] = Y_original[step][swapQBListsSwapped]
-        #     cost_temp = computeTotalCost(Y_np, Nq)
-        #     deltaCostTbl.append(cost_temp)
+        #     Y_np[step][qubitsToBeSwapped] = Y_original[step][swappedQubitsToBeSwapped]
+        #     cost_temp = computeTotalCost(Y_np, nQ)
+        #     listOfCostsForDifferentSwaps.append(cost_temp)
 
 
 
         # orders the costs by swaps 
-        ord = np.argsort(deltaCostTbl)
+        orderedCostIndices = np.argsort(listOfCostsForDifferentSwaps)
 
 
         '''
@@ -589,13 +569,13 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
 
         # ordering the deltacost table to see which swap minimizes the cost 
-        deltaCostTbl = np.array(deltaCostTbl)[ord]
+        listOfCostsForDifferentSwaps = np.array(listOfCostsForDifferentSwaps)[orderedCostIndices]
 
         # orders the qubits in the swaplist corresponding to the order 
-        swapQBLists = [swapQBLists[ssi] for ssi in ord]
+        qubitsToBeSwapped = [qubitsToBeSwapped[ssi] for ssi in orderedCostIndices]
 
         # Also the swapped qubits i suppose 
-        swapQBListsSwapped = [swapQBListsSwapped[ssi] for ssi in ord]
+        swappedQubitsToBeSwapped = [swappedQubitsToBeSwapped[ssi] for ssi in orderedCostIndices]
 
 
         '''
@@ -608,29 +588,23 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
         flag = False 
 
         # iterate over the number of possible swaps 
-        for ssi in range(numPossibleSwaps):
+        for swapNo in range(numPossibleSwaps):
                
             
             YTest = np.array(Y) 
 
-            # for every swap, exchange the positions in the Y list corresponding to the qubits in the swapQBlist with the qubits in swapQBlistSwapped 
+            # for every swap, exchange the positions in the Y list corresponding to the qubits in the swapQBlist with the qubits in qubitsToBeSwappedwapped 
             # remember: swapQBList contains all qubits that will swap their partner
-            # swapQBListsSwapped contains all the qubits that shall be swapped, but in the order they are to be swapped to 
-            YTest[step][swapQBLists[ssi]] = YTest[step][swapQBListsSwapped[ssi]]
+            # swappedQubitsToBeSwapped contains all the qubits that shall be swapped, but in the order they are to be swapped to 
+            YTest[processingBlock][qubitsToBeSwapped[swapNo]] = YTest[processingBlock][swappedQubitsToBeSwapped[swapNo]]
 
             # 
             memberQqueries += 1
 
-            # if this particular Y arrangement, which we obtained after swapping, is in the tabu list, so it is not allowed, continue and increase the tabu counter 
-            # if YTest in TSList:
-            #     tabuCtr += 1 
 
-            #     # jump to next swap 
-            #     continue 
-
-            if np.any(np.all(YTest == TSList)):
-            # if YTest in TSList:
-                tabuCtr += 1 
+            if np.any(np.all(YTest == tabuList)):
+            # if YTest in tabuList:
+                numberOfTabuSteps += 1 
 
                 # jump to next swap 
                 continue 
@@ -639,29 +613,56 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             # an update shall be performed later 
             flag = True 
 
-            # deltacostbestlocal can be worse than the best cost so far. 
+            # differenceToCostBeforeSwapping can be worse than the best cost so far. 
             # We did not check for the quality of the cost yet. 
-            deltaCostBestLocal = deltaCostTbl[ssi]
+            differenceToCostBeforeSwapping = listOfCostsForDifferentSwaps[swapNo]
 
             # save corresponding Y  
             YBestUpdate = YTest
 
             # save corresponding processing zone constellation 
-            zonesTblBestUpdate = np.array(zonesTbl)
+            zoneNumberListBestUpdate = np.array(zoneNumberList)
 
             # save s1, s2 tables 
-            s1TblBestUpdate = np.array(s1Tbl)
-            s2TblBestUpdate = np.array(s2Tbl)
+            zoneStatusListBestUpdate = np.array(zoneStatusList)
+            natureStatusListBestUpdate = np.array(natureStatusList)
 
             # and swap zones and s1. 
             # s2 unaffected 
-            zonesTblBestUpdate[step][swapQBLists[ssi]] = zonesTblBestUpdate[step][swapQBListsSwapped[ssi]]
-            s1TblBestUpdate[step][swapQBLists[ssi]] = s1TblBestUpdate[step][swapQBListsSwapped[ssi]]
+            zoneNumberListBestUpdate[processingBlock][qubitsToBeSwapped[swapNo]] = zoneNumberListBestUpdate[processingBlock][swappedQubitsToBeSwapped[swapNo]]
+            zoneStatusListBestUpdate[processingBlock][qubitsToBeSwapped[swapNo]] = zoneStatusListBestUpdate[processingBlock][swappedQubitsToBeSwapped[swapNo]]
+
 
 
             # I guess greedyspread means more than one swap at a time 
             if greedySpread == False:
                 break
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             '''
             Greedy Search:
@@ -671,16 +672,16 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
             # define this for the while-loop 
             # start with block on the right of current block 
-            stepp = step + 1 
+            stepp = processingBlock + 1 
 
             # while we did not reach the number of processing blocks 
             # iterate over all the layers that are on the right of the current block 
-            while stepp < numSteps - 1: 
+            while stepp < numberOfProcessingBlocks - 1: 
                 
                 # I do not understand this. 
                 # if the qubits that shall be swapped in the step layer do not have the same nature ('a' or 'i') in the next layer, break 
                 # also, if these two sets of qubits are in different processing zones, break 
-                if s2Tbl[step][swapQBLists[ssi]] != s2Tbl[stepp][swapQBLists[ssi]] or  zonesTbl[step][swapQBLists[ssi]] != zonesTbl[stepp][swapQBLists[ssi]]:
+                if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[stepp][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[stepp][qubitsToBeSwapped[swapNo]]:
                     break
 
                 # update the Y lists as well 
@@ -688,36 +689,36 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
                 Yp = YBestUpdate[stepp - 1]
               
                 # if there's a right neighbour, do the same 
-                if stepp < numSteps: 
+                if stepp < numberOfProcessingBlocks: 
                     Yf = YBestUpdate[stepp + 1]
                 else: 
-                    Yf = [0] * Nq
+                    Yf = [0] * nQ
               
                 # same as above 
-                deltaCost2 = 2 * (Yp[swapQBLists[ssi]] + Yf[swapQBLists[ssi]]) * (Yc[swapQBLists[ssi]] - Yc[swapQBListsSwapped[ssi]])
+                deltaCost2 = 2 * (Yp[qubitsToBeSwapped[swapNo]] + Yf[qubitsToBeSwapped[swapNo]]) * (Yc[qubitsToBeSwapped[swapNo]] - Yc[swappedQubitsToBeSwapped[swapNo]])
               
                 # update the best lists for stepp!! as well. We did it for step above, but now also for stepp
                 if deltaCost2 < 0: 
-                    deltaCostBestLocal += deltaCost2
+                    differenceToCostBeforeSwapping += deltaCost2
                 
-                    YBestUpdate[stepp][swapQBLists[ssi]] = YBestUpdate[stepp][swapQBListsSwapped[ssi]]
+                    YBestUpdate[stepp][qubitsToBeSwapped[swapNo]] = YBestUpdate[stepp][swappedQubitsToBeSwapped[swapNo]]
                 
-                    zonesTblBestUpdate[stepp][swapQBLists[ssi]] = zonesTblBestUpdate[stepp][swapQBListsSwapped[ssi]]
-                    s1TblBestUpdate[stepp][swapQBLists[ssi]] = s1TblBestUpdate[stepp][swapQBListsSwapped[ssi]]
+                    zoneNumberListBestUpdate[stepp][qubitsToBeSwapped[swapNo]] = zoneNumberListBestUpdate[stepp][swappedQubitsToBeSwapped[swapNo]]
+                    zoneStatusListBestUpdate[stepp][qubitsToBeSwapped[swapNo]] = zoneStatusListBestUpdate[stepp][swappedQubitsToBeSwapped[swapNo]]
                 
-                    for sqbi in range(swapQBLists[ssi]): 
-                        sqb = swapQBLists[ssi][sqbi]
+                    for sqbi in range(qubitsToBeSwapped[swapNo]): 
+                        sqb = qubitsToBeSwapped[swapNo][sqbi]
                  
-                    if s1TblBestUpdate[stepp][sqb] == "i" and s2TblBestUpdate[stepp][sqb] == "a":
-                        print("  ERROR in greedy expansion, step: ", step)
+                    if zoneStatusListBestUpdate[stepp][sqb] == "i" and natureStatusListBestUpdate[stepp][sqb] == "a":
+                        print("  ERROR in greedy expansion, step: ", processingBlock)
                 else: 
-                    stepp = numSteps
+                    stepp = numberOfProcessingBlocks
                 
                 stepp += 1 
 
 
             # block on the left of current block 
-            stepp = step - 1 
+            stepp = processingBlock - 1 
 
             # iterate over all the layers that are on the left of the current block 
             while stepp > 0: 
@@ -726,33 +727,33 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
                 # Muss noch geandert werden!! 
 
 
-                if s2Tbl[step][swapQBLists[ssi]] != s2Tbl[step][swapQBLists[ssi]] or  zonesTbl[step][swapQBLists[ssi]] != zonesTbl[stepp][swapQBLists[ssi]]:
+                if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[stepp][qubitsToBeSwapped[swapNo]]:
                     break
 
                 Yc = YBestUpdate[stepp]
                 Yp = YBestUpdate[stepp - 1]
               
-                if stepp < numSteps: 
+                if stepp < numberOfProcessingBlocks: 
                     Yf = YBestUpdate[stepp + 1]
                 else: 
-                    Yf = [0] * Nq
+                    Yf = [0] * nQ
               
-                deltaCost2 = 2 * (Yp[swapQBLists[ssi]] + Yf[swapQBLists[ssi]]) * (Yc[swapQBLists[ssi]] - Yc[swapQBListsSwapped[ssi]])
+                deltaCost2 = 2 * (Yp[qubitsToBeSwapped[swapNo]] + Yf[qubitsToBeSwapped[swapNo]]) * (Yc[qubitsToBeSwapped[swapNo]] - Yc[swappedQubitsToBeSwapped[swapNo]])
               
 
                 if deltaCost2 < 0: 
-                    deltaCostBestLocal += deltaCost2
+                    differenceToCostBeforeSwapping += deltaCost2
                 
-                    YBestUpdate[stepp][swapQBLists[ssi]] = YBestUpdate[stepp][swapQBListsSwapped[ssi]]
+                    YBestUpdate[stepp][qubitsToBeSwapped[swapNo]] = YBestUpdate[stepp][swappedQubitsToBeSwapped[swapNo]]
                 
-                    zonesTblBestUpdate[stepp][swapQBLists[ssi]] = zonesTblBestUpdate[stepp][swapQBListsSwapped[ssi]]
-                    s1TblBestUpdate[stepp][swapQBLists[ssi]] = s1TblBestUpdate[stepp][swapQBListsSwapped[ssi]]
+                    zoneNumberListBestUpdate[stepp][qubitsToBeSwapped[swapNo]] = zoneNumberListBestUpdate[stepp][swappedQubitsToBeSwapped[swapNo]]
+                    zoneStatusListBestUpdate[stepp][qubitsToBeSwapped[swapNo]] = zoneStatusListBestUpdate[stepp][swappedQubitsToBeSwapped[swapNo]]
                 
-                    for sqbi in range(swapQBLists[ssi]): 
-                        sqb = swapQBLists[ssi][sqbi]
+                    for sqbi in range(qubitsToBeSwapped[swapNo]): 
+                        sqb = qubitsToBeSwapped[swapNo][sqbi]
                  
-                    if s1TblBestUpdate[stepp][sqb] == "i" and s2TblBestUpdate[stepp][sqb] == "a":
-                        print("  ERROR in greedy expansion, step: ", step)
+                    if zoneStatusListBestUpdate[stepp][sqb] == "i" and natureStatusListBestUpdate[stepp][sqb] == "a":
+                        print("  ERROR in greedy expansion, step: ", processingBlock)
                 else: 
                     stepp = 1
                 
@@ -763,39 +764,58 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
             break  
 
         '''
+        GreedySpread over! 
+        '''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        '''
         Swapping is finished -> Updating 
         '''
 
         # no update if flag == false
-        # if flag == false, this means that the step we meant to perform was tabu 
+        # if flag == false, this means that no idea  
         if flag == False: 
-            noUpdateCtr += 1 
+            numberOfStepsWithoutUpdate += 1 
 
         # if flag == true, update tabu list and all the best lists, and ggf bestcost 
         if flag == True: 
 
             # assign this Y to the corresponding element in the tabu list, why not just use append? 
-            TSList[TSFill] = YBestUpdate
+            tabuList[positionInTabuList] = YBestUpdate
 
             # increase counter by one 
-            TSFill += 1
+            positionInTabuList += 1
 
             # when we have reached the end of the tabu list: start filling the tabu list, starting at the oldest - the first - element again 
-            if TSFill >= TSlen: 
-                TSFill = 0
+            if positionInTabuList >= tabuListLength: 
+                positionInTabuList = 0
 
             # updateY
             Y = YBestUpdate 
 
             # update zones
-            zonesTbl = zonesTblBestUpdate
+            zoneNumberList = zoneNumberListBestUpdate
 
             # update s1, s2 
-            s1Tbl = s1TblBestUpdate
-            s2Tbl = s2TblBestUpdate
+            zoneStatusList = zoneStatusListBestUpdate
+            natureStatusList = natureStatusListBestUpdate
 
             # update total cost 
-            costTot += deltaCostBestLocal
+            costTot += differenceToCostBeforeSwapping
 
             # if, globally, cost is minimal: 
             if costTot < costBest: 
@@ -805,37 +825,41 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
 
                 # and all the other best lists get updated too 
                 YBest = YBestUpdate
-                zonesTblBest = zonesTblBestUpdate
-                s1TblBest = s1TblBestUpdate
-                s2TblBest = s2TblBestUpdate
+                zoneNumberListBest = zoneNumberListBestUpdate
+                zoneStatusListBest = zoneStatusListBestUpdate
+                natureStatusListBest = natureStatusListBestUpdate
 
                 # increase counter, because right now we have improved the cost!
-                numImprovements += 1 
+                numberOfImprovingSteps += 1 
 
                 # if we want to store all of the improvements on b that are made in the course of this algorithm 
-                if storeAllBestBP == True: 
+                if storeAllBestprocessingBlockArrangement == True: 
 
-                    # save it by reconstructing the blocks, given the old BP as well as the Y, optimized by the tabu search 
-                    bNew = reconstructBlocksFromArrangements(BP, Fsizes, Qmax, Mmax, Nq, YBest, zonesTblBest, s1TblBest, s2TblBest)
+                    # save it by reconstructing the blocks, given the old processingBlockArrangement as well as the Y, optimized by the tabu search 
+                    newProcessingBlockArrangement = reconstructBlocksFromArrangements(processingBlockArrangement, Fsizes, qMax, mMax, nQ, YBest, zoneNumberListBest, zoneStatusListBest, natureStatusListBest)
 
                 # Taking care of some counters 
                 if swapProcessingZones == False: 
-                    if swapQBnum > 2: 
-                        numImprovementMultiSwaps += 1 
+                    if numberOfQubitsToBeSwapped > 2: 
+                        numberOfMultipleSwapSteps += 1 
 
                     else: 
-                        numImprovementTwoSwaps += 1
+                        numberOfOneSwapSteps += 1
 
                 if swapProcessingZones == True:
-                    numImprovementProcessingZonesSwaps += 1
+                    numImprovementsAfterProcessingZoneSwaps += 1
+
+                processingBlockArrangementDisplaying.append(copy.deepcopy(newProcessingBlockArrangement))
+
 
             # if we did not improve upon the best cost yet, set local delta cost to zero 
             else: 
-                deltaCostBestLocal = 0 
+                differenceToCostBeforeSwapping = 0 
+
 
         # take care of the two cost tables
-        costProgressTbl[i] = [i, costTot]
-        bestCostProgressTbl[i] = [i, costBest]
+        costProgressList[iterationStep] = [iterationStep, costTot]
+        bestcostProgressList[iterationStep] = [iterationStep, costBest]
 
 
 
@@ -845,24 +869,26 @@ def improvePlacementTabuSearch(BP, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 
     All done 
     '''
 
-    return bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr
+    return newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying
             
 
-bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(processingBlockListAfterOptimizing, FSIZES, QMAX, MMAX, NQ, TSiterations=600, TSlen=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestBP=True, echo=True)
+newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangementAfterOptimizing, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestprocessingBlockArrangement=True, echo=True)
 
 '''
 Plotting cost evolution
 '''
 
+# print(costProgressList)
+
 cost_list = []
-for i in range(1, len(costProgressTbl)):
-    cost_list.append(costProgressTbl[i][1])
+for i in range(1, len(costProgressList)):
+    cost_list.append(costProgressList[i][1])
 
 best_cost_list = []
-for i in range(1, len(bestCostProgressTbl)):
-    best_cost_list.append(bestCostProgressTbl[i][1])
+for i in range(1, len(bestcostProgressList)):
+    best_cost_list.append(bestcostProgressList[i][1])
 
-title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(noUpdateCtr)
+title = str(numberOfImprovingSteps) + '#tabus: ' + str(numberOfTabuSteps) + '#noUpdates: ' + str(numberOfStepsWithoutUpdate)
 
 # plt.figure()
 # plt.plot(cost_list, label = 'cost')
@@ -874,9 +900,12 @@ title = str(numImprovements) + '#tabus: ' + str(tabuCtr) + '#noUpdates: ' + str(
 # plt.show()
 
 # print('B is: \n', B)
-# print('bNew is: \n', bNew)
+# print('newProcessingBlockArrangement is: \n', newProcessingBlockArrangement)
 
-# visualize_blocks(bNew, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)))
+visualize_blocks(newProcessingBlockArrangement, 'After Tabu Search, cost: ' + str(computeTotalCost(YBest, NQ)) + ', # tabusteps: ' + str(numberOfTabuSteps))
+
+
+# animate_solving(processingBlockArrangementDisplaying, 'tabu search animation')
 
 
 
@@ -889,21 +918,21 @@ Now, for the alternating optimization.
 print('OPTIMIZING EVERYTING')
 
 
-def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSiterations, TSlen, echo, visualOutput):
+def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, numOptimizationSteps, TSiterations, tabuListLength, echo, visualOutput):
     '''
     In this function, the deterministic and the tabu search algorithm are applied to a set of processing blocks B in an alternating manner. 
     First, the deterministic algorithm is applied, then the tabu search. This scheme is repeated numOptimizationSteps times. 
 
     Given: 
-        BP:                     List of processing blocks 
+        processingBlockArrangement:                     List of processing blocks 
         numOptimizationSteps:   Number of iterations for the alternating algorithm 
         TSiterations:           Number of iterations for the tabu search 
-        TSlen:                  Length of the tabu list
+        tabuListLength:                  Length of the tabu list
     Returns: 
-        bNew:                   The one constellation of qubits in processing blocks that minimizes the total cost
+        newProcessingBlockArrangement:                   The one constellation of qubits in processing blocks that minimizes the total cost
         costList:               Evoluation of the cost over the iterations of the alternating algorithm
     '''
-    bNew = BP
+    newProcessingBlockArrangement = processingBlockArrangement
 
     # keeps track of the total best cost 
     totalBestCostTbl = [[] for _ in range(2 * numOptimizationSteps)]
@@ -915,10 +944,10 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     grPBest = []
 
     # list of Y positions to start with 
-    YTemp = computeArrangements(bNew, Fsizes, Qmax)
+    YTemp = computeArrangements(newProcessingBlockArrangement, Fsizes, qMax)
 
     # total cost to start with, to be minimized 
-    costTotInitial = computeTotalCost(YTemp, Nq)
+    costTotInitial = computeTotalCost(YTemp, nQ)
 
     # high number, why not initial? 
     costTotBest = 10 ** 9 
@@ -926,15 +955,19 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
     costList = []
     BList = []
 
+    numberOfTabuStepsList = []
+
+    processingBlockArrangementDisplaying = []
+
     # iterate over the number of Optimizing steps, given the function as argument 
     for optimizationstep in range(numOptimizationSteps): 
 
-        print('total cost 0, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
+        # print('total cost 0, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
 
-        # deterministic algorithm, returns updated bNew 
-        bNew, tempListUnimportant = improvePlacement(bNew, Nq, Fsizes, Qmax, Mmax, False)
+        # deterministic algorithm, returns updated newProcessingBlockArrangement 
+        newProcessingBlockArrangement, processingBlockArrangementDisplayingDeterministic = improvePlacement(newProcessingBlockArrangement, nQ, Fsizes, qMax, mMax, False)
 
-        print('total cost 1, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
+        # print('total cost 1, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
 
 
         if echo == True: 
@@ -943,16 +976,22 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
         if visualOutput == True:
             print('visualoutput')
 
-        # Tabu Search algorithm, returns updatet bNew!
-        bNew, costProgressTbl, bestCostProgressTbl, YBest, numImprovements, tabuCtr, noUpdateCtr = improvePlacementTabuSearch(bNew, Fsizes, Qmax, Mmax, Nq, TSiterations, TSlen, 3, 0, greedySpread = False, storeAllBestBP= True, echo = False)
+        # Tabu Search algorithm, returns updatet newProcessingBlockArrangement!
+        newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(newProcessingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, 3, 0, greedySpread = False, storeAllBestprocessingBlockArrangement= True, echo = False)
 
-        print('total cost 2, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
+        numberOfTabuStepsList.append(numberOfTabuSteps)
 
-        costList.append(computeTotalCost(computeArrangements(bNew, Fsizes, Qmax), Nq))
-        BList.append(copy.deepcopy(bNew))
+        processingBlockArrangementDisplaying += processingBlockArrangementDisplayingDeterministic
+        processingBlockArrangementDisplaying += processingBlockArrangementDisplayingTabuSearch
+        # processingBlockArrangementDisplaying.append(processingBlockArrangementDisplayingTabuSearch)
+
+        # print('total cost 2, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
+
+        costList.append(computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
+        BList.append(copy.deepcopy(newProcessingBlockArrangement))
 
         if echo == True: 
-            print('echo')
+            print('')
 
         if visualOutput == True: 
             print('visualoutput')
@@ -980,17 +1019,19 @@ def optimizeArrangements(BP, Nq, Fsizes, Qmax, Mmax, numOptimizationSteps, TSite
 
 
     # 
-    return grPBest, costTotBest, grPtbl, totalBestCostTbl, costList, BList[0]
+    return processingBlockArrangementDisplaying, costTotBest, grPtbl, numberOfTabuStepsList, costList, BList[0]
  
 
-a,b,c,d,costEvolution, bNew = optimizeArrangements(processingBlockList, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, TSlen= 100, echo = True, visualOutput = False)
+processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, newProcessingBlockArrangement = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
 
 
-visualize_blocks(processingBlockList, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockList, FSIZES, QMAX), NQ)))
+visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
 
 
 
-visualize_blocks(bNew, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(bNew, FSIZES, QMAX), NQ)))
+visualize_blocks(newProcessingBlockArrangement, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(newProcessingBlockArrangement, FSIZES, QMAX), NQ)))
+
+animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
 
 
 plt.figure()
@@ -998,6 +1039,15 @@ plt.plot(costEvolution, label = 'cost')
 plt.title('Evolution of total cost with alternating iterations \n')
 plt.xlabel('Iterations')
 plt.ylabel('Cost')
+plt.legend()
+plt.show()
+
+# how many tabu steps? 
+plt.figure()
+plt.plot(numberOfTabuStepsList, label = '# tabuSteps')
+plt.title('Number of Tabu Steps')
+plt.xlabel('Iterations')
+plt.ylabel('Number')
 plt.legend()
 plt.show()
 
@@ -1011,4 +1061,4 @@ Now, the displaying shall be done.
 
 
 # show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
-# show_circuit_after_optimizing(bNew, 10, circuit_of_qubits)
+# show_circuit_after_optimizing(newProcessingBlockArrangement, 10, circuit_of_qubits)

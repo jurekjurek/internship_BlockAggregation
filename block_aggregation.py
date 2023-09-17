@@ -41,7 +41,7 @@ FSIZES = [4,4,4]
 
 circuitOfQubits = random_circuit(NQ, GATES)
 
-# show_circuit(10,circuit_of_qubits)
+# show_circuit(NQ,circuitOfQubits)
 
 layeredCircuit = LayerCircuit(10, circuitOfQubits)
 # show_layeredCircuit(10, circuit_of_qubits, layeredcircuit)
