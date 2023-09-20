@@ -625,6 +625,6 @@ processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QM
 processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
-visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
-visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
+# visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
+# visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
 

@@ -285,31 +285,31 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                         continue 
 
                     # previous processing zone number of qubit 2 
-                    previousZoneNumberTwo = previousPointerQuadruple[qubit2][1]
+                    previousZoneNumberQubitTwo = previousPointerQuadruple[qubit2][1]
 
                     # was qubit two in processing or storage zone in previous step? 
                     previousZoneStatusTwo = previousPointerQuadruple[qubit2][0]
 
 
                     # if, in previous step, q1 and q2 were not in the same processing zone or second qubit is not idle
-                    if previousZoneNumberTwo != previousZoneNumberQubitOne or previousZoneStatusTwo != 'i':
+                    if previousZoneNumberQubitTwo != previousZoneNumberQubitOne or previousZoneStatusTwo != 'i':
                         continue
 
                     # position for qubit two 
                     positionInZoneQubitTwo = pointerQuadruple[qubit2][2]
 
                     # previous position for qubit two 
-                    previousPositionInZoneTwo = previousPointerQuadruple[qubit2][2]
+                    previousPositionInZoneQubitTwo = previousPointerQuadruple[qubit2][2]
 
                     # compute a distance: 
                     # distance from qubit 1 in previous step to qubit one in this step 
                     # and distance from qubit 2 in previous and this step 
-                    distance = (positionInZoneQubitOne-previousPositionInZoneQubitOne)**2 + (positionInZoneQubitTwo-previousPositionInZoneTwo)**2
+                    distance = (positionInZoneQubitOne-previousPositionInZoneQubitOne)**2 + (positionInZoneQubitTwo-previousPositionInZoneQubitTwo)**2
 
                     # And then: 
                     # Distance between q1 in this step and q2 in previous step 
                     # and distance between q2 in this and q1 in previous step 
-                    distanceAfterSwapping = (positionInZoneQubitOne-previousPositionInZoneTwo)**2 + (positionInZoneQubitTwo-previousPositionInZoneQubitOne)**2
+                    distanceAfterSwapping = (positionInZoneQubitOne-previousPositionInZoneQubitTwo)**2 + (positionInZoneQubitTwo-previousPositionInZoneQubitOne)**2
 
                     # if the distance for the swapped case of q1 and q2 is bigger or equal to dist, continue 
                     if not distanceAfterSwapping < distance:
@@ -321,18 +321,18 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     # swap pointers 
 
                     # important, because apparently, when newprocessingBlockArrangement gets altered, so does the corresponding c sublist... 
-                    c_temp = pointerQuadruple[qubit1].copy()
+                    temporaryPointerQuadruple = pointerQuadruple[qubit1].copy()
                     newprocessingBlockArrangement[processingBlock][3][qubit1] = pointerQuadruple[qubit2]
-                    newprocessingBlockArrangement[processingBlock][3][qubit2] = c_temp # c[q1] 
+                    newprocessingBlockArrangement[processingBlock][3][qubit2] = temporaryPointerQuadruple # c[q1] 
 
                     # swap qubits in storage zones (B = [[SP, GP, FP, c], ..., []]), so third element in B 
-                    q_temp = qubit1
-                    q2_temp = qubit2
-                    newprocessingBlockArrangement[processingBlock][2][storageZone][qubitNo] = q2_temp
-                    newprocessingBlockArrangement[processingBlock][2][storageZone][qubitNo2] = q_temp
+                    temporaryQubitOne = qubit1
+                    temporaryQubitTwo = qubit2
+                    newprocessingBlockArrangement[processingBlock][2][storageZone][qubitNo] = temporaryQubitTwo
+                    newprocessingBlockArrangement[processingBlock][2][storageZone][qubitNo2] = temporaryQubitOne
                     
                     # update total cost and swap qubits in Y list 
-                    costTot, yPositionList[processingBlock] = updateStep(yPositionList, processingBlock, q_temp, q2_temp, costTot)
+                    costTot, yPositionList[processingBlock] = updateStep(yPositionList, processingBlock, temporaryQubitOne, temporaryQubitTwo, costTot)
 
                     processingBlockArrangementDisplaying.append(copy.deepcopy(newprocessingBlockArrangement))
 
@@ -483,27 +483,27 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     previousZoneStatusTwo = previousPointerQuadruple[qubitTwo][0]
 
                     # processing zone number
-                    previousZoneNumberTwo  = previousPointerQuadruple[qubitTwo][1]
+                    previousZoneNumberQubitTwo  = previousPointerQuadruple[qubitTwo][1]
 
                     # if processing zone number of q1 is not the same as processing zone number of q2 in previous step, continue. Same as above 
-                    if previousZoneStatusTwo != 'p' or previousZoneNumberTwo != processingZone: 
+                    if previousZoneStatusTwo != 'p' or previousZoneNumberQubitTwo != processingZone: 
                         continue 
 
                     # position of q2 in this step 
                     positionInZoneQubitTwo = pointerQuadruple[qubitTwo][2]
 
                     # position of q2 in previous step 
-                    previousPositionInZoneTwo = previousPointerQuadruple[qubitTwo][2]
+                    previousPositionInZoneQubitTwo = previousPointerQuadruple[qubitTwo][2]
 
                     # look at qubit one and two and their respective differences to the previous layers 
-                    distance = (positionInZoneQubitOne-previousPositionInZoneQubitOne)**2 + (positionInZoneQubitTwo-previousPositionInZoneTwo)**2
+                    distance = (positionInZoneQubitOne-previousPositionInZoneQubitOne)**2 + (positionInZoneQubitTwo-previousPositionInZoneQubitTwo)**2
 
                     # and here in case of a swap 
-                    distanceAfterSwapping = (positionInZoneQubitOne-previousPositionInZoneTwo)**2 + (positionInZoneQubitTwo-previousPositionInZoneQubitOne)**2
+                    distanceAfterSwapping = (positionInZoneQubitOne-previousPositionInZoneQubitTwo)**2 + (positionInZoneQubitTwo-previousPositionInZoneQubitOne)**2
 
                     # not important 
                     if echo == True: 
-                        print(" candidates - z: ", processingZone, " zprev: ", previousZoneNumberQubitOne, " z2prev: ", previousZoneNumberTwo, " q: ", qubitOne, " q2: ", qubitTwo)
+                        print(" candidates - z: ", processingZone, " zprev: ", previousZoneNumberQubitOne, " z2prev: ", previousZoneNumberQubitTwo, " q: ", qubitOne, " q2: ", qubitTwo)
 
 
                     # if we cant improve, just keep going 

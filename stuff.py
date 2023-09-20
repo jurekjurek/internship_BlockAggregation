@@ -516,3 +516,20 @@ intabusearch firstf unction
 
                 #     # store it in the according position 
                 #     SPnew[z][0][1].append(q)
+
+
+
+
+'''
+in alternatingOptimization
+'''
+
+        # still needs to be returned by tabusearch 
+        # if the minimal cost obtained by the tabu search is smaller than the best cost so far, replace the best cost with the Tabu Search one. 
+        # if bestCostUpdateAll[-1] < costTotBest:
+
+        #     if visualOutput == True: 
+        #         print('visualoutput')
+
+        #     # last element in list 
+        #     costTotBest = bestCostUpdateAll[-1]

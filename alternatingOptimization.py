@@ -81,20 +81,19 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
         if visualOutput == True: 
             print('visualoutput')
 
-        # still needs to be returned by tabusearch 
-        # if the minimal cost obtained by the tabu search is smaller than the best cost so far, replace the best cost with the Tabu Search one. 
-        # if bestCostUpdateAll[-1] < costTotBest:
+        # if we reached the last iteration, one last deterministic algorithm to end on, to get rid of randomness 
+        # if optimizationstep == numOptimizationSteps-1: 
+        #     newProcessingBlockArrangement, processingBlockArrangementDisplayingDeterministic = improvePlacement(newProcessingBlockArrangement, nQ, Fsizes, qMax, mMax, False)
+        #     processingBlockArrangementDisplaying += processingBlockArrangementDisplayingDeterministic
+        #     costList.append(computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
+        #     BList.append(copy.deepcopy(newProcessingBlockArrangement))
 
-        #     if visualOutput == True: 
-        #         print('visualoutput')
-
-        #     # last element in list 
-        #     costTotBest = bestCostUpdateAll[-1]
 
     # get the B list for which the cost is minimal, argsort sorts from lowest to highest 
     costIndices = np.argsort(costList)
     BList = np.array(BList)
     BList = BList[costIndices]
+    bestProcessingBlockArrangement = BList[0]
 
     # this gets flattened in the mathematica code 
     grPtbl = grPtbl 
@@ -105,19 +104,25 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
     # processingBlockArrangementDisplaying += BList[0]
 
     # 
-    return processingBlockArrangementDisplaying, costTotBest, grPtbl, numberOfTabuStepsList, costList, BList[0]
+    return processingBlockArrangementDisplaying, costTotBest, grPtbl, numberOfTabuStepsList, costList, bestProcessingBlockArrangement
  
 
 processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, newProcessingBlockArrangement = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
 
 
-visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
+# visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
 
 
 
 visualize_blocks(newProcessingBlockArrangement, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(newProcessingBlockArrangement, FSIZES, QMAX), NQ)))
 
-animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
+bestProcessingBlockArrangement, processingBlockArrangementDisplayingDeterministic = improvePlacement(newProcessingBlockArrangement, NQ, FSIZES, QMAX, MMAX, False)
+
+visualize_blocks(bestProcessingBlockArrangement, 'After alternating search, fixed, cost: ' + str(computeTotalCost(computeArrangements(bestProcessingBlockArrangement, FSIZES, QMAX), NQ)))
+
+
+
+# animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
 
 
 plt.figure()
