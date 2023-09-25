@@ -221,6 +221,11 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
     # for animation reasons 
     processingBlockArrangementDisplaying = []
 
+    # how many steps were taken where the global cost has *not* been improved? 
+    globalCostNotImprovementCounter = 0
+    # and how many steps where global cost has been improved? 
+    globalCostImprovementCounter = 0 
+
     # at this point, the stuff is also timed 
     # and reap and sow again due to displaying and developement reasons 
 
@@ -400,23 +405,23 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
         '''
 
         # get the Y list corresponding to this particular block 
-        Yc = Y[processingBlock]
+        currentYPositionList = Y[processingBlock]
 
         # if there's a block to the left, define the corresponding Y list 
         if processingBlock > 1: 
-            Yp = Y[processingBlock-1]
+            previousYPositionList = Y[processingBlock-1]
 
         # if not, dont define it. 
         else: 
-            Yp = [0] * nQ
+            previousYPositionList = [0] * nQ
 
         # if there's a block to the right, define the corresponding Y list 
         if processingBlock < numberOfProcessingBlocks-1: 
-            Yf = Y[processingBlock + 1]
+            nextYPositionList = Y[processingBlock + 1]
 
         # if not, dont 
         else: 
-            Yf = [0] * nQ
+            nextYPositionList = [0] * nQ
 
         # What we do here is the following: 
         # we take the Y positions corresponding to the qubits that we want to exchange (in case of complete processing zones, exchange all of the qubits in the processing zones)
@@ -430,7 +435,20 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
 
         # I added this np.array() stuff, not believing that would work but apparently, it did 
-        listOfCostsForDifferentSwaps = [2 * np.dot(np.array(Yp)[qubitsToBeSwapped[ssi]] + np.array(Yf)[qubitsToBeSwapped[ssi]], np.array(Yc)[qubitsToBeSwapped[ssi]] - np.array(Yc)[swappedQubitsToBeSwapped[ssi]]) for ssi in range(numPossibleSwaps)]
+        listOfCostsForDifferentSwaps = [2 * np.dot(np.array(previousYPositionList)[qubitsToBeSwapped[ssi]] + np.array(nextYPositionList)[qubitsToBeSwapped[ssi]], np.array(currentYPositionList)[qubitsToBeSwapped[ssi]] - np.array(currentYPositionList)[swappedQubitsToBeSwapped[ssi]]) for ssi in range(numPossibleSwaps)]
+
+        listOfCostsForDifferentSwaps = []
+
+
+        '''
+        Create an array ySwapped, that has the correpsonding qubits swapped (not to be safed for later!! )
+        And compute the total cost using this!!!!!! 
+        '''
+
+
+        costImprovementBySwapping = computeTotalCost(Y, nQ) -  computeTotalCost(ySwapped, nQ) 
+
+        listOfCostsForDifferentSwaps.append(costImprovementBySwapping)
 
         # listOfCostsForDifferentSwaps = []
 
@@ -444,13 +462,8 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
 
         # orders the costs by swaps 
+        # the smallest swaps will occur first
         orderedCostIndices = np.argsort(listOfCostsForDifferentSwaps)
-
-
-        '''
-        WHAT EXACTLY DOES ORD LOOK LIKE?? 
-        '''
-
 
         # ordering the deltacost table to see which swap minimizes the cost 
         listOfCostsForDifferentSwaps = np.array(listOfCostsForDifferentSwaps)[orderedCostIndices]
@@ -471,7 +484,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
         # 'RESET' FLAG TO FALSE
         flag = False 
 
-        # iterate over the number of possible swaps 
+        # We iterate over the swaps 
         for swapNo in range(numPossibleSwaps):
                
             
@@ -482,7 +495,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
             # swappedQubitsToBeSwapped contains all the qubits that shall be swapped, but in the order they are to be swapped to 
             YTest[processingBlock][qubitsToBeSwapped[swapNo]] = YTest[processingBlock][swappedQubitsToBeSwapped[swapNo]]
 
-            # 
+            # number of members in tabu list 
             memberQqueries += 1
 
 
@@ -705,6 +718,8 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
             # if, globally, cost is minimal: 
             if costTot < costBest: 
 
+                globalCostImprovementCounter += 1
+
                 # global best cost is current cost 
                 costBest = costTot 
 
@@ -740,6 +755,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
             # if we did not improve upon the best cost yet, set local delta cost to zero 
             else: 
                 differenceToCostBeforeSwapping = 0 
+                globalCostNotImprovementCounter += 1
 
 
         # take care of the two cost tables
@@ -754,10 +770,13 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
     All done 
     '''
 
-    return newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying
+    print('globalCostNotImprovementCounter: ', globalCostNotImprovementCounter)
+    print('vs: globalCostImprovementCounter: ', globalCostImprovementCounter)
+
+    return newProcessingBlockArrangement, costProgressList, bestcostProgressList, globalCostNotImprovementCounter, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying
             
 
-newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangementAfterOptimizing, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestprocessingBlockArrangement=True, echo=True)
+newProcessingBlockArrangement, costProgressList, bestcostProgressList, globalCostNotImprovementCounter, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangementAfterOptimizing, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestprocessingBlockArrangement=True, echo=True)
 
 '''
 Plotting cost evolution

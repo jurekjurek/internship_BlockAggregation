@@ -110,7 +110,7 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
 processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, newProcessingBlockArrangement = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
 
 
-# visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
+visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
 
 
 
@@ -122,7 +122,7 @@ visualize_blocks(bestProcessingBlockArrangement, 'After alternating search, fixe
 
 
 
-# animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
+animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
 
 
 plt.figure()

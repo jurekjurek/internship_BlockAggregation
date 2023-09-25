@@ -532,7 +532,7 @@ def update(num, bList, title, ax):
     
     nx.draw(G, pos, node_size=200, node_color=['red' if G.nodes[node]['zone'] == 'storage' else 'green' if G.nodes[node]['zone'] == 'processing_active' else 'blue' for node in G.nodes()], labels=node_labels, with_labels=True)
 
-    ax.set_title(title + ', iteration: ' + str(num))
+    ax.set_title(title + ', progress: ' + str(int(100*num/len(bList))) + '%')
 
 
 
