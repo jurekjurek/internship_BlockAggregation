@@ -444,11 +444,21 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
         Create an array ySwapped, that has the correpsonding qubits swapped (not to be safed for later!! )
         And compute the total cost using this!!!!!! 
         '''
+        for swapNo in range(numPossibleSwaps):
+               
+            
+            yTemporarilySwapped = np.array(Y) 
 
+            # for every swap, exchange the positions in the Y list corresponding to the qubits in the swapQBlist with the qubits in qubitsToBeSwappedwapped 
+            # remember: swapQBList contains all qubits that will swap their partner
+            # swappedQubitsToBeSwapped contains all the qubits that shall be swapped, but in the order they are to be swapped to 
+            yTemporarilySwapped[processingBlock][qubitsToBeSwapped[swapNo]] = yTemporarilySwapped[processingBlock][swappedQubitsToBeSwapped[swapNo]]
 
-        costImprovementBySwapping = computeTotalCost(Y, nQ) -  computeTotalCost(ySwapped, nQ) 
+            # if this is negative, it's bad
+            # if this is positive, it's good! 
+            costImprovementBySwapping = - computeTotalCost(Y, nQ) +  computeTotalCost(yTemporarilySwapped, nQ) 
 
-        listOfCostsForDifferentSwaps.append(costImprovementBySwapping)
+            listOfCostsForDifferentSwaps.append(costImprovementBySwapping)
 
         # listOfCostsForDifferentSwaps = []
 
@@ -487,7 +497,19 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
         # We iterate over the swaps 
         for swapNo in range(numPossibleSwaps):
                
-            
+
+
+
+
+            # ADDED THIS!!!!  
+            # added this, no idea if that makes sense    
+            if not listOfCostsForDifferentSwaps[swapNo] < 0:
+                continue 
+
+
+
+
+
             YTest = np.array(Y) 
 
             # for every swap, exchange the positions in the Y list corresponding to the qubits in the swapQBlist with the qubits in qubitsToBeSwappedwapped 
