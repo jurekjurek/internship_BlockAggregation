@@ -38,7 +38,7 @@ The way we approach this optimization problem is:
 
 
 
-processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+# processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
 def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProcessingZoneQubits, numberProcessingZones, echo):
@@ -534,7 +534,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
 
 
 
-processingBlockArrangementAfterOptimizing, bList = improvePlacement(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, True)
+# processingBlockArrangementAfterOptimizing, bList = improvePlacement(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, True)
 
 
 # animate_solving(bList, 'animation_test')

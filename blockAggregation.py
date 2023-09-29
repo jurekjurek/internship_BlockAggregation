@@ -37,7 +37,7 @@ QMAX = 4
 FSIZES = [4,4,4]
 
 
-circuitOfQubits = random_circuit(NQ, GATES)
+# circuitOfQubits = random_circuit(NQ, GATES)
 
 # show_circuit(NQ,circuitOfQubits)
 
@@ -305,7 +305,7 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
             
 
 
-aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
+# aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
 
 
 # Plot the blockaggregation procedure  
@@ -621,8 +621,8 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
     return aggregatedBlocks
 
 
-processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
-processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+# processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+# processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
 # visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')

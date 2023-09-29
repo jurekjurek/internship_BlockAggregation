@@ -107,40 +107,40 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
     return processingBlockArrangementDisplaying, costTotBest, grPtbl, numberOfTabuStepsList, costList, bestProcessingBlockArrangement
  
 
-processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, newProcessingBlockArrangement = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
+# processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, newProcessingBlockArrangement = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
 
 
-visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
-
-
-
-visualize_blocks(newProcessingBlockArrangement, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(newProcessingBlockArrangement, FSIZES, QMAX), NQ)))
-
-bestProcessingBlockArrangement, processingBlockArrangementDisplayingDeterministic = improvePlacement(newProcessingBlockArrangement, NQ, FSIZES, QMAX, MMAX, False)
-
-visualize_blocks(bestProcessingBlockArrangement, 'After alternating search, fixed, cost: ' + str(computeTotalCost(computeArrangements(bestProcessingBlockArrangement, FSIZES, QMAX), NQ)))
+# visualize_blocks(processingBlockArrangement, 'Processing block arrangement before optimization, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, QMAX), NQ)))
 
 
 
-animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
+# visualize_blocks(newProcessingBlockArrangement, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(newProcessingBlockArrangement, FSIZES, QMAX), NQ)))
+
+# bestProcessingBlockArrangement, processingBlockArrangementDisplayingDeterministic = improvePlacement(newProcessingBlockArrangement, NQ, FSIZES, QMAX, MMAX, False)
+
+# visualize_blocks(bestProcessingBlockArrangement, 'After alternating search, fixed, cost: ' + str(computeTotalCost(computeArrangements(bestProcessingBlockArrangement, FSIZES, QMAX), NQ)))
 
 
-plt.figure()
-plt.plot(costEvolution, label = 'cost')
-plt.title('Evolution of total cost with alternating iterations \n')
-plt.xlabel('Iterations')
-plt.ylabel('Cost')
-plt.legend()
-plt.show()
+
+# animate_solving(processingBlockArrangementDisplaying, 'alternating search animation')
+
+
+# plt.figure()
+# plt.plot(costEvolution, label = 'cost')
+# plt.title('Evolution of total cost with alternating iterations \n')
+# plt.xlabel('Iterations')
+# plt.ylabel('Cost')
+# plt.legend()
+# plt.show()
 
 # how many tabu steps? 
-plt.figure()
-plt.plot(numberOfTabuStepsList, label = '# tabuSteps')
-plt.title('Number of Tabu Steps')
-plt.xlabel('Iterations')
-plt.ylabel('Number')
-plt.legend()
-plt.show()
+# plt.figure()
+# plt.plot(numberOfTabuStepsList, label = '# tabuSteps')
+# plt.title('Number of Tabu Steps')
+# plt.xlabel('Iterations')
+# plt.ylabel('Number')
+# plt.legend()
+# plt.show()
 
 
 '''

@@ -798,7 +798,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
     return newProcessingBlockArrangement, costProgressList, bestcostProgressList, globalCostNotImprovementCounter, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying
             
 
-newProcessingBlockArrangement, costProgressList, bestcostProgressList, globalCostNotImprovementCounter, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangementAfterOptimizing, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestprocessingBlockArrangement=True, echo=True)
+# newProcessingBlockArrangement, costProgressList, bestcostProgressList, globalCostNotImprovementCounter, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangementAfterOptimizing, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestprocessingBlockArrangement=True, echo=True)
 
 '''
 Plotting cost evolution
@@ -806,15 +806,15 @@ Plotting cost evolution
 
 # print(costProgressList)
 
-cost_list = []
-for i in range(1, len(costProgressList)):
-    cost_list.append(costProgressList[i][1])
+# cost_list = []
+# for i in range(1, len(costProgressList)):
+#     cost_list.append(costProgressList[i][1])
 
-best_cost_list = []
-for i in range(1, len(bestcostProgressList)):
-    best_cost_list.append(bestcostProgressList[i][1])
+# best_cost_list = []
+# for i in range(1, len(bestcostProgressList)):
+#     best_cost_list.append(bestcostProgressList[i][1])
 
-title = str(numberOfImprovingSteps) + '#tabus: ' + str(numberOfTabuSteps) + '#noUpdates: ' + str(numberOfStepsWithoutUpdate)
+# title = str(numberOfImprovingSteps) + '#tabus: ' + str(numberOfTabuSteps) + '#noUpdates: ' + str(numberOfStepsWithoutUpdate)
 
 # plt.figure()
 # plt.plot(cost_list, label = 'cost')
