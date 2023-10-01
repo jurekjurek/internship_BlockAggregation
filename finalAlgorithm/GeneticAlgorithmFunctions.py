@@ -66,7 +66,7 @@ def TournamentSelection(fitnessList, tournamentProbability):
 
 
 
-def Crossover(individualOne, individualTwo): 
+def CrossOver(individualOne, individualTwo): 
     '''
     Given two individuals (processingBlockArrangements), this function performs something corresponding to the genetic crossover of two genes
     Accepts: 
