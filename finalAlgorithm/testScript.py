@@ -1,6 +1,6 @@
-from alternatingOptimization import *
+from AlternatingOptimization import *
 
-from helperFunctions import *
+from HelperFunctions import *
 
 
 

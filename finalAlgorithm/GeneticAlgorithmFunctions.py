@@ -9,8 +9,8 @@ We scramble the qubits in this idle pool and then reassign them to their positio
 We could also do this in the block aggregation procedure. 
 '''
 
-from helperFunctions import * 
-from blockAggregation import *
+from HelperFunctions import * 
+from BlockAggregation import *
 
 
 
@@ -27,6 +27,18 @@ Now for the
 functions 
 
 '''
+
+def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax):
+    '''
+    The population is merely a list of processing block arrangements
+    '''
+
+    circuitOfQubits = random_circuit(nQ, gates)    
+
+    population = np.zeros(populationSize)
+
+    for i in populationSize: 
+        population[i] = blockProcessCircuit(circuitOfQubits, nQ, storageZoneShape, qMax, mMax)
 
 
 def TournamentSelection(fitnessList, tournamentProbability):

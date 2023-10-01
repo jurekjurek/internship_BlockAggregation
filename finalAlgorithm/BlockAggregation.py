@@ -12,7 +12,7 @@ import matplotlib.animation as animation
 import networkx as nx
 from fancify_text import italic, bold, italicSerif
  
-from helperFunctions import *
+from HelperFunctions import *
 
 '''
 In this file, the mathematica file ... 

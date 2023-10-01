@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 # import random 
 import itertools 
-from optimizing import *
-from helperFunctions import *
+from DeterministicOptimization import *
+from HelperFunctions import *
 
 
 '''

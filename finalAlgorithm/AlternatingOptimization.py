@@ -1,5 +1,5 @@
-from tabuSearch import *
-from helperFunctions import *
+from TabuSearch import *
+from HelperFunctions import *
 
 
 
