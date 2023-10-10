@@ -78,7 +78,7 @@ def CrossOver(individualOne, individualTwo):
     return None 
 
 
-def Mutation(population, mutationProbability): 
+def Mutation(individual, mutationProbability): 
     '''
     For an entire population of individuals, this function iterates over all the individuals and manipulates each one of these with the probability mutationProbability
     With each the propability mutationProbability, the following operations are done: 
@@ -88,7 +88,99 @@ def Mutation(population, mutationProbability):
         4. Qubits within processing zones are swapped
 
     '''
+    
+    randomProcessingQubitSwaps = random.random()
+
+    randomProbability = random.random()
+
+    # swap qubits in processing zone
+    if randomProbability < mutationProbability * 1/4:
+
+        randomLayer = random.randint(0,len(individual))
+
+        # list of qubits in processing zones
+        processingZoneQubits = individual[randomLayer][1]
+
+        randomProcessingZone = random.randint(0, len(processingZoneQubits))
+
+        # picks two qubits from the random processing zone to swap 
+        qubitsToBeSwapped = random.sample(randomProcessingZone, 2)
+
+        qubit1 = qubitsToBeSwapped[0]
+        qubit2 = qubitsToBeSwapped[1]
+
+        # Swaps qubit one and two in layer randomLayer
+        # we do not need to provide the information about the natrue of the zone, that is stored in the individual itself 
+        SwapQubits(individual, layer, qubit1, qubit2)
+
+    # swap idle qubits with each other. Between storage zones as well as inside of individual storage zones 
+    elif randomProbability < mutationProbability * 0.75:
+
+        return 
+
+    # randomly swap whole processing zones with each other 
+    elif randomProbability < mutationProbability: 
+
+        return 
+
+    # swap the positions of processing *Blocks*!!
+    else: 
+
+        # I don't know if that makes sense! 
+        return 
+
     return None 
+
+
+def SwapQubits(individual, layer, qubit1, qubit2):
+    '''
+    kann diese function optimieren indem ich processing zone number auch mit als argument gebe 
+    '''
+
+    blockOfInterest = individual[layer]
+
+    processingZoneQubits = blockOfInterest[0]
+    storageZoneQubits    = blockOfInterest[2]
+
+    for iProcessingZone in len(processingZoneQubits):
+
+        qubitsInThisProcessingZone = processingZoneQubits[iProcessingZone]
+
+        if qubit1 in qubitsInThisProcessingZone:
+            indexQubit1 = qubitsInThisProcessingZone.index(qubit1)
+            indexQubit2 = qubitsInThisProcessingZone.index(qubit2)
+
+
+            # swap qubits one and two 
+            tempValue = qubitsInThisProcessingZone[indexQubit1]
+            qubitsInThisProcessingZone[indexQubit1] = qubitsInThisProcessingZone[indexQubit2]
+            qubitsInThisProcessingZone[indexQubit2] = tempValue
+
+
+            # and adjust cList accordingly 
+            # ...
+
+            break 
+
+
+    if qubit1 in storageZoneQubits: 
+        indexQubit1 = storageZoneQubits.index(qubit1)
+        indexQubit2 = storageZoneQubits.index(qubit2)
+
+
+        # swap qubits one and two 
+        tempValue = storageZoneQubits[indexQubit1]
+        storageZoneQubits[indexQubit1] = storageZoneQubits[indexQubit2]
+        storageZoneQubits[indexQubit2] = tempValue
+
+
+    # adjust cList 
+
+
+    # update individual 
+
+
+    return individual 
     
 
 
