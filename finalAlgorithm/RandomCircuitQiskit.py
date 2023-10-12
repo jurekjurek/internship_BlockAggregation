@@ -15,7 +15,8 @@ So, we have to reduce the propery of commuting gates with numbers (the numbers o
 '''
 
 from qiskit import *
-from qiskit.circuit.random import random_circuit
+# from qiskit.circuit.random import random_circuit
+from RCSourceCode import random_circuit
 from qiskit import QuantumCircuit
 import matplotlib.pyplot as plt
 
@@ -56,7 +57,8 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
 
     print(circuitToBeAltered)
 
-CreateRandomCircuit(6, 12, 2)
+CreateRandomCircuit(4, 8, 2)
+
 
 
 '''
