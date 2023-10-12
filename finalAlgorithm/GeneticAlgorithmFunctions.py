@@ -104,14 +104,22 @@ def Mutation(individual, mutationProbability):
         randomProcessingZone = random.randint(0, len(processingZoneQubits))
 
         # picks two qubits from the random processing zone to swap 
-        qubitsToBeSwapped = random.sample(randomProcessingZone, 2)
+        # qubitsToBeSwapped = random.sample(randomProcessingZone, 2)
 
-        qubit1 = qubitsToBeSwapped[0]
-        qubit2 = qubitsToBeSwapped[1]
+        # qubit1 = qubitsToBeSwapped[0]
+        # qubit2 = qubitsToBeSwapped[1]
+
+        # pick two random positions in the processing zone, correspoding to two qubits 
+        randomIndexQubit1 = random.randint(0, len(randomProcessingZone))
+        randomIndexQubit2 = random.randint(0, len(randomProcessingZone))
+
+        # have to be different from each other 
+        while randomIndexQubit2 == randomIndexQubit1: 
+            randomIndexQubit2 = random.randint(0, len(randomProcessingZone))
 
         # Swaps qubit one and two in layer randomLayer
         # we do not need to provide the information about the natrue of the zone, that is stored in the individual itself 
-        SwapQubits(individual, layer, qubit1, qubit2)
+        SwapQubits(individual, randomLayer, 'processing', randomProcessingZone, randomIndexQubit1, randomIndexQubit1)
 
     # swap idle qubits with each other. Between storage zones as well as inside of individual storage zones 
     elif randomProbability < mutationProbability * 0.75:
@@ -132,82 +140,128 @@ def Mutation(individual, mutationProbability):
     return None 
 
 
-def SwapQubits(individual, layer, qubit1, qubit2):
+def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2, indexQubit1, indexQubit2):
     '''
-    kann diese function optimieren indem ich processing zone number auch mit als argument gebe 
+    This function returns an individual with the corresponding qubits exchanged 
+    zoneNature is a string, either 'processing' or 'storage' 
     '''
 
     blockOfInterest = individual[layer]
 
     processingZoneQubits = blockOfInterest[0]
+
     storageZoneQubits    = blockOfInterest[2]
 
-    for iProcessingZone in len(processingZoneQubits):
+    if zoneNature == 'processing': 
 
-        qubitsInThisProcessingZone = processingZoneQubits[iProcessingZone]
+        # [zoneNumberQubit1] = [zoneNumberQubit2] for processingzone qubits, because we do not swap in betweeen zones 
 
-        if qubit1 in qubitsInThisProcessingZone:
-            indexQubit1 = qubitsInThisProcessingZone.index(qubit1)
-            indexQubit2 = qubitsInThisProcessingZone.index(qubit2)
+        tempValue                           = processingZoneQubits[zoneNumberQubit1][indexQubit1]
+        processingZoneQubits[zoneNumberQubit1][indexQubit1]   = processingZoneQubits[zoneNumberQubit1][indexQubit2]
+        processingZoneQubits[zoneNumberQubit1][indexQubit2]   = tempValue
 
+        # adjust pointerQuadruple 
+        # we only have to adjust the position *in* the zone;
+        # the nature of the zone, the nature of the qubit as well as the processing zone number stay the same 
+        pointerQuadruple = blockOfInterest[3]
 
-            # swap qubits one and two 
-            tempValue = qubitsInThisProcessingZone[indexQubit1]
-            qubitsInThisProcessingZone[indexQubit1] = qubitsInThisProcessingZone[indexQubit2]
-            qubitsInThisProcessingZone[indexQubit2] = tempValue
+        qubit1 = processingZoneQubits[indexQubit1]
+        qubit2 = processingZoneQubits[indexQubit2]
 
+        positionInZoneQubit1 = pointerQuadruple[2][qubit1]
+        positionInZoneQubit2 = pointerQuadruple[2][qubit2]
 
-            # and adjust cList accordingly 
-            # ...
-
-            break 
-
-
-    if qubit1 in storageZoneQubits: 
-        indexQubit1 = storageZoneQubits.index(qubit1)
-        indexQubit2 = storageZoneQubits.index(qubit2)
+        pointerQuadruple[2][qubit2] = positionInZoneQubit2 
+        pointerQuadruple[2][qubit1] = positionInZoneQubit1
 
 
-        # swap qubits one and two 
-        tempValue = storageZoneQubits[indexQubit1]
-        storageZoneQubits[indexQubit1] = storageZoneQubits[indexQubit2]
-        storageZoneQubits[indexQubit2] = tempValue
+    elif zoneNature == 'storage':
+        tempValue                                           = storageZoneQubits[zoneNumberQubit1][indexQubit1]
+        storageZoneQubits[zoneNumberQubit1][indexQubit1]    = storageZoneQubits[zoneNumberQubit2][indexQubit2]
+        storageZoneQubits[zoneNumberQubit2][indexQubit2]    = tempValue
+
+        # adjust pointerQuadruple 
+        # we only have to adjust the position *in* the zone;
+        # the nature of the zone, the nature of the qubit as well as the processing zone number stay the same 
+        pointerQuadruple = blockOfInterest[3]
+
+        qubit1 = processingZoneQubits[indexQubit1]
+        qubit2 = processingZoneQubits[indexQubit2]
+
+        positionInZoneQubit1 = pointerQuadruple[2][qubit1]
+        positionInZoneQubit2 = pointerQuadruple[2][qubit2]
+
+        pointerQuadruple[2][qubit2] = positionInZoneQubit2 
+        pointerQuadruple[2][qubit1] = positionInZoneQubit1
+
+        # for storage zone qubits, we ggf. also have to switch the storage zone number! 
+        pointerQuadruple[1][qubit1] = zoneNumberQubit2
+        pointerQuadruple[1][qubit2] = zoneNumberQubit1
 
 
-    # adjust cList 
 
 
-    # update individual 
+    else: 
+        print('Error, qubit has to be in either Processing or Idle zone.')
+        return
+
+
+    # assign the processingzone and storagezone qubits to the individual again 
+    individual[layer][0] = processingZoneQubits
+    individual[layer][2] = storageZoneQubits
+        
+    # and pointer as well 
+    individual[layer][3] = pointerQuadruple
 
 
     return individual 
     
 
 
+def SwapProcessingZones(individual, layer, indexProcessingZone1, indexProcessingZone2):
+    '''
+    Given: 
+        
+    this function exchanges *all* qubits in processing Zone number 1 with all qubits in processing zone number 2. 
 
-def MainGeneticAlgorithm(numberOfGenerations, numberOfIndividuals): 
+    Remeber: Here indexProcessingZone1 is equal to the actual nubmer of the processing zone 
+
+    '''
+
+    blockOfInterest = individual[layer]
+
+    processingZoneQubits = blockOfInterest[0]
+
+
+    # swap all the qubits in the processing zones - amounts to swapping corresponding sublists 
+
+    processingZone1Qubits = processingZoneQubits[indexProcessingZone1]
+    processingZone2Qubits = processingZoneQubits[indexProcessingZone2]
+
+    processingZoneQubits[indexProcessingZone1] = processingZone2Qubits
+    processingZoneQubits[indexProcessingZone2] = processingZone1Qubits 
+
+
+    # adjust pointer
+    # the positions *within* the processing zones stay the same!
+    pointerQuadruple = blockOfInterest[3]
+    processingZoneNumbersForQubits = pointerQuadruple[1]
+
+
+    for iQubit in range(len(processingZoneNumbersForQubits)):
+        if processingZoneNumbersForQubits[iQubit] == indexProcessingZone1:
+            processingZoneNumbersForQubits[iQubit] = indexProcessingZone2
+        elif processingZoneNumbersForQubits[iQubit] == indexProcessingZone2:
+            processingZoneNumbersForQubits[iQubit] = indexProcessingZone1
+
     
-    # initialize population, evaluate cost 
-    population = []
-    fitnessList = []
-    for individual in range(numberOfIndividuals): 
+    # update individual to return 
 
-            temporaryProcessingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
-
-            population.append(temporaryProcessingBlockArrangement)
-
-            
-
-
-    for generation in numberOfGenerations: 
-        
-        for individual in range(numberOfIndividuals): 
-            # store the corresponding fitnessvalue in a fitnesslist 
-            temporaryProcessingBlockArrangement = population[individual]
-            temporaryCost = computeTotalCost(computeArrangements(temporaryProcessingBlockArrangement, FSIZES, QMAX), NQ)
-
-            fitnessList.append(1/ temporaryCost)
+    # update qubit list
+    individual[layer][0] = processingZoneQubits
+    # and processing zone numbers for qubits in pointer 
+    individual[layer][3][1] = processingZoneNumbersForQubits
 
 
 
-        
+    return individual
