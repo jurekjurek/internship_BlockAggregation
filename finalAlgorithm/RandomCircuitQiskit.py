@@ -12,6 +12,10 @@ if so, they commute.
 Then, we have to make the circuit compatible with the format of *numbers* that our block aggregation (and the optimization) works with. 
 So, we have to reduce the propery of commuting gates with numbers (the numbers of the gates) and the numbers of the qubits that these gates hold.
 
+
+to do: 
+gates *only* operate on two qubits!!
+
 '''
 
 from qiskit import *
