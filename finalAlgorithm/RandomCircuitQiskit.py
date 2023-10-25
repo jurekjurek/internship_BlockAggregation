@@ -21,13 +21,14 @@ gates *only* operate on two qubits!!
 from qiskit import *
 # from qiskit.circuit.random import random_circuit
 from RCSourceCode import random_circuit
+from RCSourceCode import randomCircuitTwoQubits
 from qiskit import QuantumCircuit
 import matplotlib.pyplot as plt
 
 def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
 
     # first, create one circuit with only one gate 
-    circuitToBeAltered = random_circuit(nQubits, 1, maxNumberOperations, measure=False)
+    circuitToBeAltered = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
 
     if nGates < 1:
         print('Error, number of gates smaller than one.')
@@ -39,9 +40,9 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
 
         # if we reached the last gate, we do want to measure 
         if iGate == nGates -2:
-            tempCirc = random_circuit(nQubits, 1, maxNumberOperations, measure=True)
+            tempCirc = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=True)
         else:
-            tempCirc = random_circuit(nQubits, 1, maxNumberOperations, measure=False)
+            tempCirc = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
 
         circuitToBeAltered.barrier()
         circuitToBeAltered = circuitToBeAltered.compose(tempCirc)
