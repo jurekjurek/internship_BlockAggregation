@@ -37,7 +37,7 @@ QMAX = 4
 FSIZES = [4,4,4]
 
 
-# circuitOfQubits = random_circuit(NQ, GATES)
+circuitOfQubits = random_circuit(NQ, GATES)
 
 # show_circuit(NQ,circuitOfQubits)
 
@@ -305,8 +305,14 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
             
 
 
-# aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
+aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
 
+print(aggregatedQubitsTest)
+
+print(circuitOfQubits)
+
+exit()
+# print(aggregatedQubitsTest)
 
 # Plot the blockaggregation procedure  
 

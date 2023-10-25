@@ -22,13 +22,24 @@ from qiskit import *
 # from qiskit.circuit.random import random_circuit
 from RCSourceCode import random_circuit
 from RCSourceCode import randomCircuitTwoQubits
+from RCSourceCode import randomCircuitNew
+from GetMatrixFromCircuit import calculate_circuit_matrix
 from qiskit import QuantumCircuit
+from qiskit import Aer
+from qiskit.extensions import UnitaryGate
 import matplotlib.pyplot as plt
+import numpy as np
 
 def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
+    '''
+    returns: 
+        - List of numbered gates with correspoding qubits that are operated upon
+        - List of matrices corresponding to these gates 
+
+    '''
 
     # first, create one circuit with only one gate 
-    circuitToBeAltered = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
+    circuitToBeAltered, involvedQubits = randomCircuitNew(nQubits, 1, maxNumberOperations, measure=False)
 
     if nGates < 1:
         print('Error, number of gates smaller than one.')
@@ -36,13 +47,44 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
 
     print(circuitToBeAltered)
 
+    gatesList = [[0, involvedQubits]]
+
+    listOfMatrices = np.zeros(nGates, dtype=object)
+
+    backend = Aer.get_backend('unitary_simulator')
+    job = execute(circuitToBeAltered, backend)
+    result = job.result()
+
+    listOfMatrices[0] = result.get_unitary(circuitToBeAltered, decimals = 3)
+
     for iGate in range(nGates-1):
 
         # if we reached the last gate, we do want to measure 
         if iGate == nGates -2:
-            tempCirc = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=True)
+            # was true before, but problems with matrix representation 
+            tempCirc, involvedQubits = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
         else:
-            tempCirc = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
+            tempCirc, involvedQubits = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
+
+
+        # backend = Aer.get_backend('unitary_simulator')
+        # job = execute(tempCirc, backend, shots=8192)
+        # result = job.result()
+
+        # tempMatrix = result.get_unitary(tempCirc,3)
+
+        print(tempCirc)
+
+        backend = Aer.get_backend('unitary_simulator')
+        job = execute(tempCirc, backend)
+        result = job.result()
+        # print(result.get_unitary(tempCirc, decimals=3))
+
+        listOfMatrices[iGate+1] = result.get_unitary(tempCirc, decimals = 3)
+
+
+        gatesList.append([iGate+1, involvedQubits])
+        
 
         circuitToBeAltered.barrier()
         circuitToBeAltered = circuitToBeAltered.compose(tempCirc)
@@ -58,20 +100,39 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
     
     circuitToBeAltered.draw(output='mpl')
 
-    plt.show()
+    # plt.show()
 
     print(circuitToBeAltered)
 
-CreateRandomCircuit(4, 8, 2)
+    return gatesList, listOfMatrices
 
+gatesList, listOfGateMatrices = CreateRandomCircuit(4, 4, 2)
 
+print(gatesList)
+
+# print(listOfGateMatrices)
+
+# print(listOfGateMatrices[0])
+
+# print(type(listOfGateMatrices[0]))
+# print(np.shape(listOfGateMatrices[0]))
 
 '''
-for i in number of gates: 
-    Erstelle einen random circuit mit 20 Qubits und *einem* gate. 
-    Appende diesen random circuit to the total circuit 
+We arrange the qubits in such a way, that we get as many non-commuting gates in one processing zone as possible 
+
+The goal is to - in the processing zones - arrange as many qubits as possible that do not commute. 
 '''
 
+
+def CheckCommutation(matrixOne, matrixTwo): 
+
+    resultOne = np.matmul(matrixOne, matrixTwo)
+    resultTwo = np.matmul(matrixTwo, matrixOne)
+
+    if resultOne == resultTwo: 
+        return True 
+    else: 
+        return False 
 
 
 '''

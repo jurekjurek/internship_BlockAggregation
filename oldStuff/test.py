@@ -1,15 +1,16 @@
-import random
+import numpy as np
+from qiskit import *
+from qiskit import Aer
 
-my_list = [1, 2, 3, 4, 5]
+backend = Aer.get_backend('unitary_simulator')
+#prepare 2qubits
+circ = QuantumCircuit(2)
+circ.h(0)
+circ.x(1)
 
-# Generate a random index within the range of the list
-random_index = random.randint(0, len(my_list) - 1)
-
-# Remove the element at the random index
-random_element = my_list.pop(random_index)
-
-print("Random element:", random_element)
-print("Updated list:", my_list)
-
+job = execute(circ, backend)
+result = job.result()
+print(circ)
+print(result.get_unitary(circ, decimals=3))
 
 
