@@ -25,6 +25,11 @@ FSIZES = [4,4,4]
 # initiate circuit
 circuitOfQubits = random_circuit(NQ, GATES)
 
+
+# alpha is the variable that somehow controls explorations vs. exploitation 
+alpha = 1
+
+
 # 
 # INITIALIZE POPULATION - a list of aggregated processing blocks 
 # 
@@ -88,9 +93,12 @@ for iGeneration in range(NUMBEROFGENERATIONS):
     # MUTATION
     # 
     for jIndividual in range(POPULATIONSIZE):
-        tempIndividual = Mutation(tempPopulation[jIndividual], MUTATIONPROB)
+        tempIndividual = Mutation(tempPopulation[jIndividual], MUTATIONPROB, alpha)
         tempPopulation[jIndividual] = tempIndividual
     
+
+    # update alpha
+    alpha *= 0.99
 
     # update population
     population = tempPopulation

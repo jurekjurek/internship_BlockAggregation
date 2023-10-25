@@ -78,7 +78,7 @@ def CrossOver(individualOne, individualTwo):
     return None 
 
 
-def Mutation(individual, mutationProbability): 
+def Mutation(individual, mutationProbability, alpha): 
     '''
     For an entire population of individuals, this function iterates over all the individuals and manipulates each one of these with the probability mutationProbability
     With each the propability mutationProbability, the following operations are done: 
@@ -89,7 +89,33 @@ def Mutation(individual, mutationProbability):
 
     '''
     
-    randomProcessingQubitSwaps = random.random()
+    # 
+    # if we really want to explore instead of exploiting in the beginning, we can swap whole processing blocks! In the beginning, this does make sense 
+    # when we are comparing different solutions to each other. But once a significant amount of ooptimisation has happened, this loses its meaning since 
+    # an optimal placement of one processing block relies on its position with respect to its left and right neighbours 
+    # 
+    if alpha > 0.5: 
+
+        # pick two *blocks* at random 
+        randomLayer1 = random.randint(0,len(individual))
+
+        randomLayer2 = random.randint(0,len(individual))
+
+        # and make sure that they are not the same
+        while randomLayer1 == randomLayer2: 
+            randomLayer2 = random.randint(0,len(individual))
+
+        # this step is very simple, just switch the entire processing blocks in the individual with each other 
+        tempBlock = individual[randomLayer2]
+        individual[randomLayer2] = individual[randomLayer1]
+        individual[randomLayer1] = tempBlock
+
+        # this is it - we don't have to adjust pointers or qubits themselves
+
+
+
+
+
 
     randomProbability = random.random()
 
@@ -99,9 +125,9 @@ def Mutation(individual, mutationProbability):
         randomLayer = random.randint(0,len(individual))
 
         # list of qubits in processing zones
-        processingZoneQubits = individual[randomLayer][1]
+        processingZoneQubits = individual[randomLayer][0]
 
-        randomProcessingZone = random.randint(0, len(processingZoneQubits))
+        randomProcessingZoneIndex = random.randint(0, len(processingZoneQubits))
 
         # picks two qubits from the random processing zone to swap 
         # qubitsToBeSwapped = random.sample(randomProcessingZone, 2)
@@ -110,34 +136,72 @@ def Mutation(individual, mutationProbability):
         # qubit2 = qubitsToBeSwapped[1]
 
         # pick two random positions in the processing zone, correspoding to two qubits 
-        randomIndexQubit1 = random.randint(0, len(randomProcessingZone))
-        randomIndexQubit2 = random.randint(0, len(randomProcessingZone))
+        randomIndexQubit1 = random.randint(0, len(processingZoneQubits[randomProcessingZoneIndex]))
+        randomIndexQubit2 = random.randint(0, len(processingZoneQubits[randomProcessingZoneIndex]))
 
         # have to be different from each other 
         while randomIndexQubit2 == randomIndexQubit1: 
-            randomIndexQubit2 = random.randint(0, len(randomProcessingZone))
+            randomIndexQubit2 = random.randint(0, len(processingZoneQubits[randomProcessingZoneIndex]))
 
         # Swaps qubit one and two in layer randomLayer
         # we do not need to provide the information about the natrue of the zone, that is stored in the individual itself 
-        SwapQubits(individual, randomLayer, 'processing', randomProcessingZone, randomIndexQubit1, randomIndexQubit1)
+        individual  = SwapQubits(individual, randomLayer, 'processing', randomProcessingZoneIndex, randomProcessingZoneIndex, randomIndexQubit1, randomIndexQubit1)
+
+
+
 
     # swap idle qubits with each other. Between storage zones as well as inside of individual storage zones 
     elif randomProbability < mutationProbability * 0.75:
 
+        # again, pick a random layer 
+        randomLayer = random.randint(0,len(individual))
+
+        # list of qubits in this layer that are inside storage zones 
+        storageZoneQubits = individual[randomLayer][2]
+
+        randomStorageZoneIndex1 = random.randint(0, len(storageZoneQubits))
+        randomStorageZoneIndex2 = random.randint(0, len(storageZoneQubits))
+
+        # pick two of these qubits in storage zones 
+        randomIndexQubit1 = random.randint(0, len(storageZoneQubits[randomStorageZoneIndex1]))
+        randomIndexQubit2 = random.randint(0, len(storageZoneQubits[randomStorageZoneIndex2]))
+
+        while randomIndexQubit2 == randomIndexQubit1: 
+            randomIndexQubit2 = random.randint(0, len(storageZoneQubits[randomStorageZoneIndex2]))
+
+        # swap these two qubits that are stored in storage zones 
+        individual = SwapQubits(individual, randomLayer, 'storage', randomStorageZoneIndex1, randomStorageZoneIndex2, randomIndexQubit1, randomIndexQubit2)
+
         return 
+
+
 
     # randomly swap whole processing zones with each other 
     elif randomProbability < mutationProbability: 
 
+        # start again by picking random layer 
+        randomLayer = random.randint(0,len(individual))
+
+        # qubits in processing zone in this layer 
+        processingZoneQubits = individual[randomLayer][0]
+
+        # now, pick two processing zones at random
+        randomProcessingZoneIndex1 = random.randint(0, len(processingZoneQubits))
+        randomProcessingZoneIndex2 = random.randint(0, len(processingZoneQubits))
+
+        # this time, the processing zones cannot be the same 
+        while randomProcessingZoneIndex1 == randomProcessingZoneIndex2: 
+            randomProcessingZoneIndex2 = random.randint(0, len(processingZoneQubits))
+            
+        individual = SwapProcessingZones(individual, randomLayer, randomProcessingZoneIndex1, randomProcessingZoneIndex2)
+
         return 
 
-    # swap the positions of processing *Blocks*!!
+
     else: 
 
         # I don't know if that makes sense! 
         return 
-
-    return None 
 
 
 def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2, indexQubit1, indexQubit2):
@@ -156,7 +220,7 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
 
         # [zoneNumberQubit1] = [zoneNumberQubit2] for processingzone qubits, because we do not swap in betweeen zones 
 
-        tempValue                           = processingZoneQubits[zoneNumberQubit1][indexQubit1]
+        tempValue                                             = processingZoneQubits[zoneNumberQubit1][indexQubit1]
         processingZoneQubits[zoneNumberQubit1][indexQubit1]   = processingZoneQubits[zoneNumberQubit1][indexQubit2]
         processingZoneQubits[zoneNumberQubit1][indexQubit2]   = tempValue
 
@@ -202,7 +266,7 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
 
 
     else: 
-        print('Error, qubit has to be in either Processing or Idle zone.')
+        print('Error. ZoneNature in SwapQubits is not assigned correctly.')
         return
 
 
