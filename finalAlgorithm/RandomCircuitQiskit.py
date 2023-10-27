@@ -20,15 +20,16 @@ gates *only* operate on two qubits!!
 
 from qiskit import *
 # from qiskit.circuit.random import random_circuit
-from RCSourceCode import random_circuit
-from RCSourceCode import randomCircuitTwoQubits
-from RCSourceCode import randomCircuitNew
+from AlteredRandomCircuitSourceCode import randomCircuitTwoQubits
 from GetMatrixFromCircuit import calculate_circuit_matrix
 from qiskit import QuantumCircuit
 from qiskit import Aer
 from qiskit.extensions import UnitaryGate
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+
 
 def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
     '''

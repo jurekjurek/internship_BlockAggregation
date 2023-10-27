@@ -128,6 +128,56 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
         GBest:              Gates covered by the set of qubits that maximize the gatecoverage 
         gateCoverageList:   For displaying purposes of the course of the algorithm 
 
+
+    If a qubit in one particular gate has been encountered already before, it is part of another pointer set. 
+    *BUT* if the gate of this qubit commutes with the other gate that acts on the same qubit in the next step, we can *move* the qubit from the first 
+    aggregated sublist to the recent one. 
+
+    ///////////////////////////////
+    Here is an EXAMPLE:
+
+    Gate 1: Qubits 9,1 
+    Gate 2: Qubits 1,2
+    Gate 3: Qubits 3,6
+    Gate 4: Qubits 5,7
+    Gate 5: Qubits 9,6
+
+    the first step in the algorithm will create S = [[9,1,2], [0], [3], [4], [5], [6], [7], [8]] if we have 10 qubits in total 
+
+    where the first two gates have been taken care of. The next steps are: 
+
+    S = [[9,1,2], [3,6], [5,7], [0], [4], [8]]
+
+    So far, so good. We have not encountered any difficulties with commutation yet. Now, however, we are confronted with the gate 
+    Gate 5: Qubits 9,6
+
+    What the algorithm would do so far, taking into account only the fact if there are equal qubits in two gates when evaluating their commutation: 
+    S = [[9,1,2,3,6], [5,7], [0], [4], [8]]
+
+    But, what we could do now, when it happens that gate 3 and gate 5 commute: 
+    S = [[9,1,2,6], [5,7], [0], [3], [4], [8]]
+
+    as an intermediate step, which *could* lead to a better gate coverage. 
+    The best gate coverage could then correspond to this intermediate step. If not, we would of course have to execute gate 5 now as well which would lead us 
+    again to: 
+    S = [[9,1,2,3,6], [5,7], [0], [4], [8]]
+
+    //////////////////////////////////////////////////
+    
+    The new commutation aspect only gives us these intermediate steps that *could* provide better gate coverages. And this is essentially what we want. 
+
+    What we essentially have to do in the algorithm: 
+    
+    Upon merging to sets, merging qubits together: 
+    - check if the gates containing the same qubits commute. If they commute: 
+        - merge the qubit possibly to next sublists on the left. 
+        - essentially do the algorithm, but start now at the left of the sublist that was skipped due to commutation
+        - if in there, there is a gate involved that this gate commutes with, we dont have to skip this sublist, since there are only 2 qubits in each gate. 
+        - Create the new aggregated qubit sets, merge the corresponding qubit
+        - in the next step, execute the gate of interest (corresponding to the last step in the example above)
+        - Carry on
+    - if they don't commute -> carry on 
+
     '''
 
     # S is a list of lists! G is a list of lists! 
@@ -300,16 +350,19 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
             aggregatedQubitsBest    = aggregatedQubits.copy()
             gatesCoveredBest        = gatesCovered.copy()
 
+        print(aggregatedQubits)
+
 
     return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList        
             
 
-
-aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
-
-print(aggregatedQubitsTest)
-
 print(circuitOfQubits)
+aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
+print('Best:')
+print(aggregatedQubitsTest)
+# print(aggregatedQubitsTest)
+
+# print(circuitOfQubits)
 
 exit()
 # print(aggregatedQubitsTest)
