@@ -9,6 +9,7 @@ from qiskit.circuit.library.standard_gates import (IGate, U1Gate, U2Gate, U3Gate
                                                    CU3Gate, SwapGate, RZZGate,
                                                    CCXGate, CSwapGate)
 from qiskit.circuit.exceptions import CircuitError
+import random 
 # from qiskit.util import deprecate_arguments
 
 '''
@@ -142,18 +143,58 @@ def randomCircuitTwoQubits(num_qubits, depth, max_operands=3, measure=False,
         seed = np.random.randint(0, np.iinfo(np.int32).max)
     rng = np.random.default_rng(seed)
 
+    # was inside the _ for loop 
+    remaining_qubits = list(range(num_qubits))
+
+    num_operands = 2 
+
+    rng.shuffle(remaining_qubits)
+    operands = remaining_qubits[:num_operands]
+
+
+
     # apply arbitrary random operations at every depth
     for _ in range(depth):
         # choose either 1, 2, or 3 qubits for the operation
-        remaining_qubits = list(range(num_qubits))
 
-        num_operands = 2 
+        # now only one qubit operations 
+        operandsTwo = operands
+        for j in range(2): 
 
-        rng.shuffle(remaining_qubits)
-        operands = remaining_qubits[:num_operands]
-        remaining_qubits = [q for q in remaining_qubits if q not in operands]
-        if num_operands == 2:
-            operation = rng.choice(two_q_ops)
+            operands = [operandsTwo[j]]
+
+            operation = rng.choice(one_q_ops)
+
+            if operation in one_param:
+                num_angles = 1
+            elif operation in two_param:
+                num_angles = 2
+            elif operation in three_param:
+                num_angles = 3
+            else:
+                num_angles = 0
+
+
+            angles = [rng.uniform(0, 2 * np.pi) for x in range(num_angles)]
+            register_operands = [qr[i] for i in operands]
+            op = operation(*angles)
+
+            # do the one qubit operations only with a 0.5 percent probability
+            randomNumber = random.random()
+
+            if randomNumber <= 0.5:
+                qc.append(op, register_operands)
+
+
+
+        # REVERSED ORDER OF TWO AND ONE OPERATION GATES 
+        operands = operandsTwo
+
+        # remaining_qubits = [q for q in remaining_qubits if q not in operands]
+        # if num_operands == 2:
+
+        # number of operands is two! 
+        operation = rng.choice(two_q_ops)
 
         if operation in one_param:
             num_angles = 1
@@ -175,6 +216,9 @@ def randomCircuitTwoQubits(num_qubits, depth, max_operands=3, measure=False,
 
         qc.append(op, register_operands)
 
+
+
+
     if measure:
         qc.measure(qr, cr)
 
@@ -195,6 +239,7 @@ def randomCircuitTwoQubits(num_qubits, depth, max_operands=3, measure=False,
 '''
 New Try 
 '''
+
 
 def randomCircuitNew(num_qubits, depth, max_operands=3, measure=False,
                    conditional=False, reset=False, seed=None):
@@ -232,22 +277,15 @@ def randomCircuitNew(num_qubits, depth, max_operands=3, measure=False,
         # only allow one operation on two qubits in total: 
         counterTwoOperands = 0
 
-        rng.shuffle(remaining_qubits)
-
-        for i in range(num_qubits):
-            # max_possible_operands = min(len(remaining_qubits), max_operands)
-            # num_operands = rng.choice(range(max_possible_operands)) + 1
-
-            if i == 0: 
-                num_operands = 2
-            else: 
-                num_operands = 1
+        while remaining_qubits:
+            max_possible_operands = min(len(remaining_qubits), max_operands)
+            num_operands = rng.choice(range(max_possible_operands)) + 1
 
             # if counterTwoOperands < 1: 
             #     while num_operands == 2: 
             #         num_operands = rng.choice(range(max_possible_operands)) + 1
 
-            
+            rng.shuffle(remaining_qubits)
             operands = remaining_qubits[:num_operands]
             remaining_qubits = [q for q in remaining_qubits if q not in operands]
             if num_operands == 1:
@@ -282,5 +320,9 @@ def randomCircuitNew(num_qubits, depth, max_operands=3, measure=False,
     if measure:
         qc.measure(qr, cr)
 
-    return qc
+    return qc, operands
+
+
+
+
 

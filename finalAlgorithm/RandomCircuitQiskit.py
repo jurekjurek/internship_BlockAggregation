@@ -39,7 +39,7 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
     '''
 
     # first, create one circuit with only one gate 
-    circuitToBeAltered, involvedQubits = randomCircuitNew(nQubits, 1, maxNumberOperations, measure=False)
+    circuitToBeAltered, involvedQubits = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
 
     if nGates < 1:
         print('Error, number of gates smaller than one.')
@@ -100,7 +100,7 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
     
     circuitToBeAltered.draw(output='mpl')
 
-    # plt.show()
+    plt.show()
 
     print(circuitToBeAltered)
 
@@ -109,6 +109,7 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
 gatesList, listOfGateMatrices = CreateRandomCircuit(4, 4, 2)
 
 print(gatesList)
+print(listOfGateMatrices)
 
 # print(listOfGateMatrices)
 
