@@ -14,6 +14,8 @@ from fancify_text import italic, bold, italicSerif
  
 from HelperFunctions import *
 
+from RandomCircuitQiskit import *
+
 '''
 In this file, the mathematica file ... 
 will be transcripted into python, extended and commented in order for other people to be able to use it. 
@@ -37,8 +39,9 @@ QMAX = 4
 FSIZES = [4,4,4]
 
 
-circuitOfQubits = random_circuit(NQ, GATES)
+# circuitOfQubits = random_circuit(NQ, GATES)
 
+circuitOfQubits, listOfGateMatrices = CreateRandomCircuit(4, 4, 2)
 # show_circuit(NQ,circuitOfQubits)
 
 '''
@@ -111,7 +114,49 @@ def EvaluateGateCoverage(S, G, nQ, qMax, mMax):
 G_n, so one specific element of the G list indicates what gates are covered by the Qubit Set S_n  
 mMax is the number of processing zones in one processing block 
 
+New approach: 
+Instead of rewriting the function, take all possible circuits as input for AggregateBlocksStep
+
+How do we get all possible circuits? 
+
 '''
+
+def GetCircuitVariations(circuit, commutationMatrix): 
+    '''
+    circuit is a list with this shape: 
+        [[gate1, [qubit2, qubit2]], [gate2, [qubit1, qubit2]], ..., [gateN, [qubit1, qubit2]]]
+
+    and commutationmatrix is a symmetric matrix that indicates - for the i,j-th element, if gate i and gate j commute. 
+
+    '''
+    listOfCircuits = []
+    for iGate in circuit.reverse():
+        qubit1 = iGate[0]
+        qubit2 = iGate[1]
+
+
+        circuitToBeAltered = circuit
+
+        # now, for the other gate that we shall check if iGate commutes with 
+        for jGate in circuit[0:iGate].reverse():
+
+            # check if qubit1 or qubit2 are part of this gate
+            # if so, we check if they commute. 
+            # if they do commute, 
+            if qubit1 in jGate: 
+                if commutationMatrix(iGate, jGate): 
+                    circuitToBeAltered[iGate] = jGate
+                    circuitToBeAltered[jGate] = iGate
+                    listOfCircuits.append(circuitToBeAltered)
+                
+            if qubit2 in jGate: 
+                if commutationMatrix(iGate, jGate): 
+                    circuitToBeAltered[iGate] = jGate
+                    circuitToBeAltered[jGate] = iGate
+                    listOfCircuits.append(circuitToBeAltered)
+
+    return listOfCircuits
+
 
 def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
     '''
@@ -160,7 +205,7 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
     as an intermediate step, which *could* lead to a better gate coverage. 
     The best gate coverage could then correspond to this intermediate step. If not, we would of course have to execute gate 5 now as well which would lead us 
     again to: 
-    S = [[9,1,2,3,6], [5,7], [0], [4], [8]]
+    S = [[9,1,2,6,3], [5,7], [0], [4], [8]]
 
     //////////////////////////////////////////////////
     
@@ -177,6 +222,8 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
         - in the next step, execute the gate of interest (corresponding to the last step in the example above)
         - Carry on
     - if they don't commute -> carry on 
+
+
 
     '''
 

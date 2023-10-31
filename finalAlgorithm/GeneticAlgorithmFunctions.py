@@ -94,7 +94,9 @@ def Mutation(individual, mutationProbability, alpha):
     # when we are comparing different solutions to each other. But once a significant amount of ooptimisation has happened, this loses its meaning since 
     # an optimal placement of one processing block relies on its position with respect to its left and right neighbours 
     # 
-    if alpha > 0.5: 
+
+    randomProbabilityBlocks = random.random()
+    if alpha > 0.5 and randomProbability < mutationProbability: 
 
         # pick two *blocks* at random 
         randomLayer1 = random.randint(0,len(individual))

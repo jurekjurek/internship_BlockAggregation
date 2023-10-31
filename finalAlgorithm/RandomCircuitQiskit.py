@@ -74,7 +74,7 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
 
         # tempMatrix = result.get_unitary(tempCirc,3)
 
-        print(tempCirc)
+        # print(tempCirc)
 
         backend = Aer.get_backend('unitary_simulator')
         job = execute(tempCirc, backend)
@@ -107,10 +107,10 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
 
     return gatesList, listOfMatrices
 
-gatesList, listOfGateMatrices = CreateRandomCircuit(4, 4, 2)
+# gatesList, listOfGateMatrices = CreateRandomCircuit(14, 4, 2)
 
-print(gatesList)
-print(listOfGateMatrices)
+# print(gatesList)
+# print(listOfGateMatrices)
 
 # print(listOfGateMatrices)
 
