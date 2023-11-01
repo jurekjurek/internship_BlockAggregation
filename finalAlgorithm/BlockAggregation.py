@@ -41,7 +41,8 @@ FSIZES = [4,4,4]
 
 # circuitOfQubits = random_circuit(NQ, GATES)
 
-circuitOfQubits, listOfGateMatrices = CreateRandomCircuit(4, 4, 2)
+# circuitOfQubits, listOfGateMatrices = CreateRandomCircuit(4, 4, 2)
+# commutationMatrix = GetCommutationMatrix(listOfGateMatrices)
 # show_circuit(NQ,circuitOfQubits)
 
 '''
@@ -403,15 +404,15 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
     return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList        
             
 
-print(circuitOfQubits)
-aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
-print('Best:')
-print(aggregatedQubitsTest)
+# print(circuitOfQubits)
+# aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
+# print('Best:')
+# print(aggregatedQubitsTest)
 # print(aggregatedQubitsTest)
 
 # print(circuitOfQubits)
 
-exit()
+# exit()
 # print(aggregatedQubitsTest)
 
 # Plot the blockaggregation procedure  

@@ -37,7 +37,7 @@ def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax
 
     population = np.zeros(populationSize)
 
-    for i in populationSize: 
+    for i in range(populationSize): 
         population[i] = blockProcessCircuit(circuitOfQubits, nQ, storageZoneShape, qMax, mMax)
 
 

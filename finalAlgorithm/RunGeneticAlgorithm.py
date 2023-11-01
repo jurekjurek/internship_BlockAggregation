@@ -35,6 +35,7 @@ alpha = 1
 # 
 population = InitializePopulation(POPULATIONSIZE, NQ, GATES, FSIZES, QMAX, MMAX)
 
+exit()
 
 for iGeneration in range(NUMBEROFGENERATIONS): 
 

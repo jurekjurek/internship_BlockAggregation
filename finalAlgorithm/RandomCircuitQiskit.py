@@ -137,6 +137,28 @@ def CheckCommutation(matrixOne, matrixTwo):
         return False 
 
 
+
+def GetCommutationMatrix(listOfGateMatrices): 
+    '''
+    given a list of the matrices corresponding to the individual gates in the circuit, this funciton creates a symmetric matrix 
+    indicating by its i,j-th element if the i-th and j-th matrix in listOfGateMatrices commute
+    '''
+    numberOfGates = len(listOfGateMatrices)
+    commutationMatrix = np.zeros((numberOfGates, numberOfGates))
+
+    for iGate in range(numberOfGates): 
+        for jGate in range(numberOfGates): 
+
+            gate1Matrix = listOfGateMatrices[iGate]
+            gate2Matrix = listOfGateMatrices[jGate]
+
+            if CheckCommutation(gate1Matrix, gate2Matrix): 
+                commutationMatrix[iGate, jGate] = True
+            else: 
+                commutationMatrix[iGate, jGate] = False
+
+                
+
 '''
 Maybe write an own random function. 
 
