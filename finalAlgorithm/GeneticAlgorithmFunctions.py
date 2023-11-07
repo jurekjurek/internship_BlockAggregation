@@ -228,6 +228,8 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
     zoneNature is a string, either 'processing' or 'storage' 
     '''
 
+    newIndividual = individual
+
     blockOfInterest = individual[layer]
 
     processingZoneQubits = blockOfInterest[0]
@@ -238,9 +240,7 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
 
         # [zoneNumberQubit1] = [zoneNumberQubit2] for processingzone qubits, because we do not swap in betweeen zones 
 
-        tempValue                                             = processingZoneQubits[zoneNumberQubit1][indexQubit1]
-        processingZoneQubits[zoneNumberQubit1][indexQubit1]   = processingZoneQubits[zoneNumberQubit1][indexQubit2]
-        processingZoneQubits[zoneNumberQubit1][indexQubit2]   = tempValue
+
 
         # adjust pointerQuadruple 
         # we only have to adjust the position *in* the zone;
@@ -250,6 +250,14 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
         qubit1 = processingZoneQubits[zoneNumberQubit1][indexQubit1]
         qubit2 = processingZoneQubits[zoneNumberQubit2][indexQubit2]
 
+
+
+        # swap 
+        tempValue                                             = processingZoneQubits[zoneNumberQubit1][indexQubit1]
+        processingZoneQubits[zoneNumberQubit1][indexQubit1]   = processingZoneQubits[zoneNumberQubit1][indexQubit2]
+        processingZoneQubits[zoneNumberQubit1][indexQubit2]   = tempValue
+
+
         positionInZoneQubit1 = pointerQuadruple[qubit1][2]
         positionInZoneQubit2 = pointerQuadruple[qubit2][2]
 
@@ -258,9 +266,6 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
 
 
     elif zoneNature == 'storage':
-        tempValue                                           = storageZoneQubits[zoneNumberQubit1][indexQubit1]
-        storageZoneQubits[zoneNumberQubit1][indexQubit1]    = storageZoneQubits[zoneNumberQubit2][indexQubit2]
-        storageZoneQubits[zoneNumberQubit2][indexQubit2]    = tempValue
 
         # adjust pointerQuadruple 
         # we only have to adjust the position *in* the zone;
@@ -270,6 +275,11 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
         qubit1 = storageZoneQubits[zoneNumberQubit1][indexQubit1]
         qubit2 = storageZoneQubits[zoneNumberQubit2][indexQubit2]
 
+        # swap
+
+        tempValue                                           = storageZoneQubits[zoneNumberQubit1][indexQubit1]
+        storageZoneQubits[zoneNumberQubit1][indexQubit1]    = storageZoneQubits[zoneNumberQubit2][indexQubit2]
+        storageZoneQubits[zoneNumberQubit2][indexQubit2]    = tempValue
 
         '''
         Debug print statements
@@ -298,14 +308,14 @@ def SwapQubits(individual, layer, zoneNature, zoneNumberQubit1, zoneNumberQubit2
 
 
     # assign the processingzone and storagezone qubits to the individual again 
-    individual[layer][0] = processingZoneQubits
-    individual[layer][2] = storageZoneQubits
+    newIndividual[layer][0] = processingZoneQubits
+    newIndividual[layer][2] = storageZoneQubits
         
     # and pointer as well 
-    individual[layer][3] = pointerQuadruple
+    newIndividual[layer][3] = pointerQuadruple
 
 
-    return individual 
+    return newIndividual 
     
 
 
