@@ -162,7 +162,7 @@ def Mutation(individual, mutationProbability, alpha):
         # we do not need to provide the information about the natrue of the zone, that is stored in the individual itself 
         individual  = SwapQubits(individual, randomLayer, 'processing', randomProcessingZoneIndex, randomProcessingZoneIndex, randomIndexQubit1, randomIndexQubit1)
 
-
+        print('swapping qubits ', randomIndexQubit1, ' and qubit ', randomIndexQubit2, ' in processing zone ', randomProcessingZoneIndex, ' in layer ', randomLayer)
 
 
     # swap idle qubits with each other. Between storage zones as well as inside of individual storage zones 
@@ -191,6 +191,7 @@ def Mutation(individual, mutationProbability, alpha):
         individual = SwapQubits(individual, randomLayer, 'storage', randomStorageZoneIndex1, randomStorageZoneIndex2, randomIndexQubit1, randomIndexQubit2)
 
         # return 
+        print('swapping qubit ', randomIndexQubit1, ' and qubit ', randomIndexQubit2, ' in storage zone ', randomStorageZoneIndex1, ' and ', randomStorageZoneIndex2, ' in layer ', randomLayer)
 
 
 
@@ -212,6 +213,8 @@ def Mutation(individual, mutationProbability, alpha):
             randomProcessingZoneIndex2 = random.randint(0, len(processingZoneQubits)-1)
             
         individual = SwapProcessingZones(individual, randomLayer, randomProcessingZoneIndex1, randomProcessingZoneIndex2)
+
+        print('swapping processing zone ', randomProcessingZoneIndex1, ' and processing zone ', randomProcessingZoneIndex2, ' in layer ', randomLayer)
 
         # return 
 

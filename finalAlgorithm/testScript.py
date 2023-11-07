@@ -33,9 +33,6 @@ if showPlots:
 # Each processing block holds active qubits in processing zones and idle qubits in both processing and storage zones 
 processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
-print(np.shape(processingBlockArrangement))
-
-exit()
 
 if showPlots: 
     temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangement, FSIZES, MMAX), NQ)

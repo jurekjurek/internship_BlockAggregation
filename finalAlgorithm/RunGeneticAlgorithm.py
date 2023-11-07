@@ -6,11 +6,11 @@ This file is responsible for running a Genetic algorithm to unclutter a graph.
 '''
 
 # global variables for GA
-NUMBEROFGENERATIONS = 1000
-POPULATIONSIZE = 100
+NUMBEROFGENERATIONS = 10000
+POPULATIONSIZE = 50
 
-CROSSOVERPROB = 0.2
-MUTATIONPROB = 0.4
+CROSSOVERPROB = 0.5
+MUTATIONPROB = 0.2
 
 TOURNAMENTPROB = 0.75
 TOURNAMENTSIZE = 2
