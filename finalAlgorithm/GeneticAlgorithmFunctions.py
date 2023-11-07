@@ -35,13 +35,16 @@ def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax
 
     circuitOfQubits = random_circuit(nQ, gates)    
 
-    population = np.zeros(populationSize)
+    population = []
 
     for i in range(populationSize): 
-        population[i] = blockProcessCircuit(circuitOfQubits, nQ, storageZoneShape, qMax, mMax)
+        tempProcessingBlockArrangement = blockProcessCircuit(circuitOfQubits, nQ, storageZoneShape, qMax, mMax)
+        # print(np.shape(tempProcessingBlockArrangement))
+        population.append(tempProcessingBlockArrangement)
 
+    return population
 
-def TournamentSelection(fitnessList, tournamentProbability):
+def TournamentSelection(fitnessList, tournamentProbability, tournamentSize):
     populationSize = len(fitnessList)
 
     randomIndividualOne = random.randint(0, populationSize-1)    
@@ -106,7 +109,7 @@ def Mutation(individual, mutationProbability, alpha):
     # 
 
     randomProbabilityBlocks = random.random()
-    if alpha > 0.5 and randomProbability < mutationProbability: 
+    if alpha > 0.5 and randomProbabilityBlocks < mutationProbability: 
 
         # pick two *blocks* at random 
         randomLayer1 = random.randint(0,len(individual))

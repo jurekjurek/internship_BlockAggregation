@@ -35,9 +35,8 @@ alpha = 1
 # 
 population = InitializePopulation(POPULATIONSIZE, NQ, GATES, FSIZES, QMAX, MMAX)
 
-# print(np.shape(population))
-
-exit()
+print('Populationsize:')
+print(np.shape(population))
 
 for iGeneration in range(NUMBEROFGENERATIONS): 
 
@@ -48,15 +47,21 @@ for iGeneration in range(NUMBEROFGENERATIONS):
 
     # evaluate individuals 
     for jIndividual in range(POPULATIONSIZE):
-        fitnessList[jIndividual] = computeTotalCost(population[jIndividual], NQ)
 
+        tempBrocessingBlockArrangement = population[jIndividual]
+
+        costForThisIndividual = computeTotalCost(computeArrangements(tempBrocessingBlockArrangement, FSIZES, MMAX), NQ)
+
+        fitnessList[jIndividual] = costForThisIndividual
         if fitnessList[jIndividual] > maximumFitness: 
-            fitnessList[jIndividual] = maximumFitness
+            maximumFitness = fitnessList[jIndividual]
             bestIndividual = jIndividual 
 
 
     # proceed with evolution
     tempPopulation = population
+
+    # print(fitnessList)
 
     # iterate over population, only taking into account every second individual 
     for jIndividual in range(0, POPULATIONSIZE, 2):
@@ -106,5 +111,6 @@ for iGeneration in range(NUMBEROFGENERATIONS):
     # update population
     population = tempPopulation
 
+    exit()
 
 

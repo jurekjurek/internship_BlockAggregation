@@ -396,7 +396,7 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
             aggregatedQubitsBest    = aggregatedQubits.copy()
             gatesCoveredBest        = gatesCovered.copy()
 
-        print(aggregatedQubits)
+        # print(aggregatedQubits)
 
 
     return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList        
