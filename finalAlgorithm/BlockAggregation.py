@@ -381,7 +381,8 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
         # in total, so mMax (no of processing zones) times qMax (no of qubits in processing zones)
         if nQ - qubitNonCoverage < mMax * qMax: 
 
-            print('Termination condition reached!')
+            # debug print statement
+            # print('Termination condition reached!')
             # function returns the two best lists, because we're running out of space 
             return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList
         

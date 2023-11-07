@@ -6,11 +6,11 @@ This file is responsible for running a Genetic algorithm to unclutter a graph.
 '''
 
 # global variables for GA
-NUMBEROFGENERATIONS = 10
-POPULATIONSIZE = 10
+NUMBEROFGENERATIONS = 1000
+POPULATIONSIZE = 100
 
 CROSSOVERPROB = 0.2
-MUTATIONPROB = 0.04
+MUTATIONPROB = 0.4
 
 TOURNAMENTPROB = 0.75
 TOURNAMENTSIZE = 2
@@ -111,6 +111,9 @@ for iGeneration in range(NUMBEROFGENERATIONS):
     # update population
     population = tempPopulation
 
-    exit()
+    # exit()
+    if iGeneration %100 == 0: 
+        print('Best individual: ')
+        print(computeTotalCost(computeArrangements(population[bestIndividual], FSIZES, MMAX), NQ))
 
 
