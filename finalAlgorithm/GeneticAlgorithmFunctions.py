@@ -75,7 +75,17 @@ def CrossOver(individualOne, individualTwo):
         Two new processingBlockLists
     '''
 
-    return None 
+    lenIndividuals = len(individualOne)
+
+    # we will start by exchanging processing blocks between two individuals and see how this goes 
+    randomLayer = random.randint(0,lenIndividuals)
+
+    individualTwoNew = individualTwo[0:randomLayer] + individualOne[randomLayer:lenIndividuals]
+    individualOneNew = individualOne[0:randomLayer] + individualTwo[randomLayer:lenIndividuals]
+
+
+
+    return individualOneNew, individualTwoNew
 
 
 def Mutation(individual, mutationProbability, alpha): 

@@ -35,6 +35,8 @@ alpha = 1
 # 
 population = InitializePopulation(POPULATIONSIZE, NQ, GATES, FSIZES, QMAX, MMAX)
 
+# print(np.shape(population))
+
 exit()
 
 for iGeneration in range(NUMBEROFGENERATIONS): 
