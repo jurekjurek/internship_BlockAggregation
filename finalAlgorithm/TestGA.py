@@ -42,7 +42,14 @@ individualOfInterest = population[0]
 # print(individualOfInterest)
 
 
-individualOfInterestNew = Mutation(individualOfInterest, MUTATIONPROB, alpha)
+# individualOfInterestNew = Mutation(individualOfInterest, MUTATIONPROB, alpha)
+
+
+# check die qubit swap funtion!! 
+individualOfInterestNew = SwapQubits()
+
+
+# und dann die Swap processing zone function
 
 print('Are these two the same???', individualOfInterest == individualOfInterestNew)
 
