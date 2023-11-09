@@ -6,7 +6,7 @@ This file is responsible for running a Genetic algorithm to unclutter a graph.
 '''
 
 # global variables for GA
-NUMBEROFGENERATIONS = 10000
+NUMBEROFGENERATIONS = 500
 POPULATIONSIZE = 50
 
 CROSSOVERPROB = 0.5
@@ -27,7 +27,7 @@ circuitOfQubits = random_circuit(NQ, GATES)
 
 
 # alpha is the variable that somehow controls explorations vs. exploitation 
-alpha = 1
+alpha = 0
 
 
 # 
@@ -52,7 +52,7 @@ for iGeneration in range(NUMBEROFGENERATIONS):
 
         costForThisIndividual = computeTotalCost(computeArrangements(tempBrocessingBlockArrangement, FSIZES, MMAX), NQ)
 
-        fitnessList[jIndividual] = costForThisIndividual
+        fitnessList[jIndividual] = 1/costForThisIndividual
         if fitnessList[jIndividual] > maximumFitness: 
             maximumFitness = fitnessList[jIndividual]
             bestIndividual = jIndividual 
@@ -117,3 +117,4 @@ for iGeneration in range(NUMBEROFGENERATIONS):
         print(computeTotalCost(computeArrangements(population[bestIndividual], FSIZES, MMAX), NQ))
 
 
+visualize_blocks(population[bestIndividual], 'After genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(population[bestIndividual], FSIZES, MMAX), NQ)))

@@ -27,7 +27,7 @@ circuitOfQubits = random_circuit(NQ, GATES)
 
 
 # alpha is the variable that somehow controls explorations vs. exploitation 
-alpha = 1
+alpha = 0
 
 
 # 

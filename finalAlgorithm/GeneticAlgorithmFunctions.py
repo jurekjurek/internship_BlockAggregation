@@ -10,7 +10,7 @@ We could also do this in the block aggregation procedure.
 '''
 
 from HelperFunctions import * 
-from BlockAggregation import *
+from AlternatingOptimization import *
 
 
 
@@ -91,7 +91,7 @@ def CrossOver(individualOne, individualTwo):
     return individualOneNew, individualTwoNew
 
 
-def Mutation(individual, mutationProbability, alpha): 
+def Mutation(individualOriginal, mutationProbability, alpha): 
     '''
     For an entire population of individuals, this function iterates over all the individuals and manipulates each one of these with the probability mutationProbability
     With each the propability mutationProbability, the following operations are done: 
@@ -107,6 +107,8 @@ def Mutation(individual, mutationProbability, alpha):
     # when we are comparing different solutions to each other. But once a significant amount of ooptimisation has happened, this loses its meaning since 
     # an optimal placement of one processing block relies on its position with respect to its left and right neighbours 
     # 
+
+    individual = copy.deepcopy(individualOriginal)
 
     randomProbabilityBlocks = random.random()
     if alpha > 0.5 and randomProbabilityBlocks < mutationProbability: 
@@ -162,7 +164,7 @@ def Mutation(individual, mutationProbability, alpha):
         # we do not need to provide the information about the natrue of the zone, that is stored in the individual itself 
         individual  = SwapQubits(individual, randomLayer, 'processing', randomProcessingZoneIndex, randomProcessingZoneIndex, randomIndexQubit1, randomIndexQubit1)
 
-        print('swapping qubits ', randomIndexQubit1, ' and qubit ', randomIndexQubit2, ' in processing zone ', randomProcessingZoneIndex, ' in layer ', randomLayer)
+        # print('swapping qubits ', randomIndexQubit1, ' and qubit ', randomIndexQubit2, ' in processing zone ', randomProcessingZoneIndex, ' in layer ', randomLayer)
 
 
     # swap idle qubits with each other. Between storage zones as well as inside of individual storage zones 
@@ -191,7 +193,7 @@ def Mutation(individual, mutationProbability, alpha):
         individual = SwapQubits(individual, randomLayer, 'storage', randomStorageZoneIndex1, randomStorageZoneIndex2, randomIndexQubit1, randomIndexQubit2)
 
         # return 
-        print('swapping qubit ', randomIndexQubit1, ' and qubit ', randomIndexQubit2, ' in storage zone ', randomStorageZoneIndex1, ' and ', randomStorageZoneIndex2, ' in layer ', randomLayer)
+        # print('swapping qubit ', randomIndexQubit1, ' and qubit ', randomIndexQubit2, ' in storage zone ', randomStorageZoneIndex1, ' and ', randomStorageZoneIndex2, ' in layer ', randomLayer)
 
 
 
@@ -214,7 +216,7 @@ def Mutation(individual, mutationProbability, alpha):
             
         individual = SwapProcessingZones(individual, randomLayer, randomProcessingZoneIndex1, randomProcessingZoneIndex2)
 
-        print('swapping processing zone ', randomProcessingZoneIndex1, ' and processing zone ', randomProcessingZoneIndex2, ' in layer ', randomLayer)
+        # print('swapping processing zone ', randomProcessingZoneIndex1, ' and processing zone ', randomProcessingZoneIndex2, ' in layer ', randomLayer)
 
         # return 
 
