@@ -3,14 +3,23 @@ from AlternatingOptimization import *
 
 '''
 This file is responsible for running a Genetic algorithm to unclutter a graph. 
+
+populationsize seems to have a huge impact!!!
+
+
+COMBINE GA WITH TABUSEARCH OR SO 
+
+Add tournamentselection for more individuals!!
+
 '''
 
 # global variables for GA
-NUMBEROFGENERATIONS = 500
-POPULATIONSIZE = 50
+NUMBEROFGENERATIONS = 1000
+POPULATIONSIZE = 300
 
-CROSSOVERPROB = 0.5
-MUTATIONPROB = 0.2
+# these should be fine
+CROSSOVERPROB = 0.8
+MUTATIONPROB = 0.025
 
 TOURNAMENTPROB = 0.75
 TOURNAMENTSIZE = 2
@@ -27,16 +36,22 @@ circuitOfQubits = random_circuit(NQ, GATES)
 
 
 # alpha is the variable that somehow controls explorations vs. exploitation 
-alpha = 0
+alpha = 1
 
 
 # 
 # INITIALIZE POPULATION - a list of aggregated processing blocks 
 # 
-population = InitializePopulation(POPULATIONSIZE, NQ, GATES, FSIZES, QMAX, MMAX)
+population = InitializePopulation(POPULATIONSIZE, NQ, GATES, FSIZES, QMAX, MMAX, False)
+
+costList = []
 
 print('Populationsize:')
 print(np.shape(population))
+
+maximumGlobalFitness = 0
+
+
 
 for iGeneration in range(NUMBEROFGENERATIONS): 
 
@@ -56,6 +71,13 @@ for iGeneration in range(NUMBEROFGENERATIONS):
         if fitnessList[jIndividual] > maximumFitness: 
             maximumFitness = fitnessList[jIndividual]
             bestIndividual = jIndividual 
+            if iGeneration == 0: 
+                bestIndividual1stGen = []
+                bestIndividual1stGen.append(bestIndividual)
+
+        if fitnessList[jIndividual] > maximumGlobalFitness: 
+            maximumGlobalFitness = fitnessList[jIndividual]
+            bestGlobalIndividual = jIndividual
 
 
     # proceed with evolution
@@ -82,7 +104,7 @@ for iGeneration in range(NUMBEROFGENERATIONS):
         individualOne = population[individualOneIndex]
         individualTwo = population[individualTwoIndex]
 
-        if randomNumber < CROSSOVERPROB: 
+        if randomNumber < CROSSOVERPROB and alpha > 0.5: 
             
             newIndividualOne, newIndividualTwo = CrossOver(individualOne, individualTwo)
 
@@ -115,6 +137,14 @@ for iGeneration in range(NUMBEROFGENERATIONS):
     if iGeneration %100 == 0: 
         print('Best individual: ')
         print(computeTotalCost(computeArrangements(population[bestIndividual], FSIZES, MMAX), NQ))
+    costList.append(computeTotalCost(computeArrangements(population[bestIndividual], FSIZES, MMAX), NQ))
 
 
-visualize_blocks(population[bestIndividual], 'After genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(population[bestIndividual], FSIZES, MMAX), NQ)))
+plt.title('Developement of the cost with generations. populationsize: ' + str(POPULATIONSIZE))
+plt.xlabel('Generations')
+plt.ylabel('Cost')
+plt.plot(costList)
+plt.show()
+
+# visualize_blocks(population[bestIndividual1stGen[0]], 'Before genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(population[bestIndividual1stGen[0]], FSIZES, MMAX), NQ)))
+visualize_blocks(population[bestGlobalIndividual], 'After genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(population[bestGlobalIndividual], FSIZES, MMAX), NQ)))
