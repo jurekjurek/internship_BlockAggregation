@@ -14,8 +14,8 @@ Add tournamentselection for more individuals!!
 '''
 
 # global variables for GA
-NUMBEROFGENERATIONS = 1000
-POPULATIONSIZE = 300
+NUMBEROFGENERATIONS = 500
+POPULATIONSIZE = 4
 
 # these should be fine
 CROSSOVERPROB = 0.8
@@ -42,7 +42,7 @@ alpha = 1
 # 
 # INITIALIZE POPULATION - a list of aggregated processing blocks 
 # 
-population = InitializePopulation(POPULATIONSIZE, NQ, GATES, FSIZES, QMAX, MMAX, False)
+population = InitializePopulation(POPULATIONSIZE, NQ, GATES, FSIZES, QMAX, MMAX, True, False)
 
 costList = []
 
@@ -140,11 +140,33 @@ for iGeneration in range(NUMBEROFGENERATIONS):
     costList.append(computeTotalCost(computeArrangements(population[bestIndividual], FSIZES, MMAX), NQ))
 
 
+
+
+
+
+
+
+
+
 plt.title('Developement of the cost with generations. populationsize: ' + str(POPULATIONSIZE))
 plt.xlabel('Generations')
 plt.ylabel('Cost')
 plt.plot(costList)
 plt.show()
 
+bestArrangement = population[bestGlobalIndividual]
+
 # visualize_blocks(population[bestIndividual1stGen[0]], 'Before genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(population[bestIndividual1stGen[0]], FSIZES, MMAX), NQ)))
-visualize_blocks(population[bestGlobalIndividual], 'After genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(population[bestGlobalIndividual], FSIZES, MMAX), NQ)))
+visualize_blocks(bestArrangement, 'After genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(population[bestGlobalIndividual], FSIZES, MMAX), NQ)))
+
+
+
+
+
+processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, processingBlockArrangementAfterAlternatingSearch = optimizeArrangements(bestArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
+
+# newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(bestArrangement, FSIZES, QMAX, MMAX, NQ, 10000, 100, 3, 0, greedySpread = False, storeAllBestprocessingBlockArrangement= True, echo = False)
+
+visualize_blocks(processingBlockArrangementAfterAlternatingSearch, 'After genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangementAfterAlternatingSearch, FSIZES, MMAX), NQ)))
+
+

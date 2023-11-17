@@ -28,7 +28,7 @@ functions
 
 '''
 
-def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax, useOptimizedArrangements):
+def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax, useOptimizedArrangements, useAlternatingOptimization):
     '''
     The population is merely a list of processing block arrangements
     '''
@@ -46,6 +46,11 @@ def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax
 
             # print(np.shape(tempProcessingBlockArrangement))
             population.append(tempIndividualAfterDeterministicOptimization)
+        elif useAlternatingOptimization:
+            a ,b,c,d,e, tempIndividualAfterAlternatingOpt = optimizeArrangements(tempProcessingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 5, TSiterations= 10000, tabuListLength= 100, echo = False, visualOutput = False)
+            print(np.shape(tempIndividualAfterAlternatingOpt), np.shape(tempProcessingBlockArrangement))
+            population.append(tempIndividualAfterAlternatingOpt)
+
         else: 
             population.append(tempProcessingBlockArrangement)
 

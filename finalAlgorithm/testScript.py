@@ -71,7 +71,7 @@ if showAnimations:
 
 
 # now, for the last step. The alternating optimization
-processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, processingBlockArrangementAfterAlternatingSearch = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
+processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, processingBlockArrangementAfterAlternatingSearch = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 15, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
 
 if showPlots: 
     temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterAlternatingSearch, FSIZES, MMAX), NQ)
