@@ -17,6 +17,7 @@ to do:
 gates *only* operate on two qubits!!
 
 '''
+from itertools import permutations
 
 from qiskit import *
 # from qiskit.circuit.random import random_circuit
@@ -31,7 +32,7 @@ import numpy as np
 
 
 
-def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
+def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
     '''
     returns: 
         - List of numbered gates with correspoding qubits that are operated upon
@@ -99,15 +100,20 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations):
         These are the qubits that are being acted on. 
         '''
     
-    circuitToBeAltered.draw(output='mpl')
 
-    plt.show()
+    if display: 
+        circuitToBeAltered.draw(output='mpl')
 
-    print(circuitToBeAltered)
+        plt.show()
+
+        print(circuitToBeAltered)
 
     return gatesList, listOfMatrices
 
-# gatesList, listOfGateMatrices = CreateRandomCircuit(14, 4, 2)
+gatesList, listOfGateMatrices = CreateRandomCircuit(3, 8, 2, display = False)
+
+
+print(gatesList)
 
 # print(gatesList)
 # print(listOfGateMatrices)
@@ -129,9 +135,13 @@ The goal is to - in the processing zones - arrange as many qubits as possible th
 def CheckCommutation(matrixOne, matrixTwo): 
 
     resultOne = np.matmul(matrixOne, matrixTwo)
+
+    print(type(resultOne))
+
     resultTwo = np.matmul(matrixTwo, matrixOne)
 
-    if resultOne == resultTwo: 
+    # if resultOne == resultTwo: 
+    if np.array_equal(resultOne, resultTwo):
         return True 
     else: 
         return False 
@@ -149,6 +159,10 @@ def GetCommutationMatrix(listOfGateMatrices):
     for iGate in range(numberOfGates): 
         for jGate in range(numberOfGates): 
 
+            if iGate == jGate: 
+                commutationMatrix[iGate, jGate] = True
+                continue
+
             gate1Matrix = listOfGateMatrices[iGate]
             gate2Matrix = listOfGateMatrices[jGate]
 
@@ -157,7 +171,89 @@ def GetCommutationMatrix(listOfGateMatrices):
             else: 
                 commutationMatrix[iGate, jGate] = False
 
+    return commutationMatrix
+
+
+commutationMatrix = GetCommutationMatrix(listOfGateMatrices)
+
+
+def IsValidPermutation(permutation, commutationMatrix, originalList):
+    '''
+    originalList is the only constellation of gates that we know to be actually valid 
+    '''
+    # for the gates in the restriction list, it is forbidden to 
+
+
+    # for all elements in the matrix that do not commute: 
+    for iGate in range(len(commutationMatrix)): 
+
+        for jGate in range(len(commutationMatrix)):
+
+            if commutationMatrix[iGate, jGate] == False: 
+
+                # in this particular permutation of gates, look where the two gates are that do *not* commute
+                index1 = permutation.index(iGate)
+                index2 = permutation.index(jGate)
+
+
+                # where are gate 1 and 2 in the original list? 
+                originalIndex1 = np.where(originalList == iGate)[0][0]
+                originalIndex2 = np.where(originalList == jGate)[0][0]
+
+                # if the gates have switched the respectives sides to each other, the permutation is not allowed
+                if np.sign(originalIndex1 - originalIndex2) != np.sign(index1 - index2): 
+                    return False 
+
+
+            # if the gates do commute, the permutation is allowed
+            else: 
+                continue
+
                 
+    return True
+
+
+
+
+
+def GetAllValidCircuits(gates, commutationMatrix): 
+    '''
+    In order to use the Blockaggregation procedure effectively, we have to take into account the differen possible constellations of gates in the circuit
+    '''
+
+    # this is a weird step, but for now: 
+    # transform [[g1, [q1, q2]], [g2, [q1, q1]], ...] into a simple list [g1,g2, .. ]
+
+    newGatesList = []
+
+    for gateNo in range(len(gates)): 
+        newGatesList.append(gates[gateNo][0])
+
+
+
+    all_permutations = permutations(newGatesList)
+
+    print('DEBUDEGBUGBUDEGEUBDGEUBG', newGatesList)
+
+    valid_permutations = [p for p in all_permutations if IsValidPermutation(p, commutationMatrix, np.array(newGatesList))]
+
+
+    # store all allowed permutations in a matrix 
+    # we're able to get the length of valid_permutations
+    AllowedCircuits = np.zeros((len(valid_permutations), len(newGatesList)))
+
+
+    for i, permutation in enumerate(valid_permutations):
+        print(f"Permutation {i + 1}: {permutation}")
+        AllowedCircuits[i, :] = permutation
+
+
+    return AllowedCircuits
+
+
+AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
+
+print(commutationMatrix)
 
 '''
 Maybe write an own random function. 

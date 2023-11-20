@@ -7,6 +7,10 @@ def is_valid_permutation(permutation, commutation_restrictions, originalList):
     # for the gates in the restriction list, it is forbidden to 
 
     for gate1, gate2 in commutation_restrictions:
+        print('testestestsetsetset', gate1)
+
+        print(permutation)
+
         index1 = permutation.index(gate1)
         index2 = permutation.index(gate2)
 
@@ -33,11 +37,15 @@ def generate_valid_permutations(gates, commutation_restrictions, originalList):
     print(all_permutations)
 
     valid_permutations = [p for p in all_permutations if is_valid_permutation(p, commutation_restrictions, originalList)]
+
+    print('Laenge check!!', len(valid_permutations))
+
+
     return valid_permutations
 
 # Example usage:
 gates = ['g1', 'g2', 'g3']
-commutation_restrictions = [('g2', 'g3')]
+commutation_restrictions = [('g1', 'g3')]
 
 originalList = np.array(gates)
 
