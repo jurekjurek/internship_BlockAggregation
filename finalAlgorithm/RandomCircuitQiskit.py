@@ -136,8 +136,6 @@ def CheckCommutation(matrixOne, matrixTwo):
 
     resultOne = np.matmul(matrixOne, matrixTwo)
 
-    print(type(resultOne))
-
     resultTwo = np.matmul(matrixTwo, matrixOne)
 
     # if resultOne == resultTwo: 
@@ -160,22 +158,22 @@ def GetCommutationMatrix(listOfGateMatrices):
         for jGate in range(numberOfGates): 
 
             if iGate == jGate: 
-                commutationMatrix[iGate, jGate] = True
+                commutationMatrix[iGate, jGate] = 1
                 continue
 
             gate1Matrix = listOfGateMatrices[iGate]
             gate2Matrix = listOfGateMatrices[jGate]
 
             if CheckCommutation(gate1Matrix, gate2Matrix): 
-                commutationMatrix[iGate, jGate] = True
+                commutationMatrix[iGate, jGate] = 1
+                print('True!!')
             else: 
-                commutationMatrix[iGate, jGate] = False
+                commutationMatrix[iGate, jGate] = 0
 
     return commutationMatrix
 
 
 commutationMatrix = GetCommutationMatrix(listOfGateMatrices)
-
 
 def IsValidPermutation(permutation, commutationMatrix, originalList):
     '''
