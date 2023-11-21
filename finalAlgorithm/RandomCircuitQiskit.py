@@ -84,6 +84,8 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
         listOfMatrices[iGate+1] = result.get_unitary(tempCirc, decimals = 3)
 
+        print('Shape: ', np.shape(result.get_unitary(tempCirc, decimals = 3)))
+
 
         gatesList.append([iGate+1, involvedQubits])
         

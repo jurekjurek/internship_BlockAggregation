@@ -41,7 +41,7 @@ FSIZES = [4,4,4]
 
 circuitOfQubits = random_circuit(NQ, GATES)
 
-circuitOfQubits, listOfGateMatrices = CreateRandomCircuit(NQ, GATES, 2)
+circuitOfQubits, listOfGateMatrices = CreateRandomCircuit(NQ, GATES, 2, False)
 commutationMatrix = GetCommutationMatrix(listOfGateMatrices)
 AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
 
