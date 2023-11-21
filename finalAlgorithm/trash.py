@@ -66,3 +66,52 @@ trash for when swapqubits was more general
         tempValue = storageZoneQubits[indexQubit1]
         storageZoneQubits[indexQubit1] = storageZoneQubits[indexQubit2]
         storageZoneQubits[indexQubit2] = tempValue
+
+
+
+
+
+'''
+Was in BlockAggregation to deal with commutation 
+'''
+
+
+
+
+# das werde ich nicht mehr brauchen 
+
+# def GetCircuitVariations(circuit, commutationMatrix): 
+#     '''
+#     circuit is a list with this shape: 
+#         [[gate1, [qubit2, qubit2]], [gate2, [qubit1, qubit2]], ..., [gateN, [qubit1, qubit2]]]
+
+#     and commutationmatrix is a symmetric matrix that indicates - for the i,j-th element, if gate i and gate j commute. 
+
+#     '''
+#     listOfCircuits = []
+#     for iGate in circuit.reverse():
+#         qubit1 = iGate[0]
+#         qubit2 = iGate[1]
+
+
+#         circuitToBeAltered = circuit
+
+#         # now, for the other gate that we shall check if iGate commutes with 
+#         for jGate in circuit[0:iGate].reverse():
+
+#             # check if qubit1 or qubit2 are part of this gate
+#             # if so, we check if they commute. 
+#             # if they do commute, 
+#             if qubit1 in jGate: 
+#                 if commutationMatrix(iGate, jGate): 
+#                     circuitToBeAltered[iGate] = jGate
+#                     circuitToBeAltered[jGate] = iGate
+#                     listOfCircuits.append(circuitToBeAltered)
+                
+#             if qubit2 in jGate: 
+#                 if commutationMatrix(iGate, jGate): 
+#                     circuitToBeAltered[iGate] = jGate
+#                     circuitToBeAltered[jGate] = iGate
+#                     listOfCircuits.append(circuitToBeAltered)
+
+#     return listOfCircuits

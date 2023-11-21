@@ -166,7 +166,7 @@ def GetCommutationMatrix(listOfGateMatrices):
 
             if CheckCommutation(gate1Matrix, gate2Matrix): 
                 commutationMatrix[iGate, jGate] = 1
-                print('True!!')
+                print('Gate ', iGate, ' and ', jGate, ' commute.')
             else: 
                 commutationMatrix[iGate, jGate] = 0
 
@@ -222,6 +222,8 @@ def GetAllValidCircuits(gates, commutationMatrix):
     # this is a weird step, but for now: 
     # transform [[g1, [q1, q2]], [g2, [q1, q1]], ...] into a simple list [g1,g2, .. ]
 
+    print(gates)
+
     newGatesList = []
 
     for gateNo in range(len(gates)): 
@@ -231,7 +233,6 @@ def GetAllValidCircuits(gates, commutationMatrix):
 
     all_permutations = permutations(newGatesList)
 
-    print('DEBUDEGBUGBUDEGEUBDGEUBG', newGatesList)
 
     valid_permutations = [p for p in all_permutations if IsValidPermutation(p, commutationMatrix, np.array(newGatesList))]
 
@@ -245,13 +246,32 @@ def GetAllValidCircuits(gates, commutationMatrix):
         print(f"Permutation {i + 1}: {permutation}")
         AllowedCircuits[i, :] = permutation
 
+    finalList = []
+
+    # rebuild the original gateslist structure 
+    for i in range(len(AllowedCircuits)): 
+        currentCircuit = AllowedCircuits[i]
+
+        subList = []
+
+        for j in range(len(currentCircuit)): 
+            correspondingQubits = gates[int(currentCircuit[j])][1]
+            subList.append([int(currentCircuit[j]), correspondingQubits])
+
+        finalList.append(subList)
+        print('Length of final list: ', len(finalList))
+
+    print(finalList)
+
 
     return AllowedCircuits
 
 
 AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
 
-print(commutationMatrix)
+# print(AllowedArrangements)
+
+# print(commutationMatrix)
 
 '''
 Maybe write an own random function. 
