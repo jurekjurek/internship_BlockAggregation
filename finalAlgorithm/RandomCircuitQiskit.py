@@ -32,6 +32,33 @@ import numpy as np
 
 
 
+def CountGates(qc: QuantumCircuit): 
+    '''
+    This function counts the gates in a circuit
+    '''
+    gateCount = {qubit: 0 for qubit in qc.qubits}
+    for gate in qc.data: 
+        for qubit in gate.qubits: 
+            gateCount[qubit] += 1 
+    
+    return gateCount
+
+
+
+def RemoveUnusedQubits(qc: QuantumCircuit):
+    '''
+    This function removes qubits from a circuit that are unused. 
+    We will need this function when investigating the commutation behaviour between gates
+    '''
+    gateCount = CountGates(qc)
+    for qubit, count in gateCount.items()-1:
+        if count == 0: 
+            qc.qubits.remove(qubit)
+    
+    return qc
+
+
+
 def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
     '''
     returns: 
@@ -51,14 +78,21 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
     gatesList = [[0, involvedQubits]]
 
-    listOfMatrices = np.zeros(nGates, dtype=object)
 
-    backend = Aer.get_backend('unitary_simulator')
-    job = execute(circuitToBeAltered, backend)
-    result = job.result()
+    # this numpy array will contain matrices, these matrices will be of size 8x8. 
+    # They correspond to the commutation
+    # listOfMatrices = np.zeros(nGates, dtype=object)
 
-    listOfMatrices[0] = result.get_unitary(circuitToBeAltered, decimals = 3)
+    # backend = Aer.get_backend('unitary_simulator')
+    # job = execute(circuitToBeAltered, backend)
+    # result = job.result()
 
+    # listOfMatrices[0] = result.get_unitary(circuitToBeAltered, decimals = 3)
+
+
+    listOfTempCircuits = []
+
+    # iterate over gates that we are going to create
     for iGate in range(nGates-1):
 
         # if we reached the last gate, we do want to measure 
@@ -69,6 +103,9 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
             tempCirc, involvedQubits = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
 
 
+        # collect the tempcircuits to reason about commutation behaviour later 
+        listOfTempCircuits.append(tempCirc)
+
         # backend = Aer.get_backend('unitary_simulator')
         # job = execute(tempCirc, backend, shots=8192)
         # result = job.result()
@@ -77,19 +114,23 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
         # print(tempCirc)
 
-        backend = Aer.get_backend('unitary_simulator')
-        job = execute(tempCirc, backend)
-        result = job.result()
-        # print(result.get_unitary(tempCirc, decimals=3))
+        # backend = Aer.get_backend('unitary_simulator')
+        # job = execute(tempCirc, backend)
+        # result = job.result()
+        # # print(result.get_unitary(tempCirc, decimals=3))
 
-        listOfMatrices[iGate+1] = result.get_unitary(tempCirc, decimals = 3)
+        # listOfMatrices[iGate+1] = result.get_unitary(tempCirc, decimals = 3)
 
-        print('Shape: ', np.shape(result.get_unitary(tempCirc, decimals = 3)))
+
+
+        # At this point, we created the temporary circuit. Now we want to check if it commutes with the other circuits that we have seen. 
+
+
 
 
         gatesList.append([iGate+1, involvedQubits])
         
-
+        # add barrier to the main circuit, then add the temporary circuit
         circuitToBeAltered.barrier()
         circuitToBeAltered = circuitToBeAltered.compose(tempCirc)
 
@@ -110,9 +151,56 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
         print(circuitToBeAltered)
 
-    return gatesList, listOfMatrices
+    # I guess here is a good place to define the commuation matrix
+    commutationMatrix = np.zeros((nGates, nGates))
 
-gatesList, listOfGateMatrices = CreateRandomCircuit(3, 8, 2, display = False)
+    for gateNo in range(len(gatesList)): 
+
+        gate = gatesList[gateNo]
+        q1, q2 = gate[1]
+
+        for otherGateNo in range(len(gatesList)): 
+
+            # gate always commutes with itself
+            if gateNo == otherGateNo: 
+                continue
+
+            otherGate = gatesList[otherGateNo]
+            otherQ1, otherQ2 = otherGate[1]
+
+            # create two circuits based on the gates circuit representation (stored in tempcircuitList) 
+            # and see if the corresponding matrices commute
+            circuit1 = listOfTempCircuits[gateNo]
+            circuit2 = listOfTempCircuits[otherGateNo]
+
+
+            # the circuits now consist of two qubits each
+            circuit1 = RemoveUnusedQubits(circuit1)
+            circuit2 = RemoveUnusedQubits(circuit2)
+
+            # circuit1.add_register(circuit1.qregs[0])
+            circuit1.qubits.append(circuit1.qregs[0][0])
+
+            print('circuit one:')
+            print(circuit1)
+            print('circuit two: ')
+            print(circuit2)
+
+            # there's four cases to consider: 
+            if q1 == otherQ1: 
+
+                combinedCircuit = circuit1.compose(circuit2, [1, 3])
+                combinedCircuit.draw(output = 'mpl')
+                plt.show()
+
+
+
+
+
+
+    return gatesList #, listOfMatrices
+
+gatesList = CreateRandomCircuit(3, 8, 2, display = False)
 
 
 print(gatesList)
