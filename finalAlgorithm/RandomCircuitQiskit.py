@@ -151,13 +151,6 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
         # circuitToBeAltered.barrier()
         circuitToBeAltered = circuitToBeAltered.compose(tempCirc)
 
-        # circuitToBeAltered.draw(output = 'mpl')
-        # plt.title('COMPLETECIRC')
-        # plt.show()
-
-        # print(circuitToBeAltered)
-        # circuitToBeAltered = circuitToBeAltered + tempCirc
-
         '''
         for every new part of the circuit, evaluate the matrix and store it in a list of matrices. 
         Then, to check what gate acts on which qubits, look at the rows in the matrices where the matrix is not equal to the unitary matrix. 
@@ -191,36 +184,14 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
             # create two circuits based on the gates circuit representation (stored in tempcircuitList) 
             # and see if the corresponding matrices commute
-            print('why isnt this working? ')
-            print(listOfTempCircuits)
-            print(gateNo, otherGateNo)
-
             circuit1 = listOfTempCircuits[gateNo]
             circuit2 = listOfTempCircuits[otherGateNo]
-
-            print(circuit1)
-            print(circuit2)
 
             # the circuits now consist of two qubits each
             circuit1 = RemoveUnusedQubits(circuit1)
             circuit2 = RemoveUnusedQubits(circuit2)
 
-            print(circuit1)
-            print(circuit2)
-
             testCircuit = QuantumCircuit(3)
-
-            
-
-            print(circuit1)
-            print(circuit2)
-
-            # test1Circ = circuit1.compose(circuit2, [0, 1])
-            # test2Circ = circuit1.compose(circuit2, [1, 2])
-
-            # print(test1Circ)
-            # print(test2Circ)
-
 
             # create a circuit with three qubits with both of the gates 
             if q1 == otherQ1: 
@@ -243,9 +214,12 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
                 circuit2 = testCircuit.compose(circuit2, [1, 2])
                 # combinedCircuit = circuit1.compose(circuit2, [1, 2])
 
-            # if the two circuits do not share any qubits, just continue. They will certainly not commute 
+            # if the two circuits do not share any qubits, just continue. They will certainly commute 
             else: 
+                commutationMatrix[gateNo, otherGateNo] = 1
+                commutationMatrix[otherGateNo, gateNo] = 1
                 continue
+
             
             # get matrix representation of circuit 1
             backend = Aer.get_backend('unitary_simulator')
@@ -262,13 +236,9 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
             circuit2Matrix = result.get_unitary(circuit2, decimals = 3)
 
 
-            # if circuit1Matrix * circuit2Matrix == circuit2Matrix * circuit1Matrix:
-            #     commutationMatrix[gateNo, otherGateNo] = 1
-
-            #     # symmetric
-            #     commutationMatrix[otherGateNo, gateNo] = 1
-
             if CheckCommutation(circuit1Matrix, circuit2Matrix): 
+
+                print('We actually improved the method for gates', gate, ' and ', otherGate)
 
                 commutationMatrix[gateNo, otherGateNo] = 1
 
@@ -284,10 +254,11 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
     return gatesList, commutationMatrix
 
-gatesList, commutationMatrix = CreateRandomCircuit(5, 8, 2, display = False)
+gatesList, commutationMatrix = CreateRandomCircuit(10, 8, 2, display = False)
 
-
+# this is functioning
 print(gatesList)
+print(commutationMatrix)
 
 # print(gatesList)
 # print(listOfGateMatrices)
