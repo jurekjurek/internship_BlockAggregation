@@ -215,9 +215,11 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
                 # combinedCircuit = circuit1.compose(circuit2, [1, 2])
 
             # if the two circuits do not share any qubits, just continue. They will certainly commute 
+            # BUT: we do not set the indices of the commuationmatrix to one here. The commutationmatrix should tell us the commutation behaviour between 
+            # gates that are not obvious - such that share qubits!!
             else: 
-                commutationMatrix[gateNo, otherGateNo] = 1
-                commutationMatrix[otherGateNo, gateNo] = 1
+                # commutationMatrix[gateNo, otherGateNo] = 1
+                # commutationMatrix[otherGateNo, gateNo] = 1
                 continue
 
             
@@ -254,7 +256,7 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
     return gatesList, commutationMatrix
 
-gatesList, commutationMatrix = CreateRandomCircuit(10, 8, 2, display = False)
+gatesList, commutationMatrix = CreateRandomCircuit(20, 10, 2, display = False)
 
 # this is functioning
 print(gatesList)
@@ -322,8 +324,14 @@ def IsValidPermutation(permutation, commutationMatrix, originalList):
 
         for jGate in range(len(commutationMatrix)):
 
+            # if iGate == jGate: 
+
+            #     # remember: we only want non obvious commutation information
+            #     return False
+
             if commutationMatrix[iGate, jGate] == False: 
 
+                
                 # in this particular permutation of gates, look where the two gates are that do *not* commute
                 index1 = permutation.index(iGate)
                 index2 = permutation.index(jGate)
@@ -394,19 +402,51 @@ def GetAllValidCircuits(gates, commutationMatrix):
             subList.append([int(currentCircuit[j]), correspondingQubits])
 
         finalList.append(subList)
-        print('Length of final list: ', len(finalList))
+        # print('Length of final list: ', len(finalList))
 
-    print(finalList)
+    # print(finalList)
 
 
     return AllowedCircuits
 
 
-# AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
+AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
+
+print(np.shape(AllowedArrangements))
 
 # print(AllowedArrangements)
 
 # print(commutationMatrix)
+
+
+'''
+After the function GetValidCircuits that gets all of the possible valid circuits, which takes quite a long while, I provide an alternative 
+
+
+'''
+
+
+def GetOnlyOneTimeSwaps(commutationMatrix, gatesList): 
+
+    # get i and j index - corresponding to gates - in the commutationmatrix where commutationmatrix[i, j] == True
+    # Thus, get the matrices that commute non trivially. 
+    # Then, having sets of two gates [gateOne, gateTwo] iterate over these tuples. If we recognize that two tuples share one gate, add it to the tuple. 
+    # No!
+    # Check if there are neighbouring gates in these tuples, e.g. (1,2) or (4,5)
+    # If we have these, we can update the lists. Then, check if there are tuples like (1,3) or (5,7) among the tuples. If there are, and int((g2 - g1) /2)
+    # was a gate in the former neighbouring ones, we swap the corresponding qubits in the list.
+    # 
+    return None 
+
+
+
+
+def BreadthFirstSearch(): 
+    '''
+    
+    '''
+    
+
 
 '''
 Maybe write an own random function. 
