@@ -29,6 +29,8 @@ from qiskit.extensions import UnitaryGate
 import matplotlib.pyplot as plt
 import numpy as np
 
+import copy
+
 
 # necessary for later
 def CheckCommutation(matrixOne, matrixTwo): 
@@ -256,11 +258,11 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
     return gatesList, commutationMatrix
 
-gatesList, commutationMatrix = CreateRandomCircuit(20, 10, 2, display = False)
+gatesList, commutationMatrix = CreateRandomCircuit(5, 4, 2, display = False)
 
 # this is functioning
-print(gatesList)
-print(commutationMatrix)
+# print(gatesList)
+# print(commutationMatrix)
 
 # print(gatesList)
 # print(listOfGateMatrices)
@@ -410,9 +412,9 @@ def GetAllValidCircuits(gates, commutationMatrix):
     return AllowedCircuits
 
 
-AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
+# AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
 
-print(np.shape(AllowedArrangements))
+# print(np.shape(AllowedArrangements))
 
 # print(AllowedArrangements)
 
@@ -426,26 +428,139 @@ After the function GetValidCircuits that gets all of the possible valid circuits
 '''
 
 
-def GetOnlyOneTimeSwaps(commutationMatrix, gatesList): 
+# def GetOnlyOneTimeSwaps(commutationMatrix, gatesList): 
 
-    # get i and j index - corresponding to gates - in the commutationmatrix where commutationmatrix[i, j] == True
-    # Thus, get the matrices that commute non trivially. 
-    # Then, having sets of two gates [gateOne, gateTwo] iterate over these tuples. If we recognize that two tuples share one gate, add it to the tuple. 
-    # No!
-    # Check if there are neighbouring gates in these tuples, e.g. (1,2) or (4,5)
-    # If we have these, we can update the lists. Then, check if there are tuples like (1,3) or (5,7) among the tuples. If there are, and int((g2 - g1) /2)
-    # was a gate in the former neighbouring ones, we swap the corresponding qubits in the list.
-    # 
-    return None 
-
-
+#     # get i and j index - corresponding to gates - in the commutationmatrix where commutationmatrix[i, j] == True
+#     # Thus, get the matrices that commute non trivially. 
+#     # Then, having sets of two gates [gateOne, gateTwo] iterate over these tuples. If we recognize that two tuples share one gate, add it to the tuple. 
+#     # No!
+#     # Check if there are neighbouring gates in these tuples, e.g. (1,2) or (4,5)
+#     # If we have these, we can update the lists. Then, check if there are tuples like (1,3) or (5,7) among the tuples. If there are, and int((g2 - g1) /2)
+#     # was a gate in the former neighbouring ones, we swap the corresponding qubits in the list.
+#     # 
+#     return None 
 
 
-def BreadthFirstSearch(): 
-    '''
+
+
+# def BreadthFirstSearch(gatesList, commutationMatrix): 
+#     '''
     
+#     '''
+#     print(gatesList)
+
+#     newGatesList = []
+
+#     for gateNo in range(len(gatesList)): 
+#         newGatesList.append(gatesList[gateNo][0])
+
+#     # BFS works like this: We iterate over the swaps between direct neighbours. If they swap, we append a list of the array with swapped values to 
+#     # allAllowedArrangements. 
+#     # we then have a list of all possible arrangements. For each step in the tree, we check if 
+
+#     ListOfPossibleArrangements = [gatesList]
+
+#     # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
+#     commutingGates = np.where(commutationMatrix)
+
+
+#     for i in range(len(gatesList)-1):
+
+#         tempGate1 = gatesList[i]
+#         tempGate2 = gatesList[i+1]
+
+#         if [tempGate1, tempGate1] in commutingGates: 
+
+#             tempList = copy.deepcopy(gatesList)
+
+#             tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+
+#             if tempList in ListOfPossibleArrangements: 
+#                 continue
+
+#             ListOfPossibleArrangements.append(tempList)
+
+#             ListOfPossibleArrangements = BreadthFirstSearch(ListOfPossibleArrangements, commutationMatrix)
+
+#     return ListOfPossibleArrangements
+
+
+
+    # for i in range(len(commutingGates)):
+    #     currentGates = commutingGates[i]
+
+    #     tempGate1 = currentGates[0]
+    #     tempGate2 = currentGates[1]
+
+    #     if np.abs(tempGate1 - tempGate2) == 1: 
+            # tempList = copy.deepcopy(gatesList)
+
+            # tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+
+
+            # ListOfPossibleArrangements.append(tempList)
+
+
+# BreadthFirstSearch(gatesList, commutationMatrix)
+
+
+def BFS(listOfPossibleArrangements, commutationMatrix): 
     '''
-    
+    this function receives a list of gates in a certain order, and a commutation matrix 
+    BAsed on this commutationmatrix, it assembles all different combinations of gates in the list that are possible 
+    '''
+
+    # last element 
+    gatesList = listOfPossibleArrangements[-1]
+
+    # BFS works like this: We iterate over the swaps between direct neighbours. If they swap, we append a list of the array with swapped values to 
+    # allAllowedArrangements. 
+    # we then have a list of all possible arrangements. For each step in the tree, we check if 
+
+    ListOfPossibleArrangements = [gatesList]
+
+    # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
+    commutingGates = np.where(commutationMatrix)
+
+
+    for i in range(len(gatesList)-1):
+
+        tempGate1 = gatesList[i]
+        tempGate2 = gatesList[i+1]
+
+        if [tempGate1, tempGate1] in commutingGates: 
+
+            tempList = copy.deepcopy(gatesList)
+
+            tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+
+            if tempList in ListOfPossibleArrangements: 
+                continue
+
+            ListOfPossibleArrangements.append(tempList)
+
+            ListOfPossibleArrangements = BFS(ListOfPossibleArrangements, commutationMatrix)
+
+    return ListOfPossibleArrangements
+
+
+
+newGatesList = []
+
+for gateNo in range(len(gatesList)): 
+    newGatesList.append(gatesList[gateNo][0])
+
+# BFS works like this: We iterate over the swaps between direct neighbours. If they swap, we append a list of the array with swapped values to 
+# allAllowedArrangements. 
+# we then have a list of all possible arrangements. For each step in the tree, we check if 
+
+ListOfPossibleArrangements = [newGatesList]
+
+
+newLOPA = BFS(ListOfPossibleArrangements, commutationMatrix)
+
+print(commutationMatrix)
+print('newloopa', newLOPA)
 
 
 '''
