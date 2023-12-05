@@ -522,24 +522,48 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
     # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
     commutingGates = np.where(commutationMatrix)
 
+    if not np.any(commutationMatrix): 
+        return listOfPossibleArrangements
 
     for i in range(len(gatesList)-1):
 
         tempGate1 = gatesList[i]
         tempGate2 = gatesList[i+1]
 
-        if [tempGate1, tempGate1] in commutingGates: 
+        print('DEBUGDEBUG')
+        print(np.shape(commutingGates), commutingGates)
+        tempArray = np.array([tempGate1, tempGate2])
 
-            tempList = copy.deepcopy(gatesList)
+        isPresent = any(np.array_equal(tempArray, arr) for arr in commutingGates)
 
-            tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+        print('isitpresente????',isPresent)
 
-            if tempList in ListOfPossibleArrangements: 
-                continue
+        for j in range(len(commutingGates)): 
+            print(commutingGates[0])
+            if tempGate1 == commutingGates[0][j] and tempGate2 == commutingGates[1][j]: 
+                tempList = copy.deepcopy(gatesList)
 
-            ListOfPossibleArrangements.append(tempList)
+                tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
 
-            ListOfPossibleArrangements = BFS(ListOfPossibleArrangements, commutationMatrix)
+                if tempList in ListOfPossibleArrangements: 
+                    break
+
+                ListOfPossibleArrangements.append(tempList)
+
+                ListOfPossibleArrangements = BFS(ListOfPossibleArrangements, commutationMatrix)
+
+        # if [tempGate1, tempGate1] in commutingGates: 
+
+        #     tempList = copy.deepcopy(gatesList)
+
+        #     tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+
+        #     if tempList in ListOfPossibleArrangements: 
+        #         continue
+
+        #     ListOfPossibleArrangements.append(tempList)
+
+        #     ListOfPossibleArrangements = BFS(ListOfPossibleArrangements, commutationMatrix)
 
     return ListOfPossibleArrangements
 
@@ -561,7 +585,7 @@ newLOPA = BFS(ListOfPossibleArrangements, commutationMatrix)
 
 print(commutationMatrix)
 print('newloopa', newLOPA)
-
+exit()
 
 '''
 Maybe write an own random function. 
