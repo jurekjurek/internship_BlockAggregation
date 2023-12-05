@@ -517,7 +517,7 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
     # allAllowedArrangements. 
     # we then have a list of all possible arrangements. For each step in the tree, we check if 
 
-    ListOfPossibleArrangements = [gatesList]
+    # ListOfPossibleArrangements = [gatesList]
 
     # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
     commutingGates = np.where(commutationMatrix)
@@ -545,12 +545,12 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
 
                 tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
 
-                if tempList in ListOfPossibleArrangements: 
-                    break
+                if tempList in listOfPossibleArrangements: 
+                    continue
 
-                ListOfPossibleArrangements.append(tempList)
+                listOfPossibleArrangements.append(tempList)
 
-                ListOfPossibleArrangements = BFS(ListOfPossibleArrangements, commutationMatrix)
+                listOfPossibleArrangements = BFS(listOfPossibleArrangements, commutationMatrix)
 
         # if [tempGate1, tempGate1] in commutingGates: 
 
@@ -565,7 +565,7 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
 
         #     ListOfPossibleArrangements = BFS(ListOfPossibleArrangements, commutationMatrix)
 
-    return ListOfPossibleArrangements
+    return listOfPossibleArrangements
 
 
 
