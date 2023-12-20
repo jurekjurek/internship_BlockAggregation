@@ -22,16 +22,20 @@ showPlots = True
 showAnimations = False
 
 # create a random circuit with given properties 
-circuitOfQubits = random_circuit(NQ, GATES)
+# circuitOfQubits = random_circuit(NQ, GATES)
 
-if showPlots: 
-    show_circuit(NQ,circuitOfQubits)
+gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
+possibleArrangements = BFS([gatesList], commutationMatrix)
+
+
+# if showPlots: 
+#     show_circuit(NQ,circuitOfQubits)
 
 
 
 # given this circuit, we aggregate the qubits in processing blocks. 
 # Each processing block holds active qubits in processing zones and idle qubits in both processing and storage zones 
-processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+processingBlockArrangement = blockProcessCircuit(possibleArrangements, NQ, FSIZES, QMAX, MMAX)
 
 
 if showPlots: 
