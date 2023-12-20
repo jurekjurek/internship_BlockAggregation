@@ -45,7 +45,8 @@ circuitOfQubits = random_circuit(NQ, GATES)
 # commutationMatrix = GetCommutationMatrix(listOfGateMatrices)
 # AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
 
-circuitOfQubits, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
+gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
+possibleArrangements = BFS(gatesList, commutationMatrix)
 
 # Here, and this is important to understand, AllowedArrangements is a list of allowed circuit arrangements (due to gates being able to commute with each other)
 

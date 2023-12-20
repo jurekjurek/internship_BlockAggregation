@@ -258,28 +258,37 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
     return gatesList, commutationMatrix
 
-gatesList, commutationMatrix = CreateRandomCircuit(5, 4, 2, display = False)
+gatesList, commutationMatrix = CreateRandomCircuit(20, 40, 2, display = False)
 
-# this is functioning
-# print(gatesList)
-# print(commutationMatrix)
 
-# print(gatesList)
-# print(listOfGateMatrices)
 
-# print(listOfGateMatrices)
+def ShowCommutationMatrix(commutationMatrix):
+    '''
+    plot the commutationmatrix
+    '''
+    import seaborn as sns
 
-# print(listOfGateMatrices[0])
+    # Create a heatmap using Seaborn
 
-# print(type(listOfGateMatrices[0]))
-# print(np.shape(listOfGateMatrices[0]))
+    a = sns.heatmap(commutationMatrix, annot=False, cmap='binary')
 
-'''
-We arrange the qubits in such a way, that we get as many non-commuting gates in one processing zone as possible 
+    testArray = np.zeros((40, 40))
 
-The goal is to - in the processing zones - arrange as many qubits as possible that do not commute. 
-'''
+    for i in range(40): 
+        for j in range(40):
+            if i == j+1 or j == i+1: 
+                testArray[i, j] = 1
 
+    # Add labels and title
+    plt.xlabel('Gate no.')
+    plt.ylabel('Gate no.')
+    plt.title('Commutation Matrix')
+
+    b = sns.heatmap(testArray, annot=False, cmap='binary', alpha = 0.2, cbar=False)
+    # b.color
+    # Show the plot
+
+    plt.show()
 
 
 
@@ -525,6 +534,8 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
     # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
     commutingGates = np.where(commutationMatrix)
 
+    print('Commuting Gates:', commutingGates)
+
     if not np.any(commutationMatrix): 
         return listOfPossibleArrangements
 
@@ -533,17 +544,18 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
         tempGate1 = gatesList[i]
         tempGate2 = gatesList[i+1]
 
-        print('DEBUGDEBUG')
-        print(np.shape(commutingGates), commutingGates)
-        tempArray = np.array([tempGate1, tempGate2])
+        # print('DEBUGDEBUG')
+        # print(np.shape(commutingGates), commutingGates)
+        # tempArray = np.array([tempGate1, tempGate2])
 
-        isPresent = any(np.array_equal(tempArray, arr) for arr in commutingGates)
+        # isPresent = any(np.array_equal(tempArray, arr) for arr in commutingGates)
 
-        print('isitpresente????',isPresent)
+        # print('isitpresente????',isPresent)
 
-        for j in range(len(commutingGates)): 
-            print(commutingGates[0])
+        for j in range(len(commutingGates[0])): 
+            # print(commutingGates[0])
             if tempGate1 == commutingGates[0][j] and tempGate2 == commutingGates[1][j]: 
+                print('TESTEST, IS THIS EXECUTED???')
                 tempList = copy.deepcopy(tempGatesList)
 
                 tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
@@ -587,16 +599,11 @@ ListOfPossibleArrangements = [newGatesList]
 
 newLOPA = BFS(ListOfPossibleArrangements, commutationMatrix)
 
-print(commutationMatrix)
-print('newloopa', newLOPA)
-exit()
+# print(commutationMatrix)
 
-'''
-Maybe write an own random function. 
 
-Assemble random gate strings for each element in number of gates. Store these gates in a list. 
-iterate over the gates, check if they commute. 
 
-Only in the end, assemble them to a bigger quantum circuit. 
 
-'''
+
+print('newloopa', np.shape(newLOPA))
+ShowCommutationMatrix(commutationMatrix)
