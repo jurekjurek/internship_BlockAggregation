@@ -510,8 +510,11 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
     BAsed on this commutationmatrix, it assembles all different combinations of gates in the list that are possible 
     '''
 
-    # last element 
-    gatesList = listOfPossibleArrangements[-1]
+    tempGatesList = listOfPossibleArrangements[-1]
+
+    print(tempGatesList)
+
+    gatesList = [gate[0] for gate in tempGatesList]
 
     # BFS works like this: We iterate over the swaps between direct neighbours. If they swap, we append a list of the array with swapped values to 
     # allAllowedArrangements. 
@@ -541,7 +544,7 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
         for j in range(len(commutingGates)): 
             print(commutingGates[0])
             if tempGate1 == commutingGates[0][j] and tempGate2 == commutingGates[1][j]: 
-                tempList = copy.deepcopy(gatesList)
+                tempList = copy.deepcopy(tempGatesList)
 
                 tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
 
@@ -570,9 +573,10 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
 
 
 newGatesList = []
+newGatesList = gatesList
 
-for gateNo in range(len(gatesList)): 
-    newGatesList.append(gatesList[gateNo][0])
+# for gateNo in range(len(gatesList)): 
+#     newGatesList.append(gatesList[gateNo][0])
 
 # BFS works like this: We iterate over the swaps between direct neighbours. If they swap, we append a list of the array with swapped values to 
 # allAllowedArrangements. 
