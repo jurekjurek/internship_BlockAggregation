@@ -47,7 +47,8 @@ circuitOfQubits = random_circuit(NQ, GATES)
 
 gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
 possibleArrangements = BFS([gatesList], commutationMatrix)
-
+print('shape of possarr:', np.shape(possibleArrangements))
+print('len',  len(possibleArrangements))
 # Here, and this is important to understand, AllowedArrangements is a list of allowed circuit arrangements (due to gates being able to commute with each other)
 
 
@@ -136,56 +137,6 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
         GBest:              Gates covered by the set of qubits that maximize the gatecoverage 
         gateCoverageList:   For displaying purposes of the course of the algorithm 
 
-
-    If a qubit in one particular gate has been encountered already before, it is part of another pointer set. 
-    *BUT* if the gate of this qubit commutes with the other gate that acts on the same qubit in the next step, we can *move* the qubit from the first 
-    aggregated sublist to the recent one. 
-
-    ///////////////////////////////
-    Here is an EXAMPLE:
-
-    Gate 1: Qubits 9,1 
-    Gate 2: Qubits 1,2
-    Gate 3: Qubits 3,6
-    Gate 4: Qubits 5,7
-    Gate 5: Qubits 9,6
-
-    the first step in the algorithm will create S = [[9,1,2], [0], [3], [4], [5], [6], [7], [8]] if we have 10 qubits in total 
-
-    where the first two gates have been taken care of. The next steps are: 
-
-    S = [[9,1,2], [3,6], [5,7], [0], [4], [8]]
-
-    So far, so good. We have not encountered any difficulties with commutation yet. Now, however, we are confronted with the gate 
-    Gate 5: Qubits 9,6
-
-    What the algorithm would do so far, taking into account only the fact if there are equal qubits in two gates when evaluating their commutation: 
-    S = [[9,1,2,3,6], [5,7], [0], [4], [8]]
-
-    But, what we could do now, when it happens that gate 3 and gate 5 commute: 
-    S = [[9,1,2,6], [5,7], [0], [3], [4], [8]]
-
-    as an intermediate step, which *could* lead to a better gate coverage. 
-    The best gate coverage could then correspond to this intermediate step. If not, we would of course have to execute gate 5 now as well which would lead us 
-    again to: 
-    S = [[9,1,2,6,3], [5,7], [0], [4], [8]]
-
-    //////////////////////////////////////////////////
-    
-    The new commutation aspect only gives us these intermediate steps that *could* provide better gate coverages. And this is essentially what we want. 
-
-    What we essentially have to do in the algorithm: 
-    
-    Upon merging to sets, merging qubits together: 
-    - check if the gates containing the same qubits commute. If they commute: 
-        - merge the qubit possibly to next sublists on the left. 
-        - essentially do the algorithm, but start now at the left of the sublist that was skipped due to commutation
-        - if in there, there is a gate involved that this gate commutes with, we dont have to skip this sublist, since there are only 2 qubits in each gate. 
-        - Create the new aggregated qubit sets, merge the corresponding qubit
-        - in the next step, execute the gate of interest (corresponding to the last step in the example above)
-        - Carry on
-    - if they don't commute -> carry on 
-
     '''
 
     # S is a list of lists! G is a list of lists! 
@@ -213,9 +164,6 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
 
     # for debugging
     gateCoverageList = []
-
-    # iterate over possible arrangements of gates in circuits
-    # for circuitOfQubits in possibleArrangements: 
 
 
     # iterate over layers 
@@ -638,7 +586,7 @@ We can implement the main algorithm
 '''
 
 
-def blockProcessCircuit(possibleArrangements, nQ, storageZoneShape, qMax, mMax):
+def blockProcessCircuit(possibleArrangementsList, nQ, storageZoneShape, qMax, mMax):
     '''
     This is the Main function executing the Block aggregation algorithm step by step. 
 
@@ -659,13 +607,20 @@ def blockProcessCircuit(possibleArrangements, nQ, storageZoneShape, qMax, mMax):
 
     # first of all, determine which circuit covers the gates best: 
     bestGateCoverageList = []
-    for circuit in possibleArrangements: 
+    for circuitNo in range(len(possibleArrangementsList)): 
+        circuit = possibleArrangementsList[circuitNo]
         a, b, c, bestGateCoverage      = AggregateBlocksStep(circuit, nQ, qMax, mMax)
+        print(circuit, bestGateCoverage)
         bestGateCoverageList.append(bestGateCoverage)
     
     # choose circuit with best gateCoverage 
-    rawCircuit = possibleArrangements[bestGateCoverageList.index(max(bestGateCoverageList))]
+    rawCircuit = possibleArrangementsList[bestGateCoverageList.index(max(bestGateCoverageList))]
 
+    plt.plot(bestGateCoverageList)
+    plt.title('Best gate coverage over the possible commutations')
+    plt.xlabel('Arrangement Number')
+    plt.ylabel('Gate Coverage')
+    plt.show()
 
     # Raw Circuit to be manipulated 
     rawCircuitChange = rawCircuit
@@ -705,11 +660,21 @@ def blockProcessCircuit(possibleArrangements, nQ, storageZoneShape, qMax, mMax):
 
     return aggregatedBlocks
 
-
+print(len(possibleArrangements))
 processingBlockArrangement = blockProcessCircuit(possibleArrangements, NQ, FSIZES, QMAX, MMAX)
 # processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
 # visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
 # visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
+
+
+'''
+Some stuff about the commutation matrix: 
+
+If two squares lie on top of each other, then we have another arrangement for sure. From there, how do we get more arrangements? 
+If the neighbour of the square in which the two overlap, is also black, then we have one more arrangement! 
+E.g.: 
+2 commmutes with 1. and then furthermore 1 commutes with 3. Then we have from [1,2,3] -> [1,2,3], [2,1,3], [2,3,1]
+'''
 
