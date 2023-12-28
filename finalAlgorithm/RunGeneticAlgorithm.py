@@ -19,6 +19,8 @@ POPULATIONSIZE = 4
 
 # these should be fine
 CROSSOVERPROB = 0.8
+
+# good value is 1/ chromosomelength. Thus, 1/(20*8) I suppose
 MUTATIONPROB = 0.025
 
 TOURNAMENTPROB = 0.75
