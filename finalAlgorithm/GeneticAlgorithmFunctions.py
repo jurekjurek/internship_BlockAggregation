@@ -38,7 +38,12 @@ def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax
     population = []
 
     for i in range(populationSize): 
-        tempProcessingBlockArrangement = blockProcessCircuit(circuitOfQubits, nQ, storageZoneShape, qMax, mMax)
+
+        # create possible arrangements according to commutation etc
+        gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
+        possibleArrangements = BFS([gatesList], commutationMatrix)
+
+        tempProcessingBlockArrangement = blockProcessCircuit(possibleArrangements, nQ, storageZoneShape, qMax, mMax)
 
 
         if useOptimizedArrangements:
@@ -156,11 +161,19 @@ def Mutation(individualOriginal, mutationProbability, alpha):
 
     '''
 
+    if alpha > 0.5: 
+        factorOne = 1/3
+        factorTwo = 2/3
+        factorThree = 1
+    else: 
+        factorOne = 2/3
+        factorTwo = 1
+        factorThree = 0
 
     randomProbability = random.random()
 
     # swap qubits in processing zone
-    if randomProbability < mutationProbability: #* 1/2:
+    if randomProbability < mutationProbability* factorOne:
 
         randomLayer = random.randint(0,len(individual)-1)
 
@@ -194,9 +207,9 @@ def Mutation(individualOriginal, mutationProbability, alpha):
     # swap idle qubits with each other. Between storage zones as well as inside of individual storage zones 
 
     # redefine randomProbability
-    randomProbability = random.random()
+    # randomProbability = random.random()
 
-    if randomProbability < mutationProbability: #* 0.75:
+    elif randomProbability < mutationProbability * factorTwo:
 
         # again, pick a random layer 
         randomLayer = random.randint(0,len(individual)-1)
@@ -228,9 +241,9 @@ def Mutation(individualOriginal, mutationProbability, alpha):
     # randomly swap whole processing zones with each other 
 
     # redefine once more 
-    randomProbability = random.random()
+    # randomProbability = random.random()
 
-    if randomProbability < mutationProbability and alpha > 0.5: 
+    elif randomProbability < mutationProbability * factorThree: 
 
         # start again by picking random layer 
         randomLayer = random.randint(0,len(individual)-1)

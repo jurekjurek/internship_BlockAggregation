@@ -35,7 +35,8 @@ possibleArrangements = BFS([gatesList], commutationMatrix)
 
 # given this circuit, we aggregate the qubits in processing blocks. 
 # Each processing block holds active qubits in processing zones and idle qubits in both processing and storage zones 
-processingBlockArrangement = blockProcessCircuit(possibleArrangements, NQ, FSIZES, QMAX, MMAX)
+bestCircuit = DetermineBestArrangement(possibleArrangements, NQ, QMAX, MMAX)
+processingBlockArrangement = blockProcessCircuit(bestCircuit, NQ, FSIZES, QMAX, MMAX)
 
 
 if showPlots: 

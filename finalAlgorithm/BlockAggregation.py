@@ -47,8 +47,6 @@ circuitOfQubits = random_circuit(NQ, GATES)
 
 gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
 possibleArrangements = BFS([gatesList], commutationMatrix)
-print('shape of possarr:', np.shape(possibleArrangements))
-print('len',  len(possibleArrangements))
 # Here, and this is important to understand, AllowedArrangements is a list of allowed circuit arrangements (due to gates being able to commute with each other)
 
 
@@ -554,7 +552,7 @@ def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
         if storageZone >= 0 and len(storageZoneQubits[storageZone]) < storageZoneShape[storageZone]:
 
             # take the first qubit in the idle pool 
-            # q = newIdlePool[0]
+            q = newIdlePool[0]
 
             randomQubitNo = random.randint(0, len(newIdlePool) - 1)
 
@@ -585,8 +583,21 @@ Now, all subalgorithms have been taken care of.
 We can implement the main algorithm 
 '''
 
+def DetermineBestArrangement(possibleArrangementsList, nQ, qMax, mMax): 
 
-def blockProcessCircuit(possibleArrangementsList, nQ, storageZoneShape, qMax, mMax):
+    bestGateCoverageList = []
+    for circuitNo in range(len(possibleArrangementsList)): 
+        circuit = possibleArrangementsList[circuitNo]
+        a, b, c, bestGateCoverage      = AggregateBlocksStep(circuit, nQ, qMax, mMax)
+        bestGateCoverageList.append(bestGateCoverage)
+    
+    # choose circuit with best gateCoverage 
+    bestCircuit = possibleArrangementsList[bestGateCoverageList.index(max(bestGateCoverageList))]
+
+    return bestCircuit 
+
+
+def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
     '''
     This is the Main function executing the Block aggregation algorithm step by step. 
 
@@ -606,21 +617,21 @@ def blockProcessCircuit(possibleArrangementsList, nQ, storageZoneShape, qMax, mM
     '''
 
     # first of all, determine which circuit covers the gates best: 
-    bestGateCoverageList = []
-    for circuitNo in range(len(possibleArrangementsList)): 
-        circuit = possibleArrangementsList[circuitNo]
-        a, b, c, bestGateCoverage      = AggregateBlocksStep(circuit, nQ, qMax, mMax)
-        print(circuit, bestGateCoverage)
-        bestGateCoverageList.append(bestGateCoverage)
+    # bestGateCoverageList = []
+    # for circuitNo in range(len(possibleArrangementsList)): 
+    #     circuit = possibleArrangementsList[circuitNo]
+    #     a, b, c, bestGateCoverage      = AggregateBlocksStep(circuit, nQ, qMax, mMax)
+    #     bestGateCoverageList.append(bestGateCoverage)
     
     # choose circuit with best gateCoverage 
-    rawCircuit = possibleArrangementsList[bestGateCoverageList.index(max(bestGateCoverageList))]
+    # rawCircuit = possibleArrangementsList[bestGateCoverageList.index(max(bestGateCoverageList))]
 
-    plt.plot(bestGateCoverageList)
-    plt.title('Best gate coverage over the possible commutations')
-    plt.xlabel('Arrangement Number')
-    plt.ylabel('Gate Coverage')
-    plt.show()
+    # plot best gate coverage for the different arrangements - mostly no difference, but sometimes yes 
+    # plt.plot(bestGateCoverageList)
+    # plt.title('Best gate coverage over the possible commutations')
+    # plt.xlabel('Arrangement Number')
+    # plt.ylabel('Gate Coverage')
+    # plt.show()
 
     # Raw Circuit to be manipulated 
     rawCircuitChange = rawCircuit
@@ -660,8 +671,7 @@ def blockProcessCircuit(possibleArrangementsList, nQ, storageZoneShape, qMax, mM
 
     return aggregatedBlocks
 
-print(len(possibleArrangements))
-processingBlockArrangement = blockProcessCircuit(possibleArrangements, NQ, FSIZES, QMAX, MMAX)
+# processingBlockArrangement = blockProcessCircuit(possibleArrangements, NQ, FSIZES, QMAX, MMAX)
 # processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 

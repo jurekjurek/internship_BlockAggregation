@@ -15,15 +15,15 @@ Add tournamentselection for more individuals!!
 
 # global variables for GA
 NUMBEROFGENERATIONS = 500
-POPULATIONSIZE = 4
+POPULATIONSIZE = 100
 
 # these should be fine
-CROSSOVERPROB = 0.8
+CROSSOVERPROB = 0
 
 # good value is 1/ chromosomelength. Thus, 1/(20*8) I suppose
-MUTATIONPROB = 0.025
+MUTATIONPROB = 0.5
 
-TOURNAMENTPROB = 0.75
+TOURNAMENTPROB = 0.8
 TOURNAMENTSIZE = 2
 
 # global variables for Block aggregation
@@ -118,8 +118,7 @@ for iGeneration in range(NUMBEROFGENERATIONS):
             tempPopulation[jIndividual+1] = individualTwo
 
 
-    # elitism 
-    tempPopulation[0] = population[bestIndividual]
+
 
     # 
     # MUTATION
@@ -128,6 +127,8 @@ for iGeneration in range(NUMBEROFGENERATIONS):
         tempIndividual = Mutation(tempPopulation[jIndividual], MUTATIONPROB, alpha)
         tempPopulation[jIndividual] = tempIndividual
     
+    # elitism - important: after! mutation and crossover
+    tempPopulation[0] = population[bestIndividual]
 
     # update alpha
     alpha *= 0.99
@@ -169,6 +170,6 @@ processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, p
 
 # newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(bestArrangement, FSIZES, QMAX, MMAX, NQ, 10000, 100, 3, 0, greedySpread = False, storeAllBestprocessingBlockArrangement= True, echo = False)
 
-visualize_blocks(processingBlockArrangementAfterAlternatingSearch, 'After genetic algorithm, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangementAfterAlternatingSearch, FSIZES, MMAX), NQ)))
+visualize_blocks(processingBlockArrangementAfterAlternatingSearch, 'After alternating search, cost: ' + str(computeTotalCost(computeArrangements(processingBlockArrangementAfterAlternatingSearch, FSIZES, MMAX), NQ)))
 
 

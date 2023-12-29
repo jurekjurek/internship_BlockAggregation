@@ -87,7 +87,7 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
         print('Error, number of gates smaller than one.')
         return 
 
-    print(circuitToBeAltered)
+    # print(circuitToBeAltered)
 
     gatesList = [[0, involvedQubits]]
 
@@ -195,7 +195,8 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
             if CheckCommutation(circuit1Matrix, circuit2Matrix): 
 
-                print('We actually found a commutation between ', gate, ' and ', otherGate)
+                # DEBUG 
+                # print('We actually found a commutation between ', gate, ' and ', otherGate)
 
                 commutationMatrix[gateNo, otherGateNo] = 1
 
@@ -292,4 +293,4 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
 newLOPA = BFS([gatesList], commutationMatrix)
 # print((newLOPA))
 # print(newLOPA[0])
-ShowCommutationMatrix(commutationMatrix)
+# ShowCommutationMatrix(commutationMatrix)
