@@ -291,6 +291,19 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
 
 
 newLOPA = BFS([gatesList], commutationMatrix)
+
+testMatrix = np.zeros((5,5))
+testMatrix[1][2] = 1 
+testMatrix[2][1] = 1
+testMatrix[3][4] = 1
+testMatrix[4][3] = 1
+testMatrix[0][2] = 1
+testMatrix[2][0] = 1
+
+print(testMatrix)
+test = BFS([[[1],[2],[3],[4],[5]]], testMatrix)
+
+print(test)
 # print((newLOPA))
 # print(newLOPA[0])
 # ShowCommutationMatrix(commutationMatrix)

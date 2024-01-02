@@ -186,4 +186,4 @@ def CalculatePossibleImprovement(numberOfIterations, all):
 
 
 
-CalculatePossibleImprovement(500, all = False)
+CalculatePossibleImprovement(1000, all = False)
