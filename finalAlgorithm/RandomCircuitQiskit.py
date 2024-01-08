@@ -125,6 +125,8 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
 
         print(circuitToBeAltered)
 
+    return circuitToBeAltered, gatesList, listOfTempCircuits
+
     # define commutation matrix. This is a boolean matrix indicating if the i-th and j-th gate commute 
     commutationMatrix = np.zeros((nGates, nGates))
 
@@ -206,7 +208,7 @@ def CreateRandomCircuit(nQubits, nGates, maxNumberOperations, display):
     return gatesList, commutationMatrix
 
 
-gatesList, commutationMatrix = CreateRandomCircuit(20, 40, 2, display = False)
+# gatesList, commutationMatrix = CreateRandomCircuit(20, 40, 2, display = False)
 
 
 
@@ -246,10 +248,11 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
     Based on this commutationmatrix, it assembles all different combinations of gates in the list that are possible.
     It works in an iterative manner. 
     '''
+    print(len(listOfPossibleArrangements))
 
     for listNo in range(len(listOfPossibleArrangements)): 
 
-        print(listNo)
+        # print(listNo)
 
         tempGatesList = listOfPossibleArrangements[listNo]
 
@@ -297,20 +300,80 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
 
 
 
-newLOPA = BFS([gatesList], commutationMatrix)
+def BFS_Two(subList, tabuList, commutationMatrix):
+    '''
+    subList = the list that we actually want to iterate over 
+    tabuList = the list of all possible arrangements
+    commutationMatrix = ...
+    '''
 
-testMatrix = np.zeros((5,5))
-testMatrix[1][2] = 1 
-testMatrix[2][1] = 1
-testMatrix[3][4] = 1
-testMatrix[4][3] = 1
-testMatrix[0][2] = 1
-testMatrix[2][0] = 1
+    for listNo in range(len(subList)): 
 
-print(testMatrix)
-test = BFS([[[1],[2],[3],[4],[5]]], testMatrix)
+        # print(listNo)
 
-print(test)
+        tempGatesList = tabuList[listNo]
+
+        # the list of gates of interest if always the one that was appended to the list of possible arrangements last 
+        # tempGatesList = tabuList[-1]
+
+        # define a second list, in which only the gateNumber is stored: [[1, [q1, q2]], [2, [q1, q2]], ...] becomes [1, 2, ...]
+        gatesList = [gate[0] for gate in tempGatesList]
+
+        # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
+        # commutingGates is a 2d array, where the j-th index of commutingGates[0] and the j-th index of commutingGates[1] commute
+        commutingGates = np.where(commutationMatrix)
+
+        # if there is no gate that commutes with another one non trivially, just return 
+        if not np.any(commutationMatrix): 
+            return tabuList
+
+        newSublist = []
+
+        for i in range(len(gatesList)-1):
+
+            # pick two neighbouring gates. *only* neighbouring gates in the current list are of interest!  
+            tempGate1 = gatesList[i]
+            tempGate2 = gatesList[i+1]
+
+            # check if they commute by iterating over the commuting gates
+            for j in range(len(commutingGates[0])): 
+
+                if tempGate1 == commutingGates[0][j] and tempGate2 == commutingGates[1][j]: 
+                    tempList = copy.deepcopy(tempGatesList)
+
+                    # swap the gates
+                    tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+
+                    # if this arrangement is in the list already, continue 
+                    if tempList in tabuList: 
+                        print('already in list')
+                        continue
+
+                    # if not, we append this newly formed list to the collection of lists 
+                    tabuList.append(tempList)
+                    newSublist.append(tempList)
+
+        # and we perform the BFS on this new list
+        tabuList = BFS_Two(newSublist, tabuList, commutationMatrix)
+
+    return tabuList
+
+
+
+# newLOPA = BFS([gatesList], commutationMatrix)
+
+# testMatrix = np.zeros((5,5))
+# testMatrix[1][2] = 1 
+# testMatrix[2][1] = 1
+# testMatrix[3][4] = 1
+# testMatrix[4][3] = 1
+# testMatrix[0][2] = 1
+# testMatrix[2][0] = 1
+
+# print(testMatrix)
+# test = BFS_Two([[[1],[2],[3],[4],[5]]], [[[1],[2],[3],[4],[5]]], testMatrix)
+
+# print(test)
 # print((newLOPA))
 # print(newLOPA[0])
 # ShowCommutationMatrix(commutationMatrix)
