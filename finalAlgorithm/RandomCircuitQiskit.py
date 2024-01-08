@@ -247,44 +247,51 @@ def BFS(listOfPossibleArrangements, commutationMatrix):
     It works in an iterative manner. 
     '''
 
-    # the list of gates of interest if always the one that was appended to the list of possible arrangements last 
-    tempGatesList = listOfPossibleArrangements[-1]
+    for listNo in range(len(listOfPossibleArrangements)): 
 
-    # define a second list, in which only the gateNumber is stored: [[1, [q1, q2]], [2, [q1, q2]], ...] becomes [1, 2, ...]
-    gatesList = [gate[0] for gate in tempGatesList]
+        print(listNo)
 
-    # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
-    # commutingGates is a 2d array, where the j-th index of commutingGates[0] and the j-th index of commutingGates[1] commute
-    commutingGates = np.where(commutationMatrix)
+        tempGatesList = listOfPossibleArrangements[listNo]
 
-    # if there is no gate that commutes with another one non trivially, just return 
-    if not np.any(commutationMatrix): 
-        return listOfPossibleArrangements
+        # the list of gates of interest if always the one that was appended to the list of possible arrangements last 
+        # tempGatesList = listOfPossibleArrangements[-1]
 
-    for i in range(len(gatesList)-1):
+        # define a second list, in which only the gateNumber is stored: [[1, [q1, q2]], [2, [q1, q2]], ...] becomes [1, 2, ...]
+        gatesList = [gate[0] for gate in tempGatesList]
 
-        # pick two neighbouring gates. *only* neighbouring gates in the current list are of interest!  
-        tempGate1 = gatesList[i]
-        tempGate2 = gatesList[i+1]
+        # we want to know which matrices commute, so we get all of the indices, corresponding to gates - where matrices commute 
+        # commutingGates is a 2d array, where the j-th index of commutingGates[0] and the j-th index of commutingGates[1] commute
+        commutingGates = np.where(commutationMatrix)
 
-        # check if they commute by iterating over the commuting gates
-        for j in range(len(commutingGates[0])): 
+        # if there is no gate that commutes with another one non trivially, just return 
+        if not np.any(commutationMatrix): 
+            return listOfPossibleArrangements
 
-            if tempGate1 == commutingGates[0][j] and tempGate2 == commutingGates[1][j]: 
-                tempList = copy.deepcopy(tempGatesList)
+        for i in range(len(gatesList)-1):
 
-                # swap the gates
-                tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+            # pick two neighbouring gates. *only* neighbouring gates in the current list are of interest!  
+            tempGate1 = gatesList[i]
+            tempGate2 = gatesList[i+1]
 
-                # if this arrangement is in the list already, continue 
-                if tempList in listOfPossibleArrangements: 
-                    continue
+            # check if they commute by iterating over the commuting gates
+            for j in range(len(commutingGates[0])): 
 
-                # if not, we append this newly formed list to the collection of lists 
-                listOfPossibleArrangements.append(tempList)
+                if tempGate1 == commutingGates[0][j] and tempGate2 == commutingGates[1][j]: 
+                    tempList = copy.deepcopy(tempGatesList)
 
-                # and we perform the BFS on this new list
-                listOfPossibleArrangements = BFS(listOfPossibleArrangements, commutationMatrix)
+                    # swap the gates
+                    tempList[tempGate1], tempList[tempGate2] = tempList[tempGate2], tempList[tempGate1]
+
+                    # if this arrangement is in the list already, continue 
+                    if tempList in listOfPossibleArrangements: 
+                        print('already in list')
+                        continue
+
+                    # if not, we append this newly formed list to the collection of lists 
+                    listOfPossibleArrangements.append(tempList)
+
+                    # and we perform the BFS on this new list
+                    listOfPossibleArrangements = BFS(listOfPossibleArrangements, commutationMatrix)
 
     return listOfPossibleArrangements
 
