@@ -188,6 +188,40 @@ class RandomCircuit:
             return False 
 
 
+    def CreateCommutationMatrix(self): 
+
+        self.commutationMatrix = np.zeros((self.nGates, self.nGates))
+        for gateNo in range(len(self.gatesList)):
+
+            for otherGateNo in range(len(self.gatesList)):
+
+                if gateNo >= otherGateNo: 
+                    continue
+            
+                if self.DoGatesCommute(gateNo, otherGateNo): 
+                    self.commutationMatrix[gateNo][otherGateNo] = 1
+                    self.commutationMatrix[otherGateNo][gateNo] = 1
+
+        import seaborn as sns
+
+        sns.heatmap(self.commutationMatrix, annot=False, cmap='binary')
+
+        testArray = np.zeros((40, 40))
+
+        for i in range(40): 
+            for j in range(40):
+                if i == j+1 or j == i+1: 
+                    testArray[i, j] = 1
+
+        # Add labels and title
+        plt.xlabel('Gate no.')
+        plt.ylabel('Gate no.')
+        plt.title('Commutation Matrix')
+
+        sns.heatmap(testArray, annot=False, cmap='binary', alpha = 0.2, cbar=False)
+
+        plt.show()
+
 
     def SwapGates(self, tempArrangement, gateOne, gateTwo): 
         tempList = copy.deepcopy(tempArrangement)
@@ -213,7 +247,6 @@ class RandomCircuit:
         for gateNo in range(len(gatesList)): 
             
             # python indexing, that's why the '-1'
-            print(gatesList[gateNo])
             gate = gatesList[gateNo]
 
             if gateNo >= len(gatesList)-2:
@@ -267,6 +300,12 @@ class RandomCircuit:
             if listOfPossiblePermutations[i] not in self.allPossibleArrangements: 
                 self.allPossibleArrangements.append(listOfPossiblePermutations[i])
 
+                thisPerm = all_permutations[i]
+                involvedGates = []
+                for j in range(len(thisPerm)): 
+                    if j == 1: 
+                        involvedGates.append(possibleSwaps[j])
+
 
                 # only if the next neighbour also commutes, look at it 
                 # tempGateOne = possibleSwaps[i][0]
@@ -278,9 +317,16 @@ class RandomCircuit:
                 #     
 
                 # if the commutationmatrix for the corresponding gates is == 1, we consider this case. Otherwise we do not. 
-                
-                if self.commutationMatrix[][] == 1:
-                    self.FindAllPermutations(listOfPossiblePermutations[i])
+
+                for involvedGate in involvedGates: 
+                    tempGateOne = involvedGate[0]
+                    tempGateTwo = involvedGate[1]
+
+                    if (tempGateOne + self.BFScount) >= len(gatesList) or tempGateTwo <= self.BFScount: 
+                        continue  
+
+                    if self.commutationMatrix[tempGateOne-1][tempGateOne+self.BFScount] == 1 or self.commutationMatrix[tempGateTwo-self.BFScount-2][tempGateTwo-1] == 1:
+                        self.FindAllPermutations(listOfPossiblePermutations[i])
 
 
 
@@ -292,8 +338,10 @@ class RandomCircuit:
 
 
 
-randomCirc = RandomCircuit(20, 40)
+randomCirc = RandomCircuit(5, 5)
 
 print(randomCirc.circuit)
 
 randomCirc.FindAllPossibleArrangements()
+
+randomCirc.CreateCommutationMatrix()
