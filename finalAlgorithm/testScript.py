@@ -24,8 +24,8 @@ showAnimations = False
 # create a random circuit with given properties 
 # circuitOfQubits = random_circuit(NQ, GATES)
 
-gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
-possibleArrangements = BFS([gatesList], commutationMatrix)
+asdf, circuitOfQubits, tempCircList = CreateRandomCircuit(NQ, GATES, 2, display= False)
+# possibleArrangements = BFS([gatesList], commutationMatrix)
 
 
 # if showPlots: 
@@ -35,8 +35,8 @@ possibleArrangements = BFS([gatesList], commutationMatrix)
 
 # given this circuit, we aggregate the qubits in processing blocks. 
 # Each processing block holds active qubits in processing zones and idle qubits in both processing and storage zones 
-bestCircuit = DetermineBestArrangement(possibleArrangements, NQ, QMAX, MMAX)
-processingBlockArrangement = blockProcessCircuit(bestCircuit, NQ, FSIZES, QMAX, MMAX)
+# bestCircuit = DetermineBestArrangement(possibleArrangements, NQ, QMAX, MMAX)
+processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
 if showPlots: 
@@ -80,7 +80,7 @@ processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, p
 
 if showPlots: 
     temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterAlternatingSearch, FSIZES, MMAX), NQ)
-    visualize_blocks(processingBlockArrangementAfterAlternatingSearch, 'Processing block arrangement after tabu search, cost: ' + str(temporaryCost))
+    visualize_blocks(processingBlockArrangementAfterAlternatingSearch, 'Processing block arrangement after alternating search, cost: ' + str(temporaryCost))
 
 
 if showAnimations: 

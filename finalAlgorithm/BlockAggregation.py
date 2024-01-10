@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# from matplotlib.lines import Line
-# from matplotlib.patches import Circle
 import random
 import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
@@ -45,20 +43,11 @@ circuitOfQubits = random_circuit(NQ, GATES)
 # commutationMatrix = GetCommutationMatrix(listOfGateMatrices)
 # AllowedArrangements = GetAllValidCircuits(gatesList, commutationMatrix)
 
-gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
-possibleArrangements = BFS([gatesList], commutationMatrix)
+# gatesList, commutationMatrix = CreateRandomCircuit(NQ, GATES, 2, display= False)
+# possibleArrangements = BFS([gatesList], commutationMatrix)
 # Here, and this is important to understand, AllowedArrangements is a list of allowed circuit arrangements (due to gates being able to commute with each other)
 
 
-'''
-Focus on the block aggregation. 
-This will be done ... 
-
-Structure: 
-Aggregation step - Postprocessing step - Qubit Placement - ...
-repeat until termination condition is satisfied 
-
-'''
 
 def EvaluateGateCoverage(S, G, nQ, qMax, mMax):
     '''
@@ -103,19 +92,6 @@ def EvaluateGateCoverage(S, G, nQ, qMax, mMax):
             processingZoneNo += 1  
 
     return gateCoverage, qubitNonCoverage
-
-
-'''
-
-G_n, so one specific element of the G list indicates what gates are covered by the Qubit Set S_n  
-mMax is the number of processing zones in one processing block 
-
-New approach: 
-Instead of rewriting the function, take all possible circuits as input for AggregateBlocksStep
-
-How do we get all possible circuits? 
-
-'''
 
 
 
@@ -348,7 +324,7 @@ def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMa
         SP - Qubit sets in processing zones after padding with idle qubits 
         GP - Gates covered by these new qubit sets (does not change)
         Iset - A global pool of idle qubits that are not in processing zones  
-        c - Updatet pointers for all the qubits 
+        c - Updated pointers for all the qubits 
 
 
     After the block aggregation step, this function does a couple of things: 
