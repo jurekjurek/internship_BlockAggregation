@@ -59,6 +59,7 @@ if showPlots:
     visualize_blocks(processingBlockArrangementAfterDeterministicOptimization, 'Processing block arrangement after deterministic optimization, cost: ' + str(temporaryCost))
 
 
+
 if showAnimations: 
     animate_solving(processingBlockArrangementDisplaying, 'Animation of deterministic optimization')
 

@@ -454,7 +454,7 @@ Now, as one last step, we have to take the qubits from the idle pool and place t
 '''
 
 
-def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
+def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple, randomPlacement = False):
     '''
     Given: 
         Fsizes, a list of sizes of storage zones. E.g. for two storages zones with size 10 each: Fsizes = [10,10]
@@ -477,6 +477,11 @@ def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
     # initialize empty storage zones, list of empty lists
     storageZoneQubits = [[] for _ in range(numberOfStorageZones)]
 
+    # 
+    # COULD BE NUMPY!!!
+    # 
+
+
     # idle pool, create a copy that will be continuosly decreased 
     newIdlePool = idlePool
     
@@ -485,82 +490,106 @@ def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple):
 
     # Now, to fill up these idle zones. We start in the starting zone, moving left and right, filling up the zones 
     # we go through the storage zones starting with a right zone, corresponding to fp, then a left zone, corresponding to fm 
+
+    # initialize the storage zone number to the middle storage zone!
     storageZone = storageZoneNumber
     nextStorageZone = storageZoneNumber+1 
-    ctr = 1 
+
 
     # while there's still qubits left in the idle pool 
     while len(newIdlePool) > 0: 
+
         '''
         Right zone
         '''
-        # if we are still within the allowed number of storage zones but the number of qubits in this storage zone is too high, move to the left 
+
+        # if (the right partner of the current) storage zone is still within the allowed number of storage zones but the number 
+        # of qubits in this storage zone is maximal, move to the right! (down) 
         if nextStorageZone < numberOfStorageZones and len(storageZoneQubits[nextStorageZone]) >= storageZoneShape[nextStorageZone]:
             nextStorageZone += 1
 
-        # if we are within the allowed number of storage zones and the fp-th storage zone still needs to be filled 
+        # if we are within the allowed number of storage zones and the current right partner storage zone is not filled yet, fill it!
         if nextStorageZone < numberOfStorageZones and len(storageZoneQubits[nextStorageZone]) < storageZoneShape[nextStorageZone]:
 
-                # take the first qubit in the idle pool 
-                # q = newIdlePool[0]
+                # if random
+                if randomPlacement: 
+                    # choose random qubit from the idle pool 
+                    randomQubitNo = random.randint(0, len(newIdlePool) - 1)
 
-                randomQubitNo = random.randint(0, len(newIdlePool) - 1)
+                    # eliminate this qubit from the idle pool 
+                    randomIdleQubit = newIdlePool.pop(randomQubitNo)
 
-                randomIdleQubit = newIdlePool.pop(randomQubitNo)
+                # if not random
+                else: 
+                    # take the first qubit in the idle pool 
+                    randomIdleQubit = newIdlePool[0]
 
-                # append this qubit to the storage zone 
+                    # eliminate qubit q from idle pool 
+                    newIdlePool = [x for x in newIdlePool if x != randomIdleQubit]
+
+                # append this qubit to the (right partner of the current) storage zone 
                 storageZoneQubits[nextStorageZone].append(randomIdleQubit)
 
-                # and adjust their pointer variables accordingly, where fp is the number of the storage zone
+                # and adjust their pointer variables accordingly
                 newPointerQuadruple[randomIdleQubit] = ['i', nextStorageZone, len(storageZoneQubits[nextStorageZone])-1, 'i']
 
-                # eliminate qubit q from idle pool 
-                # newIdlePool = [x for x in newIdlePool if x != randomIdleQubit]
+
 
         '''
         Left zone 
         '''
-        # if within the allowed number of storage zones and the fm-th storage zone is too full 
+
+        # now, look at the original storage zone (*not* its partner on the right)
+
+        # if the current storage zone is not the leftmost one and is completely filled, move to the left 
         if storageZone > 0 and len(storageZoneQubits[storageZone]) >= storageZoneShape[storageZone]:
             storageZone -= 1
         
-        # if the fm-th storage zone still has to be filled 
+        # if the currrent storage zone is *not* full yet
         if storageZone >= 0 and len(storageZoneQubits[storageZone]) < storageZoneShape[storageZone]:
 
-            # take the first qubit in the idle pool 
-            q = newIdlePool[0]
 
-            randomQubitNo = random.randint(0, len(newIdlePool) - 1)
+            # if random
+            if randomPlacement: 
 
-            randomIdleQubit = newIdlePool.pop(randomQubitNo)
+                # choose a random qubit from the idle pool 
+                randomQubitNo = random.randint(0, len(newIdlePool) - 1)
 
-            # append this qubit to the storage zone 
+                # eliminate this random qubit from the idle pool 
+                randomIdleQubit = newIdlePool.pop(randomQubitNo)
+
+            # if not random
+            else: 
+                # take the first qubit in the idle pool 
+                randomIdleQubit = newIdlePool[0]
+
+                # eliminate qubit q from idle pool 
+                newIdlePool = [x for x in newIdlePool if x != randomIdleQubit]
+
+            # append this qubit to the current storage zone 
             storageZoneQubits[storageZone].append(randomIdleQubit)
 
             # and adjust their pointer variables accordingly 
             newPointerQuadruple[randomIdleQubit] = ['i', storageZone, len(storageZoneQubits[storageZone])-1, 'i']
 
-            # eliminate qubit q from idle pool 
-            # newIdlePool = [x for x in newIdlePool if x != q]
+
 
 
         # if all storage zones are filled up and there's qubits left in the idle pool, error 
         if nextStorageZone == numberOfStorageZones-1 and len(storageZoneQubits[nextStorageZone-1]) >= storageZoneShape[nextStorageZone-1] and storageZone == 1 and len(storageZoneQubits[storageZone-1]) >= storageZoneShape[storageZone-1] and len(newIdlePool) > 0:
             print('ERROR: No more storage zones left, but not all qubits placed.')
-            return storageZoneQubits, newPointerQuadruple
+            return None
 
     return storageZoneQubits, newPointerQuadruple          
 
 
 
 
-'''
-Now, all subalgorithms have been taken care of.
-We can implement the main algorithm 
-'''
 
 def DetermineBestArrangement(possibleArrangementsList, nQ, qMax, mMax): 
-
+    '''
+    This is a function that calculates, given a number of possible arrangements of the gates in the circuit, the one with the highest gate coverage 
+    '''
     bestGateCoverageList = []
     for circuitNo in range(len(possibleArrangementsList)): 
         circuit = possibleArrangementsList[circuitNo]
@@ -592,35 +621,15 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
 
     '''
 
-    # first of all, determine which circuit covers the gates best: 
-    # bestGateCoverageList = []
-    # for circuitNo in range(len(possibleArrangementsList)): 
-    #     circuit = possibleArrangementsList[circuitNo]
-    #     a, b, c, bestGateCoverage      = AggregateBlocksStep(circuit, nQ, qMax, mMax)
-    #     bestGateCoverageList.append(bestGateCoverage)
-    
-    # choose circuit with best gateCoverage 
-    # rawCircuit = possibleArrangementsList[bestGateCoverageList.index(max(bestGateCoverageList))]
-
-    # plot best gate coverage for the different arrangements - mostly no difference, but sometimes yes 
-    # plt.plot(bestGateCoverageList)
-    # plt.title('Best gate coverage over the possible commutations')
-    # plt.xlabel('Arrangement Number')
-    # plt.ylabel('Gate Coverage')
-    # plt.show()
-
     # Raw Circuit to be manipulated 
     rawCircuitChange = rawCircuit
 
     # list of aggregated blocks 
     aggregatedBlocks = []
 
-    iterationCounter = 0
-
-
 
     # while stuff still left in circuit 
-    while rawCircuitChange != [] and iterationCounter<100:
+    while rawCircuitChange != []:
 
     
         # Get best set of qubits and gates from algorithm 
@@ -643,7 +652,6 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
         # append this set of S, G, F and c to the collection of processing blocks 
         aggregatedBlocks.append([processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadrupleNew])
 
-        iterationCounter += 1
 
     return aggregatedBlocks
 
@@ -653,14 +661,3 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
 
 # visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
 # visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
-
-
-'''
-Some stuff about the commutation matrix: 
-
-If two squares lie on top of each other, then we have another arrangement for sure. From there, how do we get more arrangements? 
-If the neighbour of the square in which the two overlap, is also black, then we have one more arrangement! 
-E.g.: 
-2 commmutes with 1. and then furthermore 1 commutes with 3. Then we have from [1,2,3] -> [1,2,3], [2,1,3], [2,3,1]
-'''
-

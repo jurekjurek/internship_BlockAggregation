@@ -292,12 +292,9 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
             # qubit1 cannot be swapped with itself, remove it from the list of possible swap partners, if its in there, I guess
             if qubit1 in swapPool: 
                 swapPool.remove(qubit1)
-            # else: 
-                # print('qubit1 not in swapPool????')
 
             # how many qubits in total are possible swap partners for qubit1? 
             swapPoolSize = len(swapPool)
-
 
 
             # if we want to exchange more qubits than are possible, given by the size of the swappool 
@@ -501,7 +498,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
 
 
-            # ADDED THIS!!!!  
+            # THIS SIGNIFICANTLY DECREASES THE COST, WHAT EXACTLY IS THIS????
             # added this, no idea if that makes sense    
             if not listOfCostsForDifferentSwaps[swapNo] < 0:
                 continue 
@@ -713,8 +710,8 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
         # if flag == true, update tabu list and all the best lists, and ggf bestcost 
         if flag == True: 
 
-            # assign this Y to the corresponding element in the tabu list, why not just use append? 
-            tabuList[positionInTabuList] = YBestUpdate
+            # UPDATE TABULIST
+            # tabuList[positionInTabuList] = YBestUpdate
 
             # increase counter by one 
             positionInTabuList += 1

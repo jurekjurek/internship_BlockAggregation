@@ -47,7 +47,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
     computeTotalCost()
     this function will be referred to as the deterministic part of the optimization procedure. 
     
-    It just iterates over all the qubits and thei possible swapping partners and checks if a global cost metric is minimized upon each swap. 
+    It just iterates over all the qubits and their possible swapping partners and checks if a global cost metric is minimized upon each swap. 
 
     Given: 
     processingBlockArrangement:     a list of Blocks and their corresponding variables S, G, c, 
@@ -101,12 +101,12 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
 
     processingBlockArrangementDisplaying = []
 
-    # Iterate over the processing blocks, in original file we started at one but I guess its fine 
+    # Iterate over the processing blocks
     for processingBlock in range(numberProcessingBlocks):
 
 
-        # I added this if statement, I dont understand why we would not need this 
-        # I have to stil understand this 
+        # in the first processing block, we do not swap anything. It is only the relations *between* the processing blocks that count
+        # since we always swap between a block and its left partner as well! 
         if processingBlock == 0: 
             continue 
 
@@ -131,7 +131,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
         if echo == True:
             print('Swap idle qubits between storage zones ')
 
-        # iterate over all the storage zones in the step-th processing block 
+        # iterate over all the storage zones in the current processing block 
         for storageZone in range(numberStorageZones):
 
             processingZoneQubits, coveredGates, storageZoneQubits, pointerQuadruple = newprocessingBlockArrangement[processingBlock]
@@ -139,15 +139,15 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
            
 
             # For all the qubits, we look at them in the processing blocks left and right to it. Why? 
-            # To determine if it makes sense to swap them with qubits 
+            # To determine if it makes sense to swap them with other qubits in other storage zones 
 
-            # We want to swap qubits q1 and q2 in block number step. 
+            # We want to swap qubits q1 and q2 in the current block. 
             # Therefore, we examine a couple of things of q1 and q2 in the previous and next steps 
 
-            # iterate over all idle qubits in the z-th storage zone 
+            # iterate over all idle qubits in the current storage zone 
             for qubitNo in range(len(storageZoneQubits[storageZone])):
 
-                # qi-th qubit in z-th storage zone 
+                # qubit qubitNo in this storage zone 
                 qubitOneInStorageZone = storageZoneQubits[storageZone][qubitNo]
 
                 # processing/storage zone number of q1 in the previous block! 
@@ -161,13 +161,19 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     nextZoneNumberOne =  nextPointerQuadruple[qubitOneInStorageZone][1]
                     nextZoneStatusOne = nextPointerQuadruple[qubitOneInStorageZone][0]
 
+                    # WE DO NOT!! ADD THIS, BECAUSE WE GO FROM LEFT TO RIGHT, WE COMPARE THE CURRENT TO THE LEFT NEIGHBOUR, AND NOT TO THE RIGHT AND THE LEFT 
+                    # THIS WOULD BE TOO MUCH TO ASK FOR 
+
+                    # if nextZoneStatusOne != 'i' or nextZoneNumberOne == storageZone: 
+                    #     continue
+
                 # if previous qubit is not idle, or the qubit in the previous processing block is in the same storage zone as the qubit in this processing block 
+                # this is because we only want to swap the qubit to a position where it is in the same zone as in the previous step 
+                # if it is not idle, we cannot do this, if it is in the same storage zone already, we're happy. 
                 if previousNatureStatus != 'i' or previousStorageZone == storageZone:
                     continue
 
-                # Remember: What we check for is if the qubit was in the same storage zone in the block to the left. If so, this part of the swapping algorithm does not make any sense. 
-                # We want to swap qubits in *this* layer in such a way that they are in the *same* processing zone as they were before. 
-                # So, here we want to *achieve* zp == z. If this is already accomplished, continue. 
+
 
                 # iterate over all storage zone qubits of this block in the storage zone, in which the qubit sits in in the previous step 
                 for qubitIndex2 in range(len(storageZoneQubits[previousStorageZone])):
@@ -175,15 +181,15 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     # qubit two, the qubit we want to exchange qubit 1 with 
                     qubitTwoInStorageZone = storageZoneQubits[previousStorageZone][qubitIndex2]
 
-                    # we cannot swap a qubit with itself 
-                    if qubitTwoInStorageZone == qubitOneInStorageZone: 
-                        continue 
+                    # we cannot swap a qubit with itself - this step is not necessary
+                    # if qubitTwoInStorageZone == qubitOneInStorageZone: 
+                    #     continue 
                     
-                    # Processing zone number of qubit 2 in previous step 
+                    # Processing/storage zone number of qubit 2 in previous step 
                     previousZoneTwo = previousPointerQuadruple[qubitTwoInStorageZone][1]
 
-                    # Is qubit 2 in idle or in processing zone in previous step
-                    # Why do we do this? it is idle anyway 
+                    # Is qubit 2 which -again- sits in a different storage zone in the *current* blcok 
+                    # is in idle or in processing zone in previous step?
                     previousZoneTwoNature = previousPointerQuadruple[qubitTwoInStorageZone][0]
 
                     # if we have not reached the rightmost layer, define z and s for the right neighbour (next step) as well 
@@ -193,8 +199,9 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                         nextZoneNumberTwo = nextPointerQuadruple[qubitTwoInStorageZone][1]
                         nextZoneStatusTwo = nextPointerQuadruple[qubitTwoInStorageZone][0]
 
-                    # if qubit 1 and 2 are in the same storage zone and are both idle (we know that q1 is idle anyway, but we dont know this for q2 for the previous step yet), continue 
-                    # (it could also be that one is stored in a processing zone and the other one in a storage zone. In this case, z2p == zp would not mean that they are in the same zone)
+                    # if qubit one and qubit two are in the same zone in the previous step, continue, we do not want to swap them in this step
+                    # ( remember: The zonenumber can be the same *although* the zonenature is not!! 
+                    # Being in processing zone 2 or in storage zone 2 is different!! ) 
                     if previousZoneTwo == previousStorageZone and previousZoneTwoNature == 'i':
                         continue
 
@@ -241,7 +248,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
         if echo == True: 
             print('Swap idle qubits within storage zones')
 
-        # z is storage zone number! 
+        # iterate - again - over the storageZones in the current Block
         for storageZone in range(numberStorageZones):
 
             # THIS step!
@@ -250,7 +257,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
             # iterate over all idle qubits 
             for qubitNo in range(len(storageZoneQubits[storageZone])):
 
-                #  qi-th qubit in the z-th storage zone, up until here everyting is the same as above
+                # qubit qubitNo in the z-th storage zone, up until here everyting is the same as above
                 qubit1 = storageZoneQubits[storageZone][qubitNo]
 
                 # Now different: We have to take into account the position in the storage zone 
@@ -266,9 +273,12 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                 previousPositionInZoneQubitOne = previousPointerQuadruple[qubit1][2]
 
 
-                # if qubit is not idle, or if previous processing zone and current processing zone are not equal
+                # if the qubit was in a different zone in the block before, it does not make sense to swap this qubit inside the current Zone! 
+                # checking if it was idle in the step before amounts to - remember - just making sure that it was a storage zone in the step before 
+                # because as far as numbering of the zones, there's no difference fot processing and storage zones 
                 if previousZoneStatusQubitOne != 'i' or previousZoneNumberQubitOne != storageZone:
                     continue
+
 
                 # iterate over all qubits in the *same* storage zone as possible swap partners (zp is now z)
                 for qubitNo2 in range(len(storageZoneQubits[storageZone])):
@@ -281,8 +291,9 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     qubit2 = storageZoneQubits[storageZone][qubitNo2]
 
                     # we still cannot exchange the same qubit with itself
-                    if qubit2 == qubit1: 
-                        continue 
+                    # this should be senseless
+                    # if qubit2 == qubit1: 
+                    #     continue 
 
                     # previous processing zone number of qubit 2 
                     previousZoneNumberQubitTwo = previousPointerQuadruple[qubit2][1]
@@ -291,7 +302,8 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     previousZoneStatusTwo = previousPointerQuadruple[qubit2][0]
 
 
-                    # if, in previous step, q1 and q2 were not in the same processing zone or second qubit is not idle
+                    # if, in previous step, q1 and q2 were not in the same storage zone, continue
+                    # it only makes sense to swap two qubits that were inside the same storage zone in the block before as well! 
                     if previousZoneNumberQubitTwo != previousZoneNumberQubitOne or previousZoneStatusTwo != 'i':
                         continue
 
@@ -300,6 +312,10 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
 
                     # previous position for qubit two 
                     previousPositionInZoneQubitTwo = previousPointerQuadruple[qubit2][2]
+
+                    # we now calculate if it makes sense to swap. In this case, it is not clear that it makes sense to swap. 
+                    # in the case above, it was clear that the cost would be improved upon swapping. Here, there is situations where swapping 
+                    # actually increases the cost! 
 
                     # compute a distance: 
                     # distance from qubit 1 in previous step to qubit one in this step 
@@ -315,10 +331,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     if not distanceAfterSwapping < distance:
                         continue
 
-                    # if swapping decreases the distance, exchange these two qubits with each other 
-                    
-
-                    # swap pointers 
+                    # SWAPPING  
 
                     # important, because apparently, when newprocessingBlockArrangement gets altered, so does the corresponding c sublist... 
                     temporaryPointerQuadruple = pointerQuadruple[qubit1].copy()
@@ -334,6 +347,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     # update total cost and swap qubits in Y list 
                     costTot, yPositionList[processingBlock] = updateStep(yPositionList, processingBlock, temporaryQubitOne, temporaryQubitTwo, costTot)
 
+                    # for the animation 
                     processingBlockArrangementDisplaying.append(copy.deepcopy(newprocessingBlockArrangement))
 
                     break 
@@ -363,9 +377,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
             # in the easiest case, we only have one processing zone which means: SP = [[q1,q2,q3,q4,q5]] with five qubits 
             # SPz is now the list of qubits in the z-th processing zone 
             qubitsInOneProcessingZone = processingZoneQubits[processingZone]
-            # print(SPz)
 
-            # I actually dont understand why we have to flatten here, look at this again.
 
             # iterate over all processing zones, in order to swap processing zone with processing zone 
             for processingZoneTwo in range(numberProcessingZones):
@@ -374,7 +386,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                 if processingZone == processingZoneTwo: 
                     continue
                 
-                # in the code, this is again flattened 
+
                 # list of qubits in the second processing zone 
                 qubitsInOneProcessingZoneTwo = processingZoneQubits[processingZoneTwo]
 
@@ -433,15 +445,11 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
 
             processingZoneQubits, gatesCovered, storageZoneQubits, pointerQuadruple = newprocessingBlockArrangement[processingBlock]
             
-            # list of qubits in z-th processing zone 
+            # list of qubits in current processing zone 
             qubitsInOneProcessingZone = processingZoneQubits[processingZone]
 
-            
-            ##############################################################################################################################
-            # Ich habe wahrscheinlich noch nicht so ganz verstanden, warum wir einmal ueber maxProcessingZoneQubits und einmal ueber len(SPz) iterieren!!!! #
-            ##############################################################################################################################
 
-            # iterate over all qubits in z-th processing zone 
+            # iterate over all qubits in current processing zone 
             for qubitIndex in range(maxProcessingZoneQubits):
 
                 # i-th qubit in z-th processing zone 
