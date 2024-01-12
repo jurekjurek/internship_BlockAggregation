@@ -455,8 +455,7 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                 # i-th qubit in z-th processing zone 
                 qubitOne = qubitsInOneProcessingZone[qubitIndex]
 
-                # position of q1 in processing zone z
-                # print('qubit one: ', q1)
+                # position of q1 in processing zone 
                 positionInZoneQubitOne = pointerQuadruple[qubitOne][2]
 
                 # previous processing zone of qubit 
@@ -536,6 +535,14 @@ def improvePlacement(processingBlockArrangement, nQ, storageZoneSizes, maxProces
                     # break has to be here, I put it one to the right and it did not work. Obviously. It just kept exchanging already exchanged qubits. 
                     # So: After one qubit exchange, we don't want to further exchange and break! 
                     break 
+
+
+        '''
+        Exchanging *all* possible idle qubits with each other. We are just interested in the idle qubit having an idle nature, it does not have to sit in a storage zone
+        '''
+        # for qubitNo in range(nQ): 
+
+
 
     # here, more parameters are returned in the future, for debugging and displaying reaasons 
     return newprocessingBlockArrangement, processingBlockArrangementDisplaying    

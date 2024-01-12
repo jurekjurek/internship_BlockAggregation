@@ -1,5 +1,4 @@
 from TabuSearch import *
-from HelperFunctions import *
 
 
 
@@ -22,11 +21,6 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
     # keeps track of the total best cost 
     totalBestCostTbl = [[] for _ in range(2 * numOptimizationSteps)]
 
-    # 
-    grPtbl = [[] for _ in range(2 * numOptimizationSteps)]
-
-    # 
-    grPBest = []
 
     # list of Y positions to start with 
     YTemp = computeArrangements(newProcessingBlockArrangement, Fsizes, qMax)
@@ -34,25 +28,16 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
     # total cost to start with, to be minimized 
     costTotInitial = computeTotalCost(YTemp, nQ)
 
-    # high number, why not initial? 
-    costTotBest = 10 ** 9 
-
-    costList = []
-    BList = []
-
-    numberOfTabuStepsList = []
+    costList = [costTotInitial]
+    BList = [newProcessingBlockArrangement]
 
     processingBlockArrangementDisplaying = []
 
     # iterate over the number of Optimizing steps, given the function as argument 
     for optimizationstep in range(numOptimizationSteps): 
 
-        # print('total cost 0, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
-
         # deterministic algorithm, returns updated newProcessingBlockArrangement 
         newProcessingBlockArrangement, processingBlockArrangementDisplayingDeterministic = improvePlacement(newProcessingBlockArrangement, nQ, Fsizes, qMax, mMax, False)
-
-        # print('total cost 1, iteration ', optimizationstep, 'cost is: ', computeTotalCost(computeArrangements(newProcessingBlockArrangement, Fsizes, qMax), nQ))
 
 
         if echo == True: 
@@ -62,9 +47,7 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
             print('visualoutput')
 
         # Tabu Search algorithm, returns updatet newProcessingBlockArrangement!
-        newProcessingBlockArrangement, costProgressList, bestcostProgressList, YBest, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(newProcessingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, 3, 0, greedySpread = False, storeAllBestprocessingBlockArrangement= True, echo = False)
-
-        numberOfTabuStepsList.append(numberOfTabuSteps)
+        newProcessingBlockArrangement, costProgressList, bestcostProgressList, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(newProcessingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, 3, 0, greedySpread = False, storeAllBestprocessingBlockArrangement= True, echo = False)
 
         processingBlockArrangementDisplaying += processingBlockArrangementDisplayingDeterministic
         processingBlockArrangementDisplaying += processingBlockArrangementDisplayingTabuSearch
@@ -95,8 +78,6 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
     BList = BList[costIndices]
     bestProcessingBlockArrangement = BList[0]
 
-    # this gets flattened in the mathematica code 
-    grPtbl = grPtbl 
 
     # this as well 
     totalBestCostTbl = totalBestCostTbl
@@ -104,7 +85,7 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
     # processingBlockArrangementDisplaying += BList[0]
 
     # 
-    return processingBlockArrangementDisplaying, costTotBest, grPtbl, numberOfTabuStepsList, costList, bestProcessingBlockArrangement
+    return processingBlockArrangementDisplaying, costList, bestProcessingBlockArrangement
  
 
 # processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, newProcessingBlockArrangement = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 10, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)

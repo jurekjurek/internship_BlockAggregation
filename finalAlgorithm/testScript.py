@@ -1,7 +1,5 @@
 from AlternatingOptimization import *
 
-from HelperFunctions import *
-
 
 
 '''
@@ -21,21 +19,13 @@ FSIZES = [4,4,4]
 showPlots = True  
 showAnimations = False
 
-# create a random circuit with given properties 
-# circuitOfQubits = random_circuit(NQ, GATES)
+
+'''
+BLOCKAGGREGATION STARTING FROM RANDOM CIRCUIT
+'''
 
 asdf, circuitOfQubits, tempCircList = CreateRandomCircuit(NQ, GATES, 2, display= False)
-# possibleArrangements = BFS([gatesList], commutationMatrix)
 
-
-# if showPlots: 
-#     show_circuit(NQ,circuitOfQubits)
-
-
-
-# given this circuit, we aggregate the qubits in processing blocks. 
-# Each processing block holds active qubits in processing zones and idle qubits in both processing and storage zones 
-# bestCircuit = DetermineBestArrangement(possibleArrangements, NQ, QMAX, MMAX)
 processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
@@ -44,14 +34,11 @@ if showPlots:
     visualize_blocks(processingBlockArrangement, 'Qubits arranged in processing blocks, cost: ' + str(temporaryCost))
 
 
+
 '''
-this arrangement can now be optimized using 
-  1. deterministic optimiation 
-  2. tabu sarch 
-  3. alternating optimization
+DETERMINISTIC OPTIMIZATION
 '''
 
-# start with deterministic optimization 
 processingBlockArrangementAfterDeterministicOptimization, processingBlockArrangementDisplaying = improvePlacement(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, True)
 
 if showPlots: 
@@ -64,8 +51,13 @@ if showAnimations:
     animate_solving(processingBlockArrangementDisplaying, 'Animation of deterministic optimization')
 
 
-# now, tabu search
-processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, globalCostNotImprovementCounter, numberOfImprovingSteps, numberOfTabuSteps, numberOfStepsWithoutUpdate, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, storeAllBestprocessingBlockArrangement=True, echo=True)
+
+'''
+TABU SEARCH
+'''
+
+
+processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False)
 
 if showPlots: 
     temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterTabuSearch, FSIZES, MMAX), NQ)
@@ -75,13 +67,28 @@ if showAnimations:
     animate_solving(processingBlockArrangementDisplaying, 'Animation of optimization with tabu search')
 
 
+# investigate tabu search further -> run it multiple times and look at the average cost improvement 
 
-# now, for the last step. The alternating optimization
-processingBlockArrangementDisplaying ,b,c,numberOfTabuStepsList,costEvolution, processingBlockArrangementAfterAlternatingSearch = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 15, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
+
+'''
+ALTERNATING OPTIMIZATION
+'''
+exit()
+
+processingBlockArrangementDisplaying, costEvolution, processingBlockArrangementAfterAlternatingSearch = optimizeArrangements(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, numOptimizationSteps= 15, TSiterations= 10000, tabuListLength= 100, echo = True, visualOutput = False)
 
 if showPlots: 
     temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterAlternatingSearch, FSIZES, MMAX), NQ)
     visualize_blocks(processingBlockArrangementAfterAlternatingSearch, 'Processing block arrangement after alternating search, cost: ' + str(temporaryCost))
+
+    plt.figure()
+    plt.plot(costEvolution, label = 'cost')
+    plt.title('Evolution of total cost with alternating iterations \n')
+    plt.xlabel('Iterations')
+    plt.ylabel('Cost')
+    plt.legend()
+    plt.show()
+
 
 
 if showAnimations: 
@@ -89,11 +96,5 @@ if showAnimations:
 
 
 
-plt.figure()
-plt.plot(costEvolution, label = 'cost')
-plt.title('Evolution of total cost with alternating iterations \n')
-plt.xlabel('Iterations')
-plt.ylabel('Cost')
-plt.legend()
-plt.show()
+
 
