@@ -57,7 +57,7 @@ TABU SEARCH
 '''
 
 
-processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False)
+processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, improvementFactor=0.5)
 
 if showPlots: 
     temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterTabuSearch, FSIZES, MMAX), NQ)
@@ -66,6 +66,17 @@ if showPlots:
 if showAnimations: 
     animate_solving(processingBlockArrangementDisplaying, 'Animation of optimization with tabu search')
 
+processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, improvementFactor=1)
+
+if showPlots: 
+    temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterTabuSearch, FSIZES, MMAX), NQ)
+    visualize_blocks(processingBlockArrangementAfterTabuSearch, 'Processing block arrangement after tabu search, cost: ' + str(temporaryCost))
+
+processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=600, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, improvementFactor=0)
+
+if showPlots: 
+    temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterTabuSearch, FSIZES, MMAX), NQ)
+    visualize_blocks(processingBlockArrangementAfterTabuSearch, 'Processing block arrangement after tabu search, cost: ' + str(temporaryCost))
 
 # investigate tabu search further -> run it multiple times and look at the average cost improvement 
 

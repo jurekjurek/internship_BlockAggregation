@@ -3,7 +3,7 @@ from DeterministicOptimization import *
 
 
 
-def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, swapNumMax, processingZoneSwapFraction, greedySpread, storeAllBestprocessingBlockArrangement = True, echo = False, onlyImprove = False):
+def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, swapNumMax, processingZoneSwapFraction, greedySpread, improvementFactor = 0.5, storeAllBestprocessingBlockArrangement = True, echo = False):
     '''
     This function performs the Tabu search! 
 
@@ -140,8 +140,9 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
     Y = computeArrangements(processingBlockArrangement, Fsizes, qMax)
 
     # compute total cost 
-    costTot = computeTotalCost(Y, nQ)
+    initialCostTot = computeTotalCost(Y, nQ)
 
+    costTot = initialCostTot
 
     if echo == True:
 
@@ -184,7 +185,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
     numImprovementsAfterProcessingZoneSwaps = 0
 
     # costBest so far is just the total cost 
-    costBest = costTot
+    costBest = initialCostTot
 
     # Best arrangement of qubits is so far the one we have now 
     YBest = Y
@@ -459,7 +460,8 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
             # THIS SIGNIFICANTLY REDUCES THE COST  
             # we *only* perform the step if the cost is reduced. If it is not reduced, we do not perform the step!!
             # WE COULD INTRODUCE A RANDOM FACTOR HERE AS WELL 
-            if onlyImprove and not listOfCostsForDifferentSwaps[swapNo] < 0:
+            randomNumber = random.random()
+            if randomNumber < improvementFactor and not listOfCostsForDifferentSwaps[swapNo] < 0:
                 continue 
 
 
@@ -578,9 +580,14 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
                 costImprovementBySwapping = currentCost +  computeTotalCost(yTemporarilySwapped, nQ) 
 
-                # same as above 
-                deltaCost2 = 2 * (previousYPositionList[qubitsToBeSwapped[swapNo]] + nextYPositionList[qubitsToBeSwapped[swapNo]]) * (currentYPositionList[qubitsToBeSwapped[swapNo]] - currentYPositionList[swappedQubitsToBeSwapped[swapNo]])
+                # same as above - this is how it's done in the mathematic file 
+                # deltaCost2 = 2 * (previousYPositionList[qubitsToBeSwapped[swapNo]] + nextYPositionList[qubitsToBeSwapped[swapNo]]) * (currentYPositionList[qubitsToBeSwapped[swapNo]] - currentYPositionList[swappedQubitsToBeSwapped[swapNo]])
               
+
+                # swap qubits in right neighbouring processing zone and check the cost
+                # swap these qubits on top of the current arrangement 
+                # The way we do it - again; as above - is that we switch the qubits temporarily, evaluate the cost and if the cost is better, we adapt the arrangement 
+
 
 
                 # update the best lists for greedyProcessingBlock!! as well. We did it for step above, but now also for greedyProcessingBlock
