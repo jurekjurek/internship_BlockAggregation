@@ -417,7 +417,8 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
         # keep track of the cost improvement that we have for all respective swaps 
         listOfCostsForDifferentSwaps = []
 
-
+        # safe, for greedy search as well 
+        costWithoutImprovement = computeTotalCost(Y, nQ)
 
         # iterate over all possible swaps and check which resulting arrangement has the lowest cost 
         for swapNo in range(numPossibleSwaps):
@@ -430,7 +431,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
             # if this is negative, it's bad
             # if this is positive, it's good! 
-            costImprovementBySwapping = - computeTotalCost(Y, nQ) +  computeTotalCost(yTemporarilySwapped, nQ) 
+            costImprovementBySwapping = - costWithoutImprovement +  computeTotalCost(yTemporarilySwapped, nQ) 
 
             listOfCostsForDifferentSwaps.append(costImprovementBySwapping)
 
@@ -514,30 +515,6 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             '''
             Greedy Search:
 
@@ -550,11 +527,30 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
             in the neighbouring layers. *Even if* swapping the qubits in the current layer only would yield a lower cost. 
 
             If not, we only switch the qubits in the current layer. 
+
+            Remember: We're still inside the swapNo loop
+
+            The greedy search looks like this: 
+            First, we look at the layer immediately right of the current layer. If the swapping of the qubits improves the performance relative to the *initial* 
+            (before the first swap) performance, we swap the qubits in this block and move one block to the right, check if swapping the qubits in this layer 
+            improves the performance and so on. 
+            After we changed the qubits in all of the possible blocks on the right of the current block, we do the same for the blocks on the left of the current 
+            block. 
             '''
 
             # define this for the while-loop 
             # start with block on the right of current block 
             greedyProcessingBlock = processingBlock + 1 
+
+
+            # define a list to keep track of the cost improvements due to the greedy search 
+            costImprovementsGreedy = []
+
+            # we define this outside the for loop because if two qubits are changed in one layer in the greedy search, they will also be swapped in the next 
+            # possible arrangements in the greedy search
+            yTemporarilySwapped = np.array(YBestUpdate) 
+
+            currentCost = computeTotalCost(YBestUpdate, nQ) 
 
             # while we did not reach the number of processing blocks 
             # iterate over all the layers that are on the right of the current block 
@@ -562,8 +558,14 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                 
                 # if the qubits that shall be swapped in the step layer do not have the same nature ('a' or 'i') in the next layer, break 
                 # also, if these two sets of qubits are in different zones, break 
-                if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]]:
-                    break
+                # if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]]:
+                #     break
+
+                for qubitToBeSwappedNo in range(len(qubitsToBeSwapped[swapNo])):
+                    qubitToBeSwapped = qubitsToBeSwapped[swapNo][qubitToBeSwappedNo]
+
+                    if natureStatusList[processingBlock][qubitToBeSwapped] != natureStatusList[greedyProcessingBlock][qubitToBeSwapped] or zoneNumberList[processingBlock][qubitToBeSwapped] != zoneNumberList[greedyProcessingBlock][qubitToBeSwapped]: 
+                        break
 
                 # update the Y lists as well 
                 currentYPositionList = YBestUpdate[greedyProcessingBlock]
@@ -574,11 +576,16 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                     nextYPositionList = YBestUpdate[greedyProcessingBlock + 1]
                 else: 
                     nextYPositionList = [0] * nQ
-              
 
-                currentCost = computeTotalCost(YBestUpdate, nQ) 
+                
 
-                costImprovementBySwapping = currentCost +  computeTotalCost(yTemporarilySwapped, nQ) 
+                # for every swap, exchange the positions in the Y list corresponding to the qubits in the swapQBlist with the qubits in qubitsToBeSwappedwapped 
+                # for the greedy layer (a layer on the right of the current layer)
+                yTemporarilySwapped[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = yTemporarilySwapped[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
+
+                # if this is negative, it's bad
+                # if this is positive, it's good! 
+                costImprovementByGreedySwapping = - currentCost +  computeTotalCost(yTemporarilySwapped, nQ) 
 
                 # same as above - this is how it's done in the mathematic file 
                 # deltaCost2 = 2 * (previousYPositionList[qubitsToBeSwapped[swapNo]] + nextYPositionList[qubitsToBeSwapped[swapNo]]) * (currentYPositionList[qubitsToBeSwapped[swapNo]] - currentYPositionList[swappedQubitsToBeSwapped[swapNo]])
@@ -591,37 +598,54 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
 
                 # update the best lists for greedyProcessingBlock!! as well. We did it for step above, but now also for greedyProcessingBlock
-                if deltaCost2 < 0: 
-                    differenceToCostBeforeSwapping += deltaCost2
+                if costImprovementByGreedySwapping < 0: 
+
+                    # differenceToCostBeforeSwapping is here the total difference
+                    # Important to understand: it is allowed that the switch of the qubits lowers the performance relative to the swap without greedy search 
+                    # as long as the cost is improved overall (or rather the best (least worse) possible swap is chosen)
+                    differenceToCostBeforeSwapping = costImprovementByGreedySwapping
                 
+                    # update YBestUpdate
                     YBestUpdate[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = YBestUpdate[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
                 
                     zoneNumberListBestUpdate[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = zoneNumberListBestUpdate[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
                     zoneStatusListBestUpdate[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = zoneStatusListBestUpdate[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
                 
-                    for sqbi in range(qubitsToBeSwapped[swapNo]): 
-                        sqb = qubitsToBeSwapped[swapNo][sqbi]
+
+                    # DONT REALLY UNDERSTAND THIS 
+                    # LOOK AT THIS LATER!!!!
+
+                    # for sqbi in range(qubitsToBeSwapped[swapNo]): 
+                    #     sqb = qubitsToBeSwapped[swapNo][sqbi]
                  
-                    if zoneStatusListBestUpdate[greedyProcessingBlock][sqb] == "i" and natureStatusListBestUpdate[greedyProcessingBlock][sqb] == "a":
-                        print("  ERROR in greedy expansion, step: ", processingBlock)
+                    #     if zoneStatusListBestUpdate[greedyProcessingBlock][sqb] == "i" and natureStatusListBestUpdate[greedyProcessingBlock][sqb] == "a":
+                    #         print("  ERROR in greedy expansion, step: ", processingBlock)
                 else: 
-                    greedyProcessingBlock = numberOfProcessingBlocks
+                    # greedyProcessingBlock = numberOfProcessingBlocks
+                    break 
                 
+
+                # move one block to the right 
                 greedyProcessingBlock += 1 
 
 
-            # block on the left of current block 
+            # block on the left of current block, greedyProcessingBlock is now on the left 
             greedyProcessingBlock = processingBlock - 1 
 
             # iterate over all the layers that are on the left of the current block 
             while greedyProcessingBlock > 0: 
 
 
-                # Muss noch geandert werden!! 
+                # So war es im Mathematica file... 
 
+                # if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]]:
+                #     break
 
-                if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]]:
-                    break
+                for qubitToBeSwappedNo in range(len(qubitsToBeSwapped[swapNo])):
+                    qubitToBeSwapped = qubitsToBeSwapped[swapNo][qubitToBeSwappedNo]
+
+                    if natureStatusList[processingBlock][qubitToBeSwapped] != natureStatusList[greedyProcessingBlock][qubitToBeSwapped] or zoneNumberList[processingBlock][qubitToBeSwapped] != zoneNumberList[greedyProcessingBlock][qubitToBeSwapped]: 
+                        break
 
                 currentYPositionList = YBestUpdate[greedyProcessingBlock]
                 previousYPositionList = YBestUpdate[greedyProcessingBlock - 1]
@@ -631,24 +655,31 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                 else: 
                     nextYPositionList = [0] * nQ
               
-                deltaCost2 = 2 * (previousYPositionList[qubitsToBeSwapped[swapNo]] + nextYPositionList[qubitsToBeSwapped[swapNo]]) * (currentYPositionList[qubitsToBeSwapped[swapNo]] - currentYPositionList[swappedQubitsToBeSwapped[swapNo]])
-              
+                # for every swap, exchange the positions in the Y list corresponding to the qubits in the swapQBlist with the qubits in qubitsToBeSwappedwapped 
+                # for the greedy layer (a layer on the right of the current layer)
+                yTemporarilySwapped[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = yTemporarilySwapped[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
 
-                if deltaCost2 < 0: 
-                    differenceToCostBeforeSwapping += deltaCost2
+                costImprovementByGreedySwapping = - currentCost +  computeTotalCost(yTemporarilySwapped, nQ) 
+
+                if costImprovementByGreedySwapping < 0: 
+                    differenceToCostBeforeSwapping = costImprovementByGreedySwapping
                 
                     YBestUpdate[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = YBestUpdate[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
                 
                     zoneNumberListBestUpdate[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = zoneNumberListBestUpdate[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
                     zoneStatusListBestUpdate[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = zoneStatusListBestUpdate[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
                 
-                    for sqbi in range(qubitsToBeSwapped[swapNo]): 
-                        sqb = qubitsToBeSwapped[swapNo][sqbi]
+                    # CHECK ULI'S FILE ONE MORE TIME 
+                    # for sqbi in range(qubitsToBeSwapped[swapNo]): 
+                    #     sqb = qubitsToBeSwapped[swapNo][sqbi]
                  
-                    if zoneStatusListBestUpdate[greedyProcessingBlock][sqb] == "i" and natureStatusListBestUpdate[greedyProcessingBlock][sqb] == "a":
-                        print("  ERROR in greedy expansion, step: ", processingBlock)
+                    #     if zoneStatusListBestUpdate[greedyProcessingBlock][sqb] == "i" and natureStatusListBestUpdate[greedyProcessingBlock][sqb] == "a":
+                    #         print("  ERROR in greedy expansion, step: ", processingBlock)
+
+                    
                 else: 
-                    greedyProcessingBlock = 1
+                    # greedyProcessingBlock = 1
+                    break 
                 
                 greedyProcessingBlock -= 1 
 
@@ -659,21 +690,6 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
         '''
         GreedySpread over! 
         '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         '''
         Swapping is finished -> Updating 
