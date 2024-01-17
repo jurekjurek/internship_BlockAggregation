@@ -27,6 +27,100 @@ def MainGeneticAlgorithm(numberOfGenerations, numberOfIndividuals):
 
 
 
+'''
+from find all arrangements in the class 
+'''
+
+
+            '''
+            CHECK FOLLOW UP COMMUTATIONS - PROBABLY NOT NECESSARY 
+            '''
+            # ICH HABE **KEINE** AHNUNG, WAS ICH MIR DABEI GEDACHT HABE 
+
+            # gate i with gate i+2, gate i+1 with gate i-1
+            # for i in range(len(possibleSwaps)):
+
+            #     # 
+            #     tempGateOne = possibleSwaps[i][0]
+            #     tempGateTwo = possibleSwaps[i][1]
+
+            #     # if list index out of range, just continue 
+            #     if (tempGateOne + self.BFScount) >= len(gatesList) or tempGateTwo <= self.BFScount: 
+            #         continue            
+
+            #     if self.DoGatesCommute(tempGateOne, tempGateOne + self.BFScount + 1):
+            #         self.commutationMatrix[tempGateOne-1][tempGateOne + self.BFScount] = 1 
+            #     if self.DoGatesCommute(tempGateTwo - self.BFScount - 1, tempGateTwo):
+            #         self.commutationMatrix[tempGateTwo - self.BFScount - 2][tempGateTwo-1] = 1
+
+            for gateNo in range(len(gatesList)): 
+
+                # already defined above 
+                # gate = gatesList[gateNo]
+                # otherGate = gatesList[gateNo + 1]
+
+                if gateNo >= len(gatesList)-2 - self.BFScount or gateNo < self.BFScount:
+                    break 
+
+                
+
+                nextGate = gatesList[gateNo + 1 + self.BFScount]
+
+                prevGate = gatesList[gateNo - self.BFScount]
+
+
+                if self.DoGatesCommute(gate, nextGate):
+                    self.commutationMatrix[gate-1][gate] = 1
+                    possibleSwaps.append([gate, nextGate])
+
+                if self.DoGatesCommute(prevGate, gate):
+                    self.commutationMatrix[gate-1][gate] = 1
+                    possibleSwaps.append([gate, nextGate])
+
+
+
+
+            # update the global list of all possible permutations 
+            for i in range(len(listOfPossiblePermutations)): 
+                print('Possible Arrangements: ', listOfPossiblePermutations[i])
+
+                if listOfPossiblePermutations[i] not in self.allPossibleArrangements: 
+                    self.allPossibleArrangements.append(listOfPossiblePermutations[i])
+
+                    thisPerm = all_permutations[i]
+                    involvedGates = []
+                    for j in range(len(thisPerm)): 
+                        if j == 1: 
+                            involvedGates.append(possibleSwaps[j])
+
+
+                    # only if the next neighbour also commutes, look at it 
+                    # tempGateOne = possibleSwaps[i][0]
+                    # tempGateTwo = possibleSwaps[i][1]
+                    # if 
+                    # if (tempGateOne - 1) > len(gatesList) - self.BFScount or tempGateTwo <= self.BFScount: 
+                    #     continue
+                    # if self.DoGatesCommute(tempGateOne, tempGateOne+ self.BFScount) or self.DoGatesCommute(tempGateTwo - self.BFScount, tempGateTwo):
+                    #     
+
+                    # if the commutationmatrix for the corresponding gates is == 1, we consider this case. Otherwise we do not. 
+
+                    for involvedGate in involvedGates: 
+                        tempGateOne = involvedGate[0]
+                        tempGateTwo = involvedGate[1]
+
+                        if (tempGateOne + self.BFScount) >= len(gatesList) or tempGateTwo <= self.BFScount: 
+                            continue  
+
+                        if self.commutationMatrix[tempGateOne-1][tempGateOne+self.BFScount] == 1 or self.commutationMatrix[tempGateTwo-self.BFScount-2][tempGateTwo-1] == 1:
+                            self.FindAllPermutations(listOfPossiblePermutations[i])
+
+
+
+
+
+
+
 
 
 '''

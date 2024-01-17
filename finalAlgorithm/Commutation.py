@@ -20,6 +20,9 @@ class RandomCircuit:
         # for finding all possible arrangements later 
         self.globalTabuList = []
 
+        # collect all possible arrangements 
+        self.listOfPossiblePerms = []
+
 
     # necessary for later
     def CheckCommutation(self, matrixOne, matrixTwo): 
@@ -282,6 +285,8 @@ class RandomCircuit:
             # if not, we now append it to it
             self.globalTabuList.append(tempGatesList)
 
+            # self.listOfPossiblePerms.append(tempGatesList)
+
             
             # make another list without the qubits 
             gatesList = [gate[0] for gate in tempGatesList]
@@ -320,138 +325,57 @@ class RandomCircuit:
             # e.g. means that the first and fourth swaps are executed for this specific circuit 
             all_permutations = list(product(possible_values, repeat=len(possibleSwaps)))
 
-            print(all_permutations)
+            print('all:', all_permutations)
+
+            print('len all perms:', len(all_permutations))
 
             # essentially, in these cases: we have to delete the cases from the permutation (consisting of 0s and 1s) in which 
             # both of the swaps (that are not independent of each other) are 1
             # OPTIMIZE THIS FOR SURE!
-            for swapNo in range(len(possibleSwaps)): 
-                swap = possibleSwaps[swapNo]
-                g1 = swap[0]
-                for otherSwapNo in range(len(possibleSwaps)): 
+            # for swapNo in range(len(possibleSwaps)): 
+            #     swap = possibleSwaps[swapNo]
+            #     g1 = swap[0]
+            #     for otherSwapNo in range(len(possibleSwaps)): 
 
-                    otherSwap = possibleSwaps[otherSwapNo]
-                    if g1 == otherSwap[0] or g1 == otherSwap[1]: 
-                        for perm in all_permutations:
-                            if perm[swapNo]==1 and perm[otherSwapNo] ==1: 
-                                all_permutations.remove(perm)
+            #         otherSwap = possibleSwaps[otherSwapNo]
+            #         if g1 == otherSwap[0] or g1 == otherSwap[1]: 
+            #             for perm in all_permutations:
+            #                 if perm[swapNo]==1 and perm[otherSwapNo] ==1: 
+            #                     all_permutations.remove(perm)
 
 
-            for perm in all_permutations:
-                tempArrangement = copy.deepcopy(self.gatesList)
+            # if there's non trivial swaps to be made  
+            if len(all_permutations) > 1:
 
-                for i in range(len(perm)): 
+                for perm in all_permutations:
+                    tempArrangement = copy.deepcopy(self.gatesList)
+
+                    for i in range(len(perm)): 
+                        
+                        if perm[i] == 1: 
+                            tempArrangement = self.SwapGates(tempArrangement, possibleSwaps[i][0], possibleSwaps[i][1])
                     
-                    if perm[i] == 1: 
-                        tempArrangement = self.SwapGates(tempArrangement, possibleSwaps[i][0], possibleSwaps[i][1])
-                
-                if tempArrangement not in self.globalTabuList:     
-                    listOfPossiblePermutations.append(tempArrangement)
-                    self.listOfPossiblePerms.append(tempArrangement)
-                else: 
-                    continue
+                    if tempArrangement not in self.globalTabuList:  
+
+                        print('Arrangement not in Tabu list')   
+                        listOfPossiblePermutations.append(tempArrangement)
+                        # self.listOfPossiblePerms.append(tempArrangement)
+                    else: 
+
+                        print('Arrangement in Tabu list')
+                        continue
 
 
             # now we created all possible arrangements
             self.FindAllPermutations(listOfPossiblePermutations)
-            
-
-
-
-            return 
-            '''
-            CHECK FOLLOW UP COMMUTATIONS - PROBABLY NOT NECESSARY 
-            '''
-            # ICH HABE **KEINE** AHNUNG, WAS ICH MIR DABEI GEDACHT HABE 
-
-            # gate i with gate i+2, gate i+1 with gate i-1
-            # for i in range(len(possibleSwaps)):
-
-            #     # 
-            #     tempGateOne = possibleSwaps[i][0]
-            #     tempGateTwo = possibleSwaps[i][1]
-
-            #     # if list index out of range, just continue 
-            #     if (tempGateOne + self.BFScount) >= len(gatesList) or tempGateTwo <= self.BFScount: 
-            #         continue            
-
-            #     if self.DoGatesCommute(tempGateOne, tempGateOne + self.BFScount + 1):
-            #         self.commutationMatrix[tempGateOne-1][tempGateOne + self.BFScount] = 1 
-            #     if self.DoGatesCommute(tempGateTwo - self.BFScount - 1, tempGateTwo):
-            #         self.commutationMatrix[tempGateTwo - self.BFScount - 2][tempGateTwo-1] = 1
-
-            for gateNo in range(len(gatesList)): 
-
-                # already defined above 
-                # gate = gatesList[gateNo]
-                # otherGate = gatesList[gateNo + 1]
-
-                if gateNo >= len(gatesList)-2 - self.BFScount or gateNo < self.BFScount:
-                    break 
-
                 
-
-                nextGate = gatesList[gateNo + 1 + self.BFScount]
-
-                prevGate = gatesList[gateNo - self.BFScount]
-
-
-                if self.DoGatesCommute(gate, nextGate):
-                    self.commutationMatrix[gate-1][gate] = 1
-                    possibleSwaps.append([gate, nextGate])
-
-                if self.DoGatesCommute(prevGate, gate):
-                    self.commutationMatrix[gate-1][gate] = 1
-                    possibleSwaps.append([gate, nextGate])
-
-
-
-
-            # update the global list of all possible permutations 
-            for i in range(len(listOfPossiblePermutations)): 
-                print('Possible Arrangements: ', listOfPossiblePermutations[i])
-
-                if listOfPossiblePermutations[i] not in self.allPossibleArrangements: 
-                    self.allPossibleArrangements.append(listOfPossiblePermutations[i])
-
-                    thisPerm = all_permutations[i]
-                    involvedGates = []
-                    for j in range(len(thisPerm)): 
-                        if j == 1: 
-                            involvedGates.append(possibleSwaps[j])
-
-
-                    # only if the next neighbour also commutes, look at it 
-                    # tempGateOne = possibleSwaps[i][0]
-                    # tempGateTwo = possibleSwaps[i][1]
-                    # if 
-                    # if (tempGateOne - 1) > len(gatesList) - self.BFScount or tempGateTwo <= self.BFScount: 
-                    #     continue
-                    # if self.DoGatesCommute(tempGateOne, tempGateOne+ self.BFScount) or self.DoGatesCommute(tempGateTwo - self.BFScount, tempGateTwo):
-                    #     
-
-                    # if the commutationmatrix for the corresponding gates is == 1, we consider this case. Otherwise we do not. 
-
-                    for involvedGate in involvedGates: 
-                        tempGateOne = involvedGate[0]
-                        tempGateTwo = involvedGate[1]
-
-                        if (tempGateOne + self.BFScount) >= len(gatesList) or tempGateTwo <= self.BFScount: 
-                            continue  
-
-                        if self.commutationMatrix[tempGateOne-1][tempGateOne+self.BFScount] == 1 or self.commutationMatrix[tempGateTwo-self.BFScount-2][tempGateTwo-1] == 1:
-                            self.FindAllPermutations(listOfPossiblePermutations[i])
-
-
+            return 
 
     def FindAllPossibleArrangements(self):
         self.BFScount = 0
-        self.listOfPossiblePerms = []
+        # self.listOfPossiblePerms.append(self.gatesList)
         self.FindAllPermutations([self.gatesList])
         print(self.globalTabuList)
-        print(self.listOfPossiblePerms)
-
-
 
 
 
