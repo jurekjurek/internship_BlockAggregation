@@ -3,7 +3,7 @@ from DeterministicOptimization import *
 
 
 
-def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, swapNumMax, processingZoneSwapFraction, greedySpread, improvementFactor = 0.5, storeAllBestprocessingBlockArrangement = True, echo = False):
+def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, swapNumMax, processingZoneSwapFraction, greedySpread, improvementFactor, storeAllBestprocessingBlockArrangement = True, echo = False):
     '''
     This function performs the Tabu search! 
 
@@ -676,7 +676,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                     #     if zoneStatusListBestUpdate[greedyProcessingBlock][sqb] == "i" and natureStatusListBestUpdate[greedyProcessingBlock][sqb] == "a":
                     #         print("  ERROR in greedy expansion, step: ", processingBlock)
 
-                    
+
                 else: 
                     # greedyProcessingBlock = 1
                     break 
@@ -727,6 +727,9 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
             # update total cost 
             costTot += differenceToCostBeforeSwapping
 
+
+            processingBlockArrangementDisplaying.append(copy.deepcopy(newProcessingBlockArrangement))
+
             # if, globally, cost is minimal: 
             if costTot < costBest: 
 
@@ -746,7 +749,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
                     # save it by reconstructing the blocks, given the old processingBlockArrangement as well as the Y, optimized by the tabu search 
                     newProcessingBlockArrangement = reconstructBlocksFromArrangements(processingBlockArrangement, Fsizes, qMax, mMax, nQ, YBest, zoneNumberListBest, zoneStatusListBest, natureStatusListBest)
-                    processingBlockArrangementDisplaying.append(copy.deepcopy(newProcessingBlockArrangement))
+                    
 
                 # Taking care of some counters 
                 if swapProcessingZones == False: 

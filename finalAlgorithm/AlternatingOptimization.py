@@ -2,7 +2,7 @@ from TabuSearch import *
 
 
 
-def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, numOptimizationSteps, TSiterations, tabuListLength, echo, visualOutput):
+def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, numOptimizationSteps, TSiterations, tabuListLength, echo, visualOutput, improvementFactor):
     '''
     In this function, the deterministic and the tabu search algorithm are applied to a set of processing blocks B in an alternating manner. 
     First, the deterministic algorithm is applied, then the tabu search. This scheme is repeated numOptimizationSteps times. 
@@ -47,7 +47,7 @@ def optimizeArrangements(processingBlockArrangement, nQ, Fsizes, qMax, mMax, num
             print('visualoutput')
 
         # Tabu Search algorithm, returns updatet newProcessingBlockArrangement!
-        newProcessingBlockArrangement, costProgressList, bestcostProgressList, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(newProcessingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, 3, 0, greedySpread = False, storeAllBestprocessingBlockArrangement= True, echo = False)
+        newProcessingBlockArrangement, costProgressList, bestcostProgressList, processingBlockArrangementDisplayingTabuSearch = improvePlacementTabuSearch(newProcessingBlockArrangement, Fsizes, qMax, mMax, nQ, TSiterations, tabuListLength, 3, 0, greedySpread = False, improvementFactor=improvementFactor, storeAllBestprocessingBlockArrangement= True, echo = False)
 
         processingBlockArrangementDisplaying += processingBlockArrangementDisplayingDeterministic
         processingBlockArrangementDisplaying += processingBlockArrangementDisplayingTabuSearch
