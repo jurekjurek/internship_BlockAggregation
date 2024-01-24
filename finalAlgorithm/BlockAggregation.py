@@ -140,7 +140,7 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
     gateCoverageList = []
 
 
-    # iterate over layers 
+    # iterate over gates 
     for gateNo in range(len(circuitOfQubits)):
 
         gate = circuitOfQubits[gateNo]
@@ -267,10 +267,13 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
         # termination condition: 
         # if the remaining qubits - those that can be covered by the constellation (excluding these that cannot be covered because they are more than Q) - are less than the qubits that can be stored in the processing zones 
         # in total, so mMax (no of processing zones) times qMax (no of qubits in processing zones)
+        # qubitNoncoverage are the qubits that are 'lost' because they are contained in sets that contain too many qubits 
         if nQ - qubitNonCoverage < mMax * qMax: 
 
             # debug print statement
             # print('Termination condition reached!')
+            print('chosen qubitset:')
+            print(aggregatedQubitsBest)
             # function returns the two best lists, because we're running out of space 
             return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList, bestGateCoverage
         
@@ -292,7 +295,8 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
             
 
 # print(circuitOfQubits)
-# aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
+# aggregatedQubitsTest, gatesCoveredBestTest, gateCoverageTest, bestgc = AggregateBlocksStep(circuitOfQubits, NQ, QMAX, MMAX)
+
 # print('Best:')
 # print(aggregatedQubitsTest)
 # print(aggregatedQubitsTest)
@@ -656,8 +660,8 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
     return aggregatedBlocks
 
 # processingBlockArrangement = blockProcessCircuit(possibleArrangements, NQ, FSIZES, QMAX, MMAX)
-# processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
 # visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
-# visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
+visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
