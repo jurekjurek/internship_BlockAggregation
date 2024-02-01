@@ -1,9 +1,38 @@
-from RandomCircuitQiskit import *
+from itertools import permutations
+from qiskit import *
+from AlteredRandomCircuitSourceCode import randomCircuitTwoQubits
+# from GetMatrixFromCircuit import calculate_circuit_matrix
+from qiskit import QuantumCircuit
+from qiskit import Aer
+from qiskit.extensions import UnitaryGate
+import matplotlib.pyplot as plt
+import numpy as np
 
+import copy
 from itertools import product 
 
-# create a random circuit 
-randomCircuit, gatesList, listOfTempCircuits = CreateRandomCircuit(5, 5, 2, False)
+'''
+In this file, we create a class RandomCircuit that creates a random circuit using the program from the Random Circuit Source code in Qiskit
+
+This sourcecode was altered to fit our needs and stored in the file 
+AlteredRandomCircuitSourceCode.py
+
+For an instance of this class, we can then for every circuit check the commutation behaviour among the gates and determine all of the allowed circuits 
+
+Consider the gates in the circuit [1,2,3,4,5] and consider that [1,2], [4,5] and [1,3] commute. 
+The possible arrangements of this circuit then are: 
+[1,2,3,4,5]
+[1,2,3,5,4]
+[2,1,3,4,5]
+[2,1,3,5,4]
+and 
+[2,3,1,4,5]
+[2,3,1,5,4]
+
+We want to get all of the possible permutations because in the end, the cost of the processing block arrangement is to be minimized and some of these 
+circuits might lead to arrangements with lower costs than others. 
+
+'''
 
 
 class RandomCircuit:
@@ -22,6 +51,10 @@ class RandomCircuit:
 
         # collect all possible arrangements 
         self.listOfPossiblePerms = []
+
+
+
+
 
 
     # necessary for later
@@ -57,7 +90,7 @@ class RandomCircuit:
         This function removes qubits from a circuit that are unused. 
         We will need this function when investigating the commutation behaviour between gates
         '''
-        gateCount = CountGates(qc)
+        gateCount = self.CountGates(qc)
         for qubit, count in gateCount.items():
             if count == 0: 
                 qc.qubits.remove(qubit)
@@ -82,8 +115,6 @@ class RandomCircuit:
             print('Error, number of gates smaller than one.')
             return 
 
-        # print(circuitToBeAltered)
-
         gatesList = [[0, involvedQubits]]
 
 
@@ -94,7 +125,6 @@ class RandomCircuit:
 
             # if we reached the last gate, we do want to measure 
             if iGate == nGates -2:
-                # was true before, but problems with matrix representation 
                 tempCirc, involvedQubits = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
             else:
                 tempCirc, involvedQubits = randomCircuitTwoQubits(nQubits, 1, maxNumberOperations, measure=False)
@@ -142,8 +172,8 @@ class RandomCircuit:
         circuit2 = self.listOfTempCircuits[gateTwo]
 
         # the circuits now consist of two qubits each
-        circuit1 = RemoveUnusedQubits(circuit1)
-        circuit2 = RemoveUnusedQubits(circuit2)
+        circuit1 = self.RemoveUnusedQubits(circuit1)
+        circuit2 = self.RemoveUnusedQubits(circuit2)
 
         testCircuit = QuantumCircuit(3)
 
@@ -186,8 +216,8 @@ class RandomCircuit:
         circuit2Matrix = result.get_unitary(circuit2, decimals = 3)
 
 
-        if CheckCommutation(circuit1Matrix, circuit2Matrix): 
-            print('These Gates commute! gates: ', gateOne, gateTwo)
+        if self.CheckCommutation(circuit1Matrix, circuit2Matrix): 
+            # print('These Gates commute! gates: ', gateOne, gateTwo)
             return True
 
         else:
@@ -289,34 +319,26 @@ class RandomCircuit:
 
             
             # make another list without the qubits 
-            gatesList = [gate[0] for gate in tempGatesList]
+            gatesListSimpl = [gate[0] for gate in tempGatesList]
 
             # iterate over all possible gates and check if gates commute with their immediate neighbours 
-            for gateNo in range(len(gatesList)): 
+            for gateNo in range(len(gatesListSimpl) - 1): 
                 
                 # python indexing, that's why the '-1'
-                gate = gatesList[gateNo]
+                gate = gatesListSimpl[gateNo]
 
-                # if gateNo == len(gatesList) - 1 -> break *and* here we compare gate to gate+1
-                if gateNo >= len(gatesList)-2:
-                    continue 
-
-                otherGate = gatesList[gateNo + 1]
+                otherGate = gatesListSimpl[gateNo + 1]
 
 
                 if self.DoGatesCommute(gate, otherGate):
                     self.commutationMatrix[gate-1][gate] = 1
-                    possibleSwaps.append([gate, otherGate])
+                    possibleSwaps.append([gateNo, gateNo + 1])
 
-            # works 
-            print(listOfPossiblePermutations)
 
             # generate all possible permuations of exchanging the n possible gate swaps (that are independent of each other for now)
             possible_values = [0, 1]
 
-            # but, one thing we still have to check is that the gates are really independent of each other 
-            # because if, e.g., possibleSwaps = [[1,4], [8,9], [4,2]]
-            # we have a problem because swap 1 and 3 cannot be executed at the same time! look further downstairs
+
 
 
             # Generate all permutations, this is a list of lists of 0s and 1s 
@@ -325,61 +347,70 @@ class RandomCircuit:
             # e.g. means that the first and fourth swaps are executed for this specific circuit 
             all_permutations = list(product(possible_values, repeat=len(possibleSwaps)))
 
-            print('all:', all_permutations)
-
-            print('len all perms:', len(all_permutations))
-
+            # Check if the gates are really independent of each other 
+            # because if, e.g., possibleSwaps = [[1,4], [8,9], [4,2]]
+            # we have a problem because swap 1 and 3 cannot be executed at the same time!
             # essentially, in these cases: we have to delete the cases from the permutation (consisting of 0s and 1s) in which 
             # both of the swaps (that are not independent of each other) are 1
-            # OPTIMIZE THIS FOR SURE!
-            # for swapNo in range(len(possibleSwaps)): 
-            #     swap = possibleSwaps[swapNo]
-            #     g1 = swap[0]
-            #     for otherSwapNo in range(len(possibleSwaps)): 
+            for swapNo in range(len(possibleSwaps)): 
+                swap = possibleSwaps[swapNo]
+                g1 = gatesListSimpl[swap[0]]
+                g2 = gatesListSimpl[swap[1]]
+                for otherSwapNo in range(len(possibleSwaps)): 
 
-            #         otherSwap = possibleSwaps[otherSwapNo]
-            #         if g1 == otherSwap[0] or g1 == otherSwap[1]: 
-            #             for perm in all_permutations:
-            #                 if perm[swapNo]==1 and perm[otherSwapNo] ==1: 
-            #                     all_permutations.remove(perm)
+                    otherSwap = possibleSwaps[otherSwapNo]
+                    if otherSwap == swap: 
+                        continue
+                    if g1 in otherSwap or g2 in otherSwap: 
+                        for perm in all_permutations:
+                            if perm[swapNo]==1 and perm[otherSwapNo] ==1: 
+                                all_permutations.remove(perm)
 
 
             # if there's non trivial swaps to be made  
             if len(all_permutations) > 1:
 
                 for perm in all_permutations:
-                    tempArrangement = copy.deepcopy(self.gatesList)
+                    tempArrangement = copy.deepcopy(tempGatesList)
 
                     for i in range(len(perm)): 
                         
                         if perm[i] == 1: 
                             tempArrangement = self.SwapGates(tempArrangement, possibleSwaps[i][0], possibleSwaps[i][1])
                     
-                    if tempArrangement not in self.globalTabuList:  
+                        else: 
+                            continue
 
-                        print('Arrangement not in Tabu list')   
+                    if tempArrangement not in self.globalTabuList:  
+                        
                         listOfPossiblePermutations.append(tempArrangement)
-                        # self.listOfPossiblePerms.append(tempArrangement)
+                        
+                        if tempArrangement not in self.listOfPossiblePerms: 
+                            self.listOfPossiblePerms.append(tempArrangement)
                     else: 
 
-                        print('Arrangement in Tabu list')
                         continue
 
 
             # now we created all possible arrangements
+            # iteratively go through the arrangements
             self.FindAllPermutations(listOfPossiblePermutations)
                 
             return 
 
     def FindAllPossibleArrangements(self):
         self.BFScount = 0
-        # self.listOfPossiblePerms.append(self.gatesList)
+        self.listOfPossiblePerms.append(self.gatesList)
         self.FindAllPermutations([self.gatesList])
-        print(self.globalTabuList)
+        # for iList in self.listOfPossiblePerms: 
+        #     print(iList)
+        return self.listOfPossiblePerms
 
 
 
 randomCirc = RandomCircuit(5, 5)
+
+
 
 print(randomCirc.circuit)
 

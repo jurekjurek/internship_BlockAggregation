@@ -5,7 +5,7 @@ We iterate numberIteration times, in each step we create a new processingBlockAr
 
 '''
 from AlternatingOptimization import *
-
+from Commutation import *
 
 
 # start by defining global variables, properties of the circuit. 
@@ -21,7 +21,7 @@ showPlots = False
 showAnimations = False
 
 
-numberIterations = 500
+numberIterations = 1
 
 # define three costLists for deterministic, Tabu Search and Alternating optimization
 
@@ -36,7 +36,7 @@ for iteration in range(numberIterations):
     BLOCKAGGREGATION STARTING FROM RANDOM CIRCUIT
     '''
 
-    asdf, circuitOfQubits, tempCircList = CreateRandomCircuit(NQ, GATES, 2, display= False)
+    circuitOfQubits = RandomCircuit(NQ, GATES).gatesList
 
     processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 

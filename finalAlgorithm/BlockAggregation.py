@@ -37,7 +37,7 @@ QMAX = 4
 FSIZES = [4,4,4]
 
 
-circuitOfQubits = random_circuit(NQ, GATES)
+# circuitOfQubits = random_circuit(NQ, GATES)
 
 # circuitOfQubits, listOfGateMatrices = CreateRandomCircuit(NQ, GATES, 2, False)
 # commutationMatrix = GetCommutationMatrix(listOfGateMatrices)
@@ -272,8 +272,8 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
 
             # debug print statement
             # print('Termination condition reached!')
-            print('chosen qubitset:')
-            print(aggregatedQubitsBest)
+            # print('chosen qubitset:')
+            # print(aggregatedQubitsBest)
             # function returns the two best lists, because we're running out of space 
             return aggregatedQubitsBest, gatesCoveredBest, gateCoverageList, bestGateCoverage
         
@@ -316,7 +316,7 @@ def AggregateBlocksStep(circuitOfQubits, nQ, qMax, mMax):
 # plt.xlabel('Iterations')
 # plt.show()
 
-def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMax):
+def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMax, randomIdleQubitPlacement):
     '''
     Given:
         S - A set of qubits in the processing zones 
@@ -413,10 +413,18 @@ def AggregateBlocksStepPostProcess(aggregatedQubits, gatesCovered, nQ, qMax, mMa
         # we pad the processing zone with more idle qubits from the idle pool 
         while len(qubitsInProcessingZones[processingZone])+ len(idleqQubitsInProcessingZones) < qMax:
 
-            # take random qubit from idle pool 
-            randomQubitNo = random.randint(0, len(idlePool) - 1)
+            if randomIdleQubitPlacement:
+                # take random qubit from idle pool 
+                randomQubitNo = random.randint(0, len(idlePool) - 1)
 
-            idleQubit = idlePool.pop(randomQubitNo)
+                idleQubit = idlePool.pop(randomQubitNo)
+
+            else:
+                # take the first qubit in the idle pool 
+                idleQubit = idlePool[0]
+
+                # eliminate qubit q from idle pool 
+                idlePool = [x for x in idlePool if x != idleQubit]
 
             # append the qubit from the idle pool to the idle subset of the processing zone 
             idleqQubitsInProcessingZones.append(idleQubit)
@@ -458,7 +466,7 @@ Now, as one last step, we have to take the qubits from the idle pool and place t
 '''
 
 
-def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple, randomPlacement = False):
+def PlaceIdlePoolQB(storageZoneShape, idlePool, pointerQuadruple, randomPlacement):
     '''
     Given: 
         Fsizes, a list of sizes of storage zones. E.g. for two storages zones with size 10 each: Fsizes = [10,10]
@@ -606,7 +614,7 @@ def DetermineBestArrangement(possibleArrangementsList, nQ, qMax, mMax):
     return bestCircuit 
 
 
-def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
+def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax, randomPlacement = False):
     '''
     This is the Main function executing the Block aggregation algorithm step by step. 
 
@@ -641,11 +649,11 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
 
 
         # Get set of qubits and gates, for the different processing zones. And the 'remaining' idle pool Iset 
-        processingZoneQubits, coveredGates, Iset, pointerQuadruple     = AggregateBlocksStepPostProcess(aggregatedQubitsBest, gatesCoveredBest, nQ, qMax, mMax)
+        processingZoneQubits, coveredGates, Iset, pointerQuadruple     = AggregateBlocksStepPostProcess(aggregatedQubitsBest, gatesCoveredBest, nQ, qMax, mMax, randomPlacement)
 
 
         # Finally, fill storage zones with qubits in 'remaining' idle pool 
-        storageZoneQubits, pointerQuadrupleNew            = PlaceIdlePoolQB(storageZoneShape, Iset, pointerQuadruple)
+        storageZoneQubits, pointerQuadrupleNew            = PlaceIdlePoolQB(storageZoneShape, Iset, pointerQuadruple, randomPlacement)
 
         # iterate over the different sets of gates in GP
         for gateNo in range(len(coveredGates)):
@@ -660,8 +668,8 @@ def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax):
     return aggregatedBlocks
 
 # processingBlockArrangement = blockProcessCircuit(possibleArrangements, NQ, FSIZES, QMAX, MMAX)
-processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
+# processingBlockArrangement2 = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
 
-# visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
-visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')
+# # visualize_blocks(processingBlockArrangement, 'Arrangement after Block Aggregation')
+# visualize_blocks(processingBlockArrangement2, 'Arrangement after Block Aggregation')

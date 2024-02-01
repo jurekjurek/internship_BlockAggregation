@@ -165,6 +165,10 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
     # number of TS steps where improvement was found 
     numberOfImprovingSteps = 0
 
+    # greedy Search 
+    greedyRightImprovement = 0
+    greedyLeftImprovement = 0
+
     # number of TS steps where a step was tabu 
     numberOfTabuSteps = 0 
 
@@ -313,7 +317,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                     swapPool = swapPool + processingPools[processingBlock][processingZoneNumberQubitOne]
 
             else: 
-
+            
                 # if qubit1 is active, it sits in a processing zone. Then the possible swap partners for qubit1 are only the qubits that sit in the very same processing zone. 
                 swapPool = processingPools[processingBlock][processingZoneNumberQubitOne]
 
@@ -510,7 +514,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
 
             # I guess greedyspread means more than one swap at a time 
-            if greedySpread == False:
+            if greedySpread == False or iterationStep > TSiterations/2:
                 break
 
 
@@ -561,11 +565,16 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                 # if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]]:
                 #     break
 
+                stop = False
+
                 for qubitToBeSwappedNo in range(len(qubitsToBeSwapped[swapNo])):
                     qubitToBeSwapped = qubitsToBeSwapped[swapNo][qubitToBeSwappedNo]
 
                     if natureStatusList[processingBlock][qubitToBeSwapped] != natureStatusList[greedyProcessingBlock][qubitToBeSwapped] or zoneNumberList[processingBlock][qubitToBeSwapped] != zoneNumberList[greedyProcessingBlock][qubitToBeSwapped]: 
-                        break
+                        stop =  True
+
+                if stop: 
+                    break
 
                 # update the Y lists as well 
                 currentYPositionList = YBestUpdate[greedyProcessingBlock]
@@ -599,6 +608,8 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
                 # update the best lists for greedyProcessingBlock!! as well. We did it for step above, but now also for greedyProcessingBlock
                 if costImprovementByGreedySwapping < 0: 
+
+                    greedyRightImprovement += 1
 
                     # differenceToCostBeforeSwapping is here the total difference
                     # Important to understand: it is allowed that the switch of the qubits lowers the performance relative to the swap without greedy search 
@@ -641,11 +652,16 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                 # if natureStatusList[processingBlock][qubitsToBeSwapped[swapNo]] != natureStatusList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] or  zoneNumberList[processingBlock][qubitsToBeSwapped[swapNo]] != zoneNumberList[greedyProcessingBlock][qubitsToBeSwapped[swapNo]]:
                 #     break
 
+                stop = False
+
                 for qubitToBeSwappedNo in range(len(qubitsToBeSwapped[swapNo])):
                     qubitToBeSwapped = qubitsToBeSwapped[swapNo][qubitToBeSwappedNo]
 
                     if natureStatusList[processingBlock][qubitToBeSwapped] != natureStatusList[greedyProcessingBlock][qubitToBeSwapped] or zoneNumberList[processingBlock][qubitToBeSwapped] != zoneNumberList[greedyProcessingBlock][qubitToBeSwapped]: 
-                        break
+                        stop = True
+
+                if stop: 
+                    break
 
                 currentYPositionList = YBestUpdate[greedyProcessingBlock]
                 previousYPositionList = YBestUpdate[greedyProcessingBlock - 1]
@@ -662,6 +678,9 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                 costImprovementByGreedySwapping = - currentCost +  computeTotalCost(yTemporarilySwapped, nQ) 
 
                 if costImprovementByGreedySwapping < 0: 
+
+                    greedyLeftImprovement += 1
+
                     differenceToCostBeforeSwapping = costImprovementByGreedySwapping
                 
                     YBestUpdate[greedyProcessingBlock][qubitsToBeSwapped[swapNo]] = YBestUpdate[greedyProcessingBlock][swappedQubitsToBeSwapped[swapNo]]
@@ -677,6 +696,7 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
                     #         print("  ERROR in greedy expansion, step: ", processingBlock)
 
 
+                # here we break and do not continue, because we only want to continue iterating through the layers if we actually swapped the qubits in *this* layer
                 else: 
                     # greedyProcessingBlock = 1
                     break 
@@ -689,11 +709,12 @@ def improvePlacementTabuSearch(processingBlockArrangement, Fsizes, qMax, mMax, n
 
         '''
         GreedySpread over! 
-        '''
 
-        '''
         Swapping is finished -> Updating 
         '''
+
+        # if greedyRightImprovement > 0 or greedyLeftImprovement > 0: 
+        #     visualize_blocks(reconstructBlocksFromArrangements(processingBlockArrangement, Fsizes, qMax, mMax, nQ, YBestUpdate, zoneNumberListBest, zoneStatusListBest, natureStatusListBest), 'Test')
 
         # no update if flag == false
         # if flag == false, this means that no update is to be performed in this iteration

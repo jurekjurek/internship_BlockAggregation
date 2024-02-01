@@ -1,5 +1,5 @@
 from AlternatingOptimization import *
-
+from Commutation import *
 
 
 '''
@@ -24,7 +24,11 @@ showAnimations = False
 BLOCKAGGREGATION STARTING FROM RANDOM CIRCUIT
 '''
 
-asdf, circuitOfQubits, tempCircList = CreateRandomCircuit(NQ, GATES, 2, display= False)
+# important: The circuit is a list of gates in our case! 
+# class is RandomCircuit!
+circuitOfQubits = RandomCircuit(NQ, GATES).gatesList
+
+# asdf, circuitOfQubits, tempCircList = CreateRandomCircuit(NQ, GATES, 2, display= False)
 
 processingBlockArrangement = blockProcessCircuit(circuitOfQubits, NQ, FSIZES, QMAX, MMAX)
 
@@ -39,33 +43,37 @@ if showPlots:
 DETERMINISTIC OPTIMIZATION
 '''
 
-processingBlockArrangementAfterDeterministicOptimization, processingBlockArrangementDisplaying = improvePlacement(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, True)
+def DeterministicPlots(): 
 
-if showPlots: 
-    temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterDeterministicOptimization, FSIZES, MMAX), NQ)
-    visualize_blocks(processingBlockArrangementAfterDeterministicOptimization, 'Processing block arrangement after deterministic optimization, cost: ' + str(temporaryCost))
+    processingBlockArrangementAfterDeterministicOptimization, processingBlockArrangementDisplaying = improvePlacement(processingBlockArrangement, NQ, FSIZES, QMAX, MMAX, True)
 
-    # display the developement of the cost 
-    tempCostList = []
-    for i in range(len(processingBlockArrangementDisplaying)):
-        tempCostList.append( computeTotalCost(computeArrangements(processingBlockArrangementDisplaying[i], FSIZES, MMAX), NQ) )
+    if showPlots: 
+        temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterDeterministicOptimization, FSIZES, MMAX), NQ)
+        visualize_blocks(processingBlockArrangementAfterDeterministicOptimization, 'Processing block arrangement after deterministic optimization, cost: ' + str(temporaryCost))
 
-    print(len(processingBlockArrangementDisplaying))
+        # display the developement of the cost 
+        tempCostList = []
+        for i in range(len(processingBlockArrangementDisplaying)):
+            tempCostList.append( computeTotalCost(computeArrangements(processingBlockArrangementDisplaying[i], FSIZES, MMAX), NQ) )
 
-    plt.figure()
-    plt.plot(tempCostList, label = 'cost')
-    plt.title('Evolution of total cost, deterministic optimization \n')
-    plt.xlabel('Iterations')
-    plt.ylabel('Cost')
-    plt.legend()
-    plt.show()
+        print(len(processingBlockArrangementDisplaying))
 
-    
+        plt.figure()
+        plt.plot(tempCostList, label = 'cost')
+        plt.title('Evolution of total cost, deterministic optimization \n')
+        plt.xlabel('Iterations')
+        plt.ylabel('Cost')
+        plt.legend()
+        plt.show()
+
+    if showAnimations: 
+        animate_solving(processingBlockArrangementDisplaying, 'Animation of deterministic optimization')
+
+# DeterministicPlots()
 
 
 
-if showAnimations: 
-    animate_solving(processingBlockArrangementDisplaying, 'Animation of deterministic optimization')
+
 
 
 
@@ -73,35 +81,64 @@ if showAnimations:
 TABU SEARCH
 '''
 
+def TabuPlots(tabuListLenght, processingZoneSwapFraction, greedySpread, improvementFactor, showPlots): 
 
-processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=100, tabuListLength=30, swapNumMax=3, processingZoneSwapFraction=0, greedySpread=False, improvementFactor=1)
+    processingBlockArrangementAfterTabuSearch, costProgressList, bestcostProgressList, processingBlockArrangementDisplaying = improvePlacementTabuSearch(processingBlockArrangement, FSIZES, QMAX, MMAX, NQ, TSiterations=100, tabuListLength=tabuListLenght, swapNumMax=3, processingZoneSwapFraction=processingZoneSwapFraction, greedySpread=greedySpread, improvementFactor=improvementFactor)
 
-if showPlots: 
     temporaryCost = computeTotalCost(computeArrangements(processingBlockArrangementAfterTabuSearch, FSIZES, MMAX), NQ)
-    visualize_blocks(processingBlockArrangementAfterTabuSearch, 'Processing block arrangement after tabu search, cost: ' + str(temporaryCost))
-
-    # display the developement of the cost 
-    tempCostList = []
-    for i in range(len(processingBlockArrangementDisplaying)):
-        tempCostList.append( computeTotalCost(computeArrangements(processingBlockArrangementDisplaying[i], FSIZES, MMAX), NQ) )
-
-    plt.figure()
-    plt.plot(tempCostList, label = 'cost')
-    plt.title('Evolution of total cost, tabu search \n')
-    plt.xlabel('Iterations')
-    plt.ylabel('Cost')
-    plt.legend()
-    plt.show()
 
 
+    if showPlots: 
+        if greedySpread == False:
+            visualize_blocks(processingBlockArrangementAfterTabuSearch, 'Processing block arrangement after tabu search, cost: ' + str(temporaryCost))
+        else: 
+            visualize_blocks(processingBlockArrangementAfterTabuSearch, 'Processing block arrangement after tabu search, greedy, cost: ' + str(temporaryCost))
 
-if showAnimations: 
-    animate_solving(processingBlockArrangementDisplaying, 'Animation of optimization with tabu search')
+        # display the developement of the cost 
+        tempCostList = []
+        totCost = computeTotalCost(computeArrangements(processingBlockArrangementDisplaying[i], FSIZES, MMAX), NQ) 
+        for i in range(len(processingBlockArrangementDisplaying)):
+            tempCostList.append( totCost)
 
+        plt.figure()
+        plt.plot(tempCostList, label = 'cost')
+
+        if greedySpread == False: 
+            plt.title('Evolution of total cost, tabu search \n')
+        else: 
+            plt.title('Evolution of total cost, tabu search, greedy \n')
+        plt.xlabel('Iterations')
+        plt.ylabel('Cost')
+        plt.legend()
+        plt.show()
+    
+    if showAnimations: 
+        animate_solving(processingBlockArrangementDisplaying, 'Animation of optimization with tabu search')
+
+    return temporaryCost
+
+
+
+'''Average over nIterations times the performance of the Tabu Search'''
+nIterations = 500
+costList = np.zeros(nIterations)
+costListG = np.zeros(nIterations)
+for i in range(nIterations):
+    nonGreedyCost = TabuPlots(tabuListLenght= 30, processingZoneSwapFraction= 0, greedySpread= False, improvementFactor= 1, showPlots=False)
+
+    costList[i] = (nonGreedyCost)
+
+    greedyCost    = TabuPlots(tabuListLenght= 30, processingZoneSwapFraction= 0, greedySpread= True, improvementFactor= 1, showPlots=False)
+
+    costListG[i] = (greedyCost)
+
+
+print('Non Greedy: ', np.mean(costList))
+print('Greedy: ', np.mean(costListG))
 
 # investigate tabu search further -> run it multiple times and look at the average cost improvement 
 
-
+exit()
 '''
 ALTERNATING OPTIMIZATION
 '''
