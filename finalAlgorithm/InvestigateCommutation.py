@@ -23,7 +23,7 @@ MISSING:
 def CompareDifferentArrangements(possibleArrangements):
     '''
     given a list of possible circuits, this function determines the cost of the different arrangements *relative* to the initial arrangement
-    It returns a list of relative improvements and the number of possible arrangements in this 
+    It returns the best possible relative improvement and the number of arrangements
     '''
 
 
@@ -39,7 +39,7 @@ def CompareDifferentArrangements(possibleArrangements):
         costList.append(computeTotalCost(computeArrangements(tempArrangement, FSIZES, MMAX), NQ))
 
     # costlist[0] corresponds to the initial element that would have been chosen if no commutation had been considered
-    return [((costList[0]) - min(costList)) / costList[0], len(possibleArrangements)]
+    return ((costList[0]) - min(costList)) / costList[0] #[((costList[0]) - min(costList)) / costList[0], len(possibleArrangements)]
 
 
 
@@ -50,26 +50,67 @@ def CalculatePossibleImprovement(numberOfIterations):
     relativeCostList = []
     numArrangementsList = []
 
-    for iteration in range(numberOfIterations): 
-        if iteration % 10 == 0:
-            print('iteration No. ', iteration)
+    limitOnNumberOfPossibleArrangements = 5
 
+    # for each possible number of arrangements (up to 20), we keep track of the number of possibilities that have this number of possible arrangemnets
+    countForEachNo = np.zeros(limitOnNumberOfPossibleArrangements)
+
+    '''
+    making sure to have an equal number of possible arrangement for eaach possible lenght of possible arrangemnts...
+    '''
+    # while 0 in countForEachNo:
+    #     # if iteration % 10 == 0:
+    #     #     print('iteration No. ', iteration)
+
+    #     print(countForEachNo)
+
+    #     randomCirc = RandomCircuit(20, 40)
+    #     possibleArrangements = randomCirc.FindAllPossibleArrangements()
+        
+    #     NoPossibleArrangements = len(possibleArrangements)
+        
+    #     if NoPossibleArrangements >= limitOnNumberOfPossibleArrangements:
+    #         continue
+    #     else: 
+    #         if countForEachNo[NoPossibleArrangements-1] >= 4:
+    #             continue
+    #         else:
+    #             countForEachNo[NoPossibleArrangements-1] += 1
+
+    #     tempResult = CompareDifferentArrangements(possibleArrangements)
+
+
+    #     numArrangementsList.append(len(possibleArrangements))
+    #     relativeCostList.append( tempResult )
+
+
+    for iteration in range(numberOfIterations):
+        if iteration % 10: 
+            print('iteration: ', iteration)
+        
         randomCirc = RandomCircuit(20, 40)
         possibleArrangements = randomCirc.FindAllPossibleArrangements()
+        
+        NoPossibleArrangements = len(possibleArrangements)
+        if NoPossibleArrangements > 20: 
+            continue
 
         tempResult = CompareDifferentArrangements(possibleArrangements)
 
 
-        numArrangementsList.append(len(possibleArrangements))
+        numArrangementsList.append(NoPossibleArrangements)
         relativeCostList.append( tempResult )
 
 
     tabuList = []
 
-    avgList = []
-    
+    avgList = np.zeros(max(numArrangementsList))
+    errorList = np.zeros(max(numArrangementsList))
 
     indexCount = np.zeros(50)
+    
+    # for plotting 
+    numArrangementsListUnOrdered = []
 
     for i in range(len(relativeCostList)): 
         
@@ -82,6 +123,7 @@ def CalculatePossibleImprovement(numberOfIterations):
 
         # if we saw this index before or the lenght of the arrangement is one (no commutation induced rearrangement possibilities)
         if numArrangements in tabuList or numArrangements == 1:
+            avgList[0] = 0
             if numArrangements == 1: 
                 indexCount[0] += 1
             continue
@@ -90,15 +132,22 @@ def CalculatePossibleImprovement(numberOfIterations):
 
         tempCount = 0
         tempSum = 0
+        tempCostsForThisArrNo = []
 
 
+        # Here, we actually iterate over all possible maxCostImprovements for this particular arrangment number
         for j in range(len(relativeCostList)): 
             if numArrangementsList[j] == numArrangements: 
                 tempSum += relativeCostList[j]
+                tempCostsForThisArrNo.append(relativeCostList[j])
                 tempCount += 1
 
-        avgList.append(tempSum / tempCount)
-        numArrangementsList.append(numArrangements)
+        avgList[numArrangements - 1] = (np.average(tempCostsForThisArrNo))
+        errorList[numArrangements - 1] = (np.std(tempCostsForThisArrNo))
+
+        # avgList.append(tempSum / tempCount)
+        # numArrangementsListUnOrdered.append(numArrangements)
+
 
     print(relativeCostList)
 
@@ -115,11 +164,23 @@ def CalculatePossibleImprovement(numberOfIterations):
     plt.xlabel('Number of possible arrangements')
     plt.show()
 
+    print(len(numArrangementsList))
+    print(len(avgList))
+
+    xValues = np.arange(len(avgList))
+
+    print('errorList: ', errorList)
+    print('avgList: ', avgList)
+
     # print average possible cost improvement for the different iterations
-    plt.title('Maximum possible cost improvement in %')
-    plt.scatter(numArrangementsList, avgList, label = 'With commutation')
+    plt.title('Maximum possible cost improvement in %, with errorbars')
+    # plt.scatter(numArrangementsListUnOrdered, avgList, label = 'With commutation')
+    for i in range(1, len(xValues)):
+        if avgList[i] != 0: 
+            plt.errorbar(xValues[i], avgList[i], yerr = errorList[i], fmt = 'o')
+    
     # plt.scatter(numArrangementsList, avgGaugeList, label = 'Without commutation')
-    plt.xlim(0,50)
+    # plt.xlim(0,50)
     plt.xlabel('Numbers of possible arrangements')
     plt.ylabel('(initialcost - bestCost) / initialCost')
     plt.legend()
@@ -127,4 +188,4 @@ def CalculatePossibleImprovement(numberOfIterations):
 
 
 
-CalculatePossibleImprovement(1000)
+CalculatePossibleImprovement(300)
