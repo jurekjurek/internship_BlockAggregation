@@ -3,19 +3,14 @@
 from Commutation import *
 from AlternatingOptimization import *
 
+import time
+
+
+
 '''
-In this file, the gatecoverage and thus, the cost of the inital arrangements is compared for the different commutations of the inital random circuit
-that are allowed as calculated in the file RandomCircuitQiskit.py
+In this file, we compare the performance (the initial block aggregation cost) between the different initital arrangements 
+resulting in the commutation rules to each other. 
 
-Two things will be displayed: 
-    The gatecoverage for the different arrangements 
-    The cost of the resulting qubit arregations
-
-
-MISSING: 
-    compute errors for the relative performance! 
-    find a way to find many circuits of higher length: 
-        We want 20 cicuits each of numberArr = 1, 2, 3, 4, 5, 6, 7, 8, 9, ..., 50
 
 '''
 
@@ -38,94 +33,132 @@ def CompareDifferentArrangements(possibleArrangements):
 
         costList.append(computeTotalCost(computeArrangements(tempArrangement, FSIZES, MMAX), NQ))
 
-    # costlist[0] corresponds to the initial element that would have been chosen if no commutation had been considered
-    return ((costList[0]) - min(costList)) / costList[0] #[((costList[0]) - min(costList)) / costList[0], len(possibleArrangements)]
+    # return the maximal relative costimprovement 
+    return ((costList[0]) - min(costList)) / costList[0]
 
 
 
 
 
-def CalculatePossibleImprovement(numberOfIterations): 
+def CalculatePossibleImprovement(numberOfIterations, limitOnNumberOfPossibleArrangements = 8, limitConsidered = 20, equalSampling = True): 
+    '''
+    This function creates the plots of interest in order to compare the performances of the different arrangements with each other 
+    numberOfIterations is the times a new randomcircuit is arranged, its possible arrangements are determined and for each of these, the blockaggregation is 
+    carried out
+    equalSampling indicates if the random circuits we compare to each other should all have an equal number of statistics concerning its possible arrangements 
+    If for example, we have 20 circuits C1, ..., C20, and C1 gives us 5 possible alternative circuits due to the commutation behaviour of the gates in 
+    this circuit and C2 gives us 4, C3 gives us another 5 and so on, the number will be very unbalanced. 
+    We introduce a numpy array called countForEachNo, that counts the number of possible arrangements for each of the circuit. In our example, we might end up with 
+    [10,0,3,3,0,4,0,...] where we introduce a limit to the length of this array given by limitOnNumberOfPossibleArrangements. Here, we see that we have no circuit 
+    where we have two possible arrangements and 3 for when we have three, another 3 for when we have four and so on. This is not equally sampled. 
+    Thus, in order to have an equal amount of statistics for all the different number of possible arrangements, we introduce equalSampling, that executes the code
+    until a number (specified by limitOnNumberOfPossibleArrangements) is in the array for *every* possible number of arrangement. The list countForEachNo would then
+    look like this at the end of the algorithm: 
+            [limitOnNumberOfPossibleArrangements, limitOnNumberOfPossibleArrangements, ..., limitOnNumberOfPossibleArrangements]
+    However, this takes very long
+
+    Limitconsidered is a limit for the number of possible arrangements. If there is for example, 100 possible arrangemnts, the chance that we will encounter 
+    even one more of this is very low, thus only an insignificant number of statistics is available for these. We typically set limitConsidered = 20 
+    '''
+
+    # keep track of time 
+    start = time.time()
+
 
     relativeCostList = []
     numArrangementsList = []
 
-    limitOnNumberOfPossibleArrangements = 5
-
     # for each possible number of arrangements (up to 20), we keep track of the number of possibilities that have this number of possible arrangemnets
     countForEachNo = np.zeros(limitOnNumberOfPossibleArrangements)
 
+    limitOnCount = 40
+
     '''
-    making sure to have an equal number of possible arrangement for eaach possible lenght of possible arrangemnts...
+    making sure to have an equal number of possible arrangement for eaach possible lenght of possible arrangements...
     '''
-    # while 0 in countForEachNo:
-    #     # if iteration % 10 == 0:
-    #     #     print('iteration No. ', iteration)
 
-    #     print(countForEachNo)
+    if equalSampling: 
+        while True:
 
-    #     randomCirc = RandomCircuit(20, 40)
-    #     possibleArrangements = randomCirc.FindAllPossibleArrangements()
-        
-    #     NoPossibleArrangements = len(possibleArrangements)
-        
-    #     if NoPossibleArrangements >= limitOnNumberOfPossibleArrangements:
-    #         continue
-    #     else: 
-    #         if countForEachNo[NoPossibleArrangements-1] >= 4:
-    #             continue
-    #         else:
-    #             countForEachNo[NoPossibleArrangements-1] += 1
+            # debug, see the array being iteratively filled up 
+            print(countForEachNo)
 
-    #     tempResult = CompareDifferentArrangements(possibleArrangements)
+            randomCirc = RandomCircuit(20, 40)
+            possibleArrangements = randomCirc.FindAllPossibleArrangements()
+            
+            NoPossibleArrangements = len(possibleArrangements)
+            
+            if NoPossibleArrangements > limitOnNumberOfPossibleArrangements or NoPossibleArrangements == 5 or NoPossibleArrangements == 7:
+                continue
+            else: 
+                if countForEachNo[NoPossibleArrangements-1] >= limitOnCount:
+                    if np.array_equal(countForEachNo, np.array([limitOnCount,limitOnCount,limitOnCount,limitOnCount, 0, limitOnCount, 0, limitOnCount])):
+                        print('test')
+                        break
+                    else: 
+                        continue
+                else:
+                    countForEachNo[NoPossibleArrangements-1] += 1
 
-
-    #     numArrangementsList.append(len(possibleArrangements))
-    #     relativeCostList.append( tempResult )
-
-
-    for iteration in range(numberOfIterations):
-        if iteration % 10: 
-            print('iteration: ', iteration)
-        
-        randomCirc = RandomCircuit(20, 40)
-        possibleArrangements = randomCirc.FindAllPossibleArrangements()
-        
-        NoPossibleArrangements = len(possibleArrangements)
-        if NoPossibleArrangements > 20: 
-            continue
-
-        tempResult = CompareDifferentArrangements(possibleArrangements)
+            tempResult = CompareDifferentArrangements(possibleArrangements)
 
 
-        numArrangementsList.append(NoPossibleArrangements)
-        relativeCostList.append( tempResult )
+            numArrangementsList.append(len(possibleArrangements))
+            relativeCostList.append( tempResult )
 
+    # if not sampled equally: 
+    else:
+        for iteration in range(numberOfIterations):
+            if iteration % 10: 
+                print('iteration: ', iteration)
+            
+            randomCirc = RandomCircuit(20, 40)
+            possibleArrangements = randomCirc.FindAllPossibleArrangements()
+            
+            NoPossibleArrangements = len(possibleArrangements)
+            if NoPossibleArrangements > limitConsidered: 
+                continue
+
+            tempResult = CompareDifferentArrangements(possibleArrangements)
+
+
+            numArrangementsList.append(NoPossibleArrangements)
+            relativeCostList.append( tempResult )
+
+
+    '''
+    Here, we actually create the plots 
+    we iterate over the number of circuits and for each circuit, we look at the corersponding number of possible arrangements (nArr)
+    then we iterate over the rest of the circuits, and check if the circuit shares this nArr. If it does, we take the relativeCostImprovement (determined by 
+    the above function) into a sum and in the end, average over the whole thing. 
+    What we thus observe is an average over the (BEST POSSIBLE) cost improvement (in percent) for circuits with these particular numbers of arrangements resulting 
+    from the commutation behaviour.
+
+    '''
 
     tabuList = []
 
     avgList = np.zeros(max(numArrangementsList))
     errorList = np.zeros(max(numArrangementsList))
 
-    indexCount = np.zeros(50)
-    
-    # for plotting 
-    numArrangementsListUnOrdered = []
+    indexCount = np.zeros(limitConsidered)
 
-    for i in range(len(relativeCostList)): 
+    numberOfCircuits = len(relativeCostList)
+    
+
+    for i in range(numberOfCircuits): 
         
         # numArrangements is the length of the arrangement
         numArrangements = numArrangementsList[i]
 
-        # we want to know the frequencies of the occurences of different ArrangementLenghts (only smaller 50 are of interest)
-        if numArrangements < 50: 
+        # we want to know the frequencies of the occurences of different ArrangementLenghts (only smaller than limit are of interest)
+        if numArrangements < limitConsidered: 
             indexCount[numArrangements-1] += 1
 
         # if we saw this index before or the lenght of the arrangement is one (no commutation induced rearrangement possibilities)
         if numArrangements in tabuList or numArrangements == 1:
             avgList[0] = 0
-            if numArrangements == 1: 
-                indexCount[0] += 1
+            # we do not have to average over this, because clearly, if there is no other arrangement possible, the cost improvement will always be zero
             continue
 
         tabuList.append(numArrangements)
@@ -143,20 +176,16 @@ def CalculatePossibleImprovement(numberOfIterations):
                 tempCount += 1
 
         avgList[numArrangements - 1] = (np.average(tempCostsForThisArrNo))
-        errorList[numArrangements - 1] = (np.std(tempCostsForThisArrNo))
+        errorList[numArrangements - 1] = (np.std(tempCostsForThisArrNo)/np.sqrt(tempCount))
 
-        # avgList.append(tempSum / tempCount)
-        # numArrangementsListUnOrdered.append(numArrangements)
+    end = time.time()
 
+    print('TIME:', end - start)
 
     print(relativeCostList)
 
-
-        # print('Average for possiblearrangements Length ', numArrangements, ' is ', tempSum / tempCount, '. \n Where the number of averages was ', tempCount)
-
-
     # bar plot for the frequencies
-    xValues = np.arange(50)
+    xValues = np.arange(limitConsidered)
     plt.bar(xValues, indexCount)
     plt.xlim(-1, 10.5)
     plt.title('Histogram')
@@ -175,8 +204,8 @@ def CalculatePossibleImprovement(numberOfIterations):
     # print average possible cost improvement for the different iterations
     plt.title('Maximum possible cost improvement in %, with errorbars')
     # plt.scatter(numArrangementsListUnOrdered, avgList, label = 'With commutation')
-    for i in range(1, len(xValues)):
-        if avgList[i] != 0: 
+    for i in range(0, len(xValues)):
+        if avgList[i] != 0 or i < 5: 
             plt.errorbar(xValues[i], avgList[i], yerr = errorList[i], fmt = 'o')
     
     # plt.scatter(numArrangementsList, avgGaugeList, label = 'Without commutation')
@@ -188,4 +217,7 @@ def CalculatePossibleImprovement(numberOfIterations):
 
 
 
-CalculatePossibleImprovement(300)
+
+CalculatePossibleImprovement(1000)
+
+
