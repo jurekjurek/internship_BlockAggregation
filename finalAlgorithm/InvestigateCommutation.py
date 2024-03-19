@@ -71,7 +71,7 @@ def CalculatePossibleImprovement(numberOfIterations, limitOnNumberOfPossibleArra
     # for each possible number of arrangements (up to 20), we keep track of the number of possibilities that have this number of possible arrangemnets
     countForEachNo = np.zeros(limitOnNumberOfPossibleArrangements)
 
-    limitOnCount = 40
+    limitOnCount = 30
 
     '''
     making sure to have an equal number of possible arrangement for eaach possible lenght of possible arrangements...
@@ -205,19 +205,19 @@ def CalculatePossibleImprovement(numberOfIterations, limitOnNumberOfPossibleArra
     plt.title('Maximum possible cost improvement in %, with errorbars')
     # plt.scatter(numArrangementsListUnOrdered, avgList, label = 'With commutation')
     for i in range(0, len(xValues)):
-        if avgList[i] != 0 or i < 5: 
-            plt.errorbar(xValues[i], avgList[i], yerr = errorList[i], fmt = 'o')
+        if avgList[i] != 0 or i < 4: 
+            plt.errorbar(xValues[i], avgList[i]*100, yerr = errorList[i]*100, fmt = 'o', color = 'red')
     
     # plt.scatter(numArrangementsList, avgGaugeList, label = 'Without commutation')
     # plt.xlim(0,50)
     plt.xlabel('Numbers of possible arrangements')
-    plt.ylabel('(initialcost - bestCost) / initialCost')
-    plt.legend()
+    plt.ylabel('MaxCostImprovement / InitialCost [%]')#'(initialcost - bestCost) / initialCost')
+    # plt.legend()
     plt.show()
 
 
 
 
-CalculatePossibleImprovement(1000)
+CalculatePossibleImprovement(100)
 
 

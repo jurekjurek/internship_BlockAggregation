@@ -614,7 +614,7 @@ def DetermineBestArrangement(possibleArrangementsList, nQ, qMax, mMax):
     return bestCircuit 
 
 
-def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax, randomPlacement = False):
+def blockProcessCircuit(rawCircuit, nQ, storageZoneShape, qMax, mMax, randomPlacement = True):
     '''
     This is the Main function executing the Block aggregation algorithm step by step. 
 
