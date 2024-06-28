@@ -28,7 +28,7 @@ functions
 
 '''
 
-def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax, useOptimizedArrangements, useAlternatingOptimization):
+def InitializePopulation(populationSize, nQ, gates, storageZoneShape, qMax, mMax, useOptimizedArrangements = False, useAlternatingOptimization = True):
     '''
     The population is merely a list of processing block arrangements
     '''
