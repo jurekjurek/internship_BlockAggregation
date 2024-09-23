@@ -10,3 +10,4 @@ Two different optimising algorithms are applied to the problem:
 
 The algorithms are tested on up to 40 qubits, with 40 gates in the circuits that are to be carried out. Both approaches to optimising show similar results, where the genetic algorithm takes a shorter time to compile.
 
+For an illustration of the workings of this work, see the repository SummerInternship. 
