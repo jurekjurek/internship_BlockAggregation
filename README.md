@@ -3,9 +3,10 @@ In the process of carrying out a quantum algorithm on a quantum circuit, or even
 This project optimises this scheme with the objective of minimising the overall movement of the qubits. 
 
 Two different optimising algorithms are applied to the problem: 
-- The tabu search, in which a list of before encountered values is kept. If a solution in this list is encountered in one iteration of the algorithm, this temporary solution is not considered.
 
-A genetic algorithm, treating the individual schemes after which qubits are moved as individuals. An algorithm mimicing evolution is applied to search for the optimal scheme. 
+1. The tabu search, in which a list of before encountered values is kept. If a solution in this list is encountered in one iteration of the algorithm, this temporary solution is not considered.
 
-The algorithms are tested on up to 40 qubits, with 40 gates in the circuits that are to be carried out. 
+2. A genetic algorithm, treating the individual schemes after which qubits are moved as individuals. An algorithm mimicing evolution is applied to search for the optimal scheme. 
+
+The algorithms are tested on up to 40 qubits, with 40 gates in the circuits that are to be carried out. Both approaches to optimising show similar results, where the genetic algorithm takes a shorter time to compile.
 
